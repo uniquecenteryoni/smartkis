@@ -29,8 +29,8 @@ const UserTypeCard: React.FC<UserTypeCardProps> = ({ title, description, icon: I
                 <Icon className="w-12 h-12 text-white" />
             </div>
 
-            <h3 className={`text-4xl sm:text-5xl font-bold font-display ${isComingSoon ? 'text-gray-500' : 'text-brand-dark-blue'}`}>{title}</h3>
-            <p className={`text-xl sm:text-2xl mt-2 ${isComingSoon ? 'text-gray-400' : 'text-brand-dark-blue/80'}`}>{description}</p>
+            <h3 className={`text-3xl sm:text-5xl font-bold font-display ${isComingSoon ? 'text-gray-500' : 'text-brand-dark-blue'}`}>{title}</h3>
+            <p className={`text-lg sm:text-2xl mt-2 ${isComingSoon ? 'text-gray-400' : 'text-brand-dark-blue/80'}`}>{description}</p>
         </div>
     );
 };

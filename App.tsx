@@ -429,7 +429,7 @@ const App: React.FC = () => {
                 <Header />
                 <button 
                   onClick={handleBackToProgramSelection}
-                  className="mb-8 bg-brand-magenta hover:bg-pink-700 text-white font-bold py-3 px-8 text-xl sm:text-2xl rounded-full flex items-center transition-colors duration-300"
+                  className="mb-8 w-full sm:w-auto bg-brand-magenta hover:bg-pink-700 text-white font-bold py-2.5 sm:py-3 px-5 sm:px-8 text-base sm:text-2xl rounded-full flex items-center justify-center transition-colors duration-300"
                 >
                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H15a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
@@ -467,7 +467,7 @@ const App: React.FC = () => {
                            <button
                             onClick={() => handleSelectModule({ id: 'final-exam', title: 'בוחן סיום', description: '', icon: TrophyIcon, component: FinalExam })}
                             disabled={!canTakeExam}
-                            className={`w-full p-4 md:p-6 rounded-3xl text-white font-bold text-2xl sm:text-3xl transition-all duration-300 flex items-center justify-center gap-4 ${!canTakeExam ? 'bg-gray-400 cursor-not-allowed' : 'bg-brand-magenta hover:bg-pink-700 transform hover:-translate-y-1'}`}
+                            className={`w-full p-4 md:p-6 rounded-3xl text-white font-bold text-lg sm:text-3xl transition-all duration-300 flex items-center justify-center gap-2 sm:gap-4 ${!canTakeExam ? 'bg-gray-400 cursor-not-allowed' : 'bg-brand-magenta hover:bg-pink-700 transform hover:-translate-y-1'}`}
                           >
                             <TrophyIcon className="w-8 h-8"/>
                             <span>
@@ -546,7 +546,7 @@ const App: React.FC = () => {
   };
   
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {renderContent()}
     </div>
   )

@@ -27,7 +27,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ userType, description, icon: Icon
         <div className="animate-fade-in">
             <button 
                 onClick={onBack}
-                className="mb-8 bg-brand-magenta hover:bg-pink-700 text-white font-bold py-3 px-8 text-xl rounded-full flex items-center transition-colors duration-300"
+                className="mb-8 w-full sm:w-auto bg-brand-magenta hover:bg-pink-700 text-white font-bold py-2.5 sm:py-3 px-5 sm:px-8 text-base sm:text-xl rounded-full flex items-center justify-center transition-colors duration-300"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H15a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
@@ -36,13 +36,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ userType, description, icon: Icon
             </button>
             <Header />
 
-            <div className="max-w-md mx-auto mt-12 bg-white/60 backdrop-blur-lg p-8 rounded-4xl border-2 border-brand-teal shadow-2xl">
+            <div className="max-w-md mx-auto mt-10 sm:mt-12 bg-white/60 backdrop-blur-lg p-5 sm:p-8 rounded-4xl border-2 border-brand-teal shadow-2xl">
                 <div className="flex flex-col items-center text-center">
                     <div className="p-4 rounded-full mb-4 shadow-md bg-brand-teal shadow-brand-teal/30">
                         <Icon className="w-12 h-12 text-white" />
                     </div>
-                    <h2 className="text-4xl sm:text-5xl font-bold font-display text-brand-dark-blue">כניסת {userType}</h2>
-                    <p className="mt-2 text-xl sm:text-2xl text-brand-dark-blue/80">{description}</p>
+                    <h2 className="text-3xl sm:text-5xl font-bold font-display text-brand-dark-blue">כניסת {userType}</h2>
+                    <p className="mt-2 text-lg sm:text-2xl text-brand-dark-blue/80">{description}</p>
                 </div>
 
                 <div className="mt-8 space-y-4">
@@ -52,7 +52,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ userType, description, icon: Icon
                             <select
                                 value={selectedGrade}
                                 onChange={(e) => setSelectedGrade(e.target.value)}
-                                className="w-full mt-1 bg-white p-4 rounded-lg border-2 border-gray-300 focus:border-brand-teal focus:ring-brand-teal transition text-xl"
+                                className="w-full mt-1 bg-white p-3 sm:p-4 rounded-lg border-2 border-gray-300 focus:border-brand-teal focus:ring-brand-teal transition text-lg sm:text-xl"
                             >
                                 <option value="" disabled>-- בחרו את כיתתכם --</option>
                                 {grades.map(g => <option key={g} value={g}>{g}</option>)}
@@ -64,7 +64,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ userType, description, icon: Icon
                         <input
                             type="text"
                             placeholder="הזינו שם משתמש"
-                            className="w-full mt-1 bg-white p-4 rounded-lg border-2 border-gray-300 focus:border-brand-teal focus:ring-brand-teal transition text-xl"
+                            className="w-full mt-1 bg-white p-3 sm:p-4 rounded-lg border-2 border-gray-300 focus:border-brand-teal focus:ring-brand-teal transition text-lg sm:text-xl"
                         />
                     </div>
                     <div>
@@ -72,7 +72,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ userType, description, icon: Icon
                         <input
                             type="password"
                             placeholder="הזינו סיסמה"
-                            className="w-full mt-1 bg-white p-4 rounded-lg border-2 border-gray-300 focus:border-brand-teal focus:ring-brand-teal transition text-xl"
+                            className="w-full mt-1 bg-white p-3 sm:p-4 rounded-lg border-2 border-gray-300 focus:border-brand-teal focus:ring-brand-teal transition text-lg sm:text-xl"
                         />
                     </div>
                 </div>
@@ -81,13 +81,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ userType, description, icon: Icon
                      <button
                         disabled={showGradeSelector && !selectedGrade}
                         onClick={() => onLogin(selectedGrade)}
-                        className="w-full bg-brand-teal hover:bg-teal-500 text-white font-bold py-4 px-6 rounded-lg text-2xl transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        className="w-full bg-brand-teal hover:bg-teal-500 text-white font-bold py-3.5 sm:py-4 px-6 rounded-lg text-xl sm:text-2xl transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
                         כניסה
                     </button>
                     <button
                         onClick={handleGuestLogin}
-                        className="w-full mt-3 bg-transparent hover:bg-brand-light-blue/20 text-brand-light-blue font-bold py-4 px-6 rounded-lg text-2xl border-2 border-brand-light-blue transition-colors disabled:bg-gray-300/50 disabled:border-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed"
+                        className="w-full mt-3 bg-transparent hover:bg-brand-light-blue/20 text-brand-light-blue font-bold py-3.5 sm:py-4 px-6 rounded-lg text-xl sm:text-2xl border-2 border-brand-light-blue transition-colors disabled:bg-gray-300/50 disabled:border-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed"
                     >
                         כניסת אורח
                     </button>

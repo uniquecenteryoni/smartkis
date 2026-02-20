@@ -164,7 +164,7 @@ const WhereMoneyComesFromModule: React.FC<ModuleProps> = ({ onBack, title, onCom
                             <p className="text-3xl font-bold">הצלחות: {score}/{jobs.length}</p>
                         </div>
 
-                        <div className={`relative w-full max-w-[${GAME_WIDTH}px] h-[500px] bg-sky-100 mx-auto rounded-3xl border-4 border-brand-light-blue overflow-hidden shadow-2xl`}>
+                        <div className={`relative w-full max-w-[${GAME_WIDTH}px] h-[68vw] min-h-[320px] max-h-[500px] bg-sky-100 mx-auto rounded-3xl border-4 border-brand-light-blue overflow-hidden shadow-2xl`}>
                              <div className="absolute inset-0 bg-gradient-to-b from-sky-300 to-sky-100"></div>
                              <div className="absolute bottom-0 w-full h-40 bg-green-400"></div>
                              <div className="absolute bottom-32 w-full h-8 bg-green-500 rounded-t-full"></div>
@@ -180,13 +180,13 @@ const WhereMoneyComesFromModule: React.FC<ModuleProps> = ({ onBack, title, onCom
                                     <div key={job.id} className={`absolute bottom-16 text-center transition-all duration-300`}
                                         style={{ left: `${job.x}px`, transform: 'translateX(-50%)' }}
                                     >
-                                        <div className="text-7xl drop-shadow-lg">{job.icon}</div>
-                                        <div className="font-bold text-lg bg-white/70 px-2 py-1 rounded-md">{job.name}</div>
+                                        <div className="text-5xl sm:text-7xl drop-shadow-lg">{job.icon}</div>
+                                        <div className="font-bold text-sm sm:text-lg bg-white/70 px-2 py-1 rounded-md">{job.name}</div>
                                     </div>
                                 ))}
                             </div>
                         </div>
-                        {message && <p className="mt-6 text-3xl font-bold text-brand-magenta">{message}</p>}
+                        {message && <p className="mt-6 text-2xl sm:text-3xl font-bold text-brand-magenta">{message}</p>}
                     </>
                 )}
             </div>

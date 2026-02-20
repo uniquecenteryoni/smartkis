@@ -487,8 +487,8 @@ const MotorcycleGame: React.FC<{ onComplete: () => void }> = ({ onComplete }) =>
 
     return (
         <div className="flex flex-col items-center">
-            <div className="relative w-full max-w-[800px] h-[400px] bg-gray-200 rounded-lg overflow-hidden border-4 border-brand-dark-blue">
-                <canvas ref={canvasRef} width="800" height="400" />
+            <div className="relative w-full max-w-[800px] h-[55vw] min-h-[260px] max-h-[400px] bg-gray-200 rounded-lg overflow-hidden border-4 border-brand-dark-blue">
+                <canvas ref={canvasRef} width="800" height="400" className="w-full h-full" />
                 {gameState === 'start' && (
                     <div className="absolute inset-0 bg-black/50 flex flex-col justify-center items-center text-white p-4">
                         <h4 className="text-5xl font-bold">טפסו לפלוס!</h4>
@@ -518,10 +518,10 @@ const MotorcycleGame: React.FC<{ onComplete: () => void }> = ({ onComplete }) =>
                         <button onClick={() => startGame(true)} className="mt-6 bg-brand-magenta text-white font-bold py-3 px-6 rounded-lg text-xl">התחל מחדש</button>
                     </div>
                 )}
-                 <div className="absolute top-4 left-4 bg-white/70 p-2 rounded-lg text-3xl font-bold">
+                 <div className="absolute top-2 sm:top-4 left-2 sm:left-4 bg-white/70 p-2 rounded-lg text-lg sm:text-3xl font-bold">
                     מאזן: <span className={score < 0 ? 'text-red-500' : 'text-green-600'}>{score} / {GOAL_SCORE} ₪</span>
                 </div>
-                 <div className="absolute top-4 right-4 bg-white/70 p-2 rounded-lg text-3xl font-bold flex gap-2">
+                 <div className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-white/70 p-2 rounded-lg text-lg sm:text-3xl font-bold flex gap-2">
                    {Array.from({length: lives}).map((_, i) => <span key={i}>❤️</span>)}
                 </div>
             </div>

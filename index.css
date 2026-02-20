@@ -6,6 +6,15 @@ html {
 }
 
 /* Base body styles are applied via Tailwind classes in index.html */
+body {
+  overflow-x: hidden;
+}
+
+img,
+canvas,
+video {
+  max-width: 100%;
+}
 
 /* Fade-in animation used by module cards */
 @keyframes fade-in {

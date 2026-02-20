@@ -67,7 +67,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectProgram, onBack }) =>
     <div className="animate-fade-in">
         <button 
             onClick={onBack}
-            className="mb-8 bg-brand-magenta hover:bg-pink-700 text-white font-bold py-3 px-8 text-xl rounded-full flex items-center transition-colors duration-300"
+            className="mb-8 w-full sm:w-auto bg-brand-magenta hover:bg-pink-700 text-white font-bold py-2.5 sm:py-3 px-5 sm:px-8 text-base sm:text-xl rounded-full flex items-center justify-center transition-colors duration-300"
         >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H15a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
@@ -77,8 +77,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectProgram, onBack }) =>
 
         <Header />
          <div className="text-center my-8 max-w-3xl mx-auto">
-            <h2 className="text-3xl sm:text-4xl font-bold font-display text-brand-dark-blue mb-2">ברוכים הבאים למרחב הלמידה החוויתי של "חכם בכיס"</h2>
-            <p className="text-xl sm:text-2xl text-brand-dark-blue/90">
+            <h2 className="text-2xl sm:text-4xl font-bold font-display text-brand-dark-blue mb-2">ברוכים הבאים למרחב הלמידה החוויתי של "חכם בכיס"</h2>
+            <p className="text-lg sm:text-2xl text-brand-dark-blue/90">
                 ביחרו את התוכנית שלם והתחילו במסע הלמידה
             </p>
         </div>

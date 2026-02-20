@@ -234,7 +234,7 @@ const SavingsAdventureModule: React.FC<ModuleProps> = ({ onBack, title, onComple
                                 <p className="text-3xl font-bold mt-2">בלוטים בסל: {savedCoins}</p>
                             </div>
 
-                            <div className="relative w-full max-w-[700px] h-[450px] bg-sky-300 mx-auto rounded-3xl border-4 border-brand-dark-blue overflow-hidden cursor-pointer shadow-2xl">
+                            <div className="relative w-full max-w-[700px] h-[65vw] min-h-[320px] max-h-[450px] bg-sky-300 mx-auto rounded-3xl border-4 border-brand-dark-blue overflow-hidden cursor-pointer shadow-2xl">
                                  <div className="absolute inset-0 bg-gradient-to-b from-sky-400 to-green-300"></div>
                                 
                                 {/* Falling Object */}
