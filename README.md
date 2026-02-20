@@ -18,3 +18,4 @@ View your app in AI Studio: https://ai.studio/apps/a6e8e4da-9491-4c59-a0c2-4d790
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+# smartkis
