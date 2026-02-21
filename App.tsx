@@ -29,6 +29,8 @@ import HowToEarnModule from './components/modules/HowToEarnModule';
 import TimeManagementModule from './components/modules/TimeManagementModule';
 import PublicSpeakingModule from './components/modules/PublicSpeakingModule';
 import BuildBusinessModule from './components/modules/BuildBusinessModule';
+import HatsarModelModule from './components/modules/HatsarModelModule';
+import FutureManagersChallengeModule from './components/modules/FutureManagersChallengeModule';
 import { BudgetIcon, SalaryIcon, InterestIcon, OverdraftIcon, ExpensesIcon, ResearchIcon, LockIcon, TrophyIcon, RightsIcon, LinksIcon, SelfEmployedIcon, TimeIcon, PodiumIcon, BusinessIcon, PiggyBankIcon, HeartIcon, CoinIcon, GlobeIcon, StarIcon, StoreIcon } from './components/icons/Icons';
 import WhereMoneyComesFromModule from './components/modules/kisonim/WhereMoneyComesFromModule';
 import NeedsVsWantsModule from './components/modules/kisonim/NeedsVsWantsModule';
@@ -156,6 +158,22 @@ const maBakisModules: Module[] = [
     icon: ExpensesIcon,
     component: HowMuchCostModule,
     completionGoal: 'השלמת בוחן הידע בהצלחה.',
+  },
+  {
+    id: 'hatsar-model',
+    title: 'מחשבון מודל החצ״ר',
+    description: 'יחידת תרגול אינטראקטיבית לקבלת החלטות קנייה לפי סדר עדיפויות: חייב, צריך, רוצה.',
+    icon: StarIcon,
+    component: HatsarModelModule,
+    completionGoal: 'השלמת סימולציית קבלת החלטה אחת לפחות.',
+  },
+  {
+    id: 'future-managers-5000',
+    title: 'מנהלי העתיד: אתגר ה-5,000',
+    description: 'לוח בקרה כיתתי לתרגול ניהול תקציב קבוצתי, חקר מחירים, ועמידה מול בלת״מים לאורך החודש.',
+    icon: StoreIcon,
+    component: FutureManagersChallengeModule,
+    completionGoal: 'יש להשלים הזנת כל 5 הקטגוריות עבור צוות אחד לפחות.',
   },
   {
     id: 'monopolies',
