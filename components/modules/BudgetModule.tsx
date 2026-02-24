@@ -257,6 +257,55 @@ const placeholders: Record<string, string> = {
     'רכב- ביטוח': 'רשמו את שם חברת הביטוח וסוג הביטוח',
 };
 
+const budgetGuideSteps = [
+    {
+        title: 'מתחילים בלמידה',
+        shortText: 'קודם פותחים אייקון מידע כדי להבין את הסעיף.',
+        iconLabel: 'מידע',
+        buttonClass: 'bg-[#1b2550] text-white border-[#1b2550]',
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        )
+    },
+    {
+        title: 'מבצעים משימה',
+        shortText: 'עוברים על כפתור "משימה" ופועלים לפי ההנחיה.',
+        iconLabel: 'משימה',
+        buttonClass: 'bg-[#1b2550] text-white border-[#1b2550]',
+        icon: <span className="font-bold text-sm">✓</span>
+    },
+    {
+        title: 'משתמשים בכלי עזר',
+        shortText: 'פותחים מחשבון/שאלון/בחירה לפי הסדר המופיע.',
+        iconLabel: 'כלי עזר',
+        buttonClass: 'bg-[#01b2cf] text-black border-[#01b2cf]',
+        icon: <span className="font-bold text-sm">⚙</span>
+    },
+    {
+        title: 'בודקים מקור חיצוני',
+        shortText: 'נכנסים לקישור לאתר ומשווים מידע אמיתי.',
+        iconLabel: 'קישור',
+        buttonClass: 'bg-brand-teal text-black border-brand-teal',
+        icon: <span className="font-bold text-sm">🔗</span>
+    },
+    {
+        title: 'מעדכנים תוצאה',
+        shortText: 'מזינים סכום והערה כדי להשלים את הסעיף.',
+        iconLabel: 'תוצאה',
+        buttonClass: 'bg-[#01b2cf] text-black border-[#01b2cf]',
+        icon: <span className="font-bold text-sm">₪</span>
+    },
+    {
+        title: 'מסיימים מחזור',
+        shortText: 'מנתחים תרשים ומאזן, ואז מפיקים דו״ח סיכום.',
+        iconLabel: 'סיכום',
+        buttonClass: 'bg-brand-magenta text-black border-brand-magenta',
+        icon: <span className="font-bold text-sm">📄</span>
+    }
+] as const;
+
 const termExplanations: Record<string, string> = {
     'שכר ברוטו': 'זהו השכר הכולל שלך לפני כל הניכויים. הוא כולל את שכר היסוד, שעות נוספות, בונוסים ותוספות אחרות.',
     'ניכויים': 'אלו סכומים שהמעסיק שלך מוריד משכר הברוטו שלך על פי חוק (כמו מסים וביטוחים) לפני שהכסף מגיע אליך.',
@@ -606,33 +655,51 @@ const CarQuestionnaireModal: React.FC<{ onClose: () => void, style?: React.CSSPr
     );
 };
 
-const RentQuestionnaireModal: React.FC<{ onClose: () => void, style?: React.CSSProperties }> = ({ onClose, style }) => {
+const RentQuestionnaireModal: React.FC<{ onClose: () => void, style?: React.CSSProperties, selectedCharacter?: Character | null }> = ({ onClose, style, selectedCharacter }) => {
     const [step, setStep] = useState(0);
     const [answers, setAnswers] = useState<Record<number, string>>({});
     const [results, setResults] = useState<{
         budget: string;
-        size: string;
-        locationType: string;
-        features: string;
+        sizeSqm: string;
+        rooms: string;
+        locationSuggestions: string[];
     } | null>(null);
 
+    const cityMatch = selectedCharacter?.description.match(/גר(?:ה)?\s+ב([א-ת"'\-\s]+)/);
+    const baseCity = cityMatch?.[1]?.trim() || 'תל אביב';
+
+    const nearbyCitiesByBase: Record<string, string[]> = {
+        'הרצליה': ['רמת השרון', 'רעננה', 'כפר סבא', 'הוד השרון', 'תל אביב'],
+        'פתח תקווה': ['בני ברק', 'רמת גן', 'גבעת שמואל', 'קריית אונו', 'ראש העין'],
+        'תל אביב': ['רמת גן', 'גבעתיים', 'חולון', 'בת ים', 'הרצליה'],
+        'ירושלים': ['מבשרת ציון', 'מעלה אדומים', 'בית שמש', 'גבעת זאב', 'אבו גוש'],
+    };
+
     const questions = [
-        { 
-            question: "מהו התקציב החודשי הריאלי שתרצו להקדיש לשכר דירה?", 
-            note: "מומלץ שההוצאה על דיור לא תעלה על 35% מההכנסה נטו.",
-            options: ["עד 3,000 ₪ (חסכוני)", "3,000 - 4,500 ₪ (סטנדרטי)", "מעל 4,500 ₪ (מפנק)"] 
+        {
+            question: "איזה סכום חודשי ירגיש לכם נוח לשכר דירה?",
+            note: "קפיצות של 500 ש״ח כדי לדייק תקציב ריאלי.",
+            options: ["עד 3,500 ₪", "3,500-4,500 ₪", "4,500-6,000 ₪", "6,000 ₪ ומעלה"]
         },
-        { 
-            question: "איך תעדיפו לגור?", 
-            options: ["לבד (פרטיות מלאה, יקר יותר)", "עם שותף/ה אחד/ת (איזון בין עלויות לפרטיות)", "עם 2 שותפים או יותר (הכי חסכוני)"] 
+        {
+            question: "איזה סגנון מגורים מתאים לכם ביום-יום?",
+            options: ["דירה קטנה ומדויקת", "דירה בינונית ונוחה", "דירה גדולה ומרווחת"]
         },
-        { 
-            question: "מה הכי חשוב לכם במיקום הדירה?", 
-            options: ["קרבה למרכזי בילוי ותחבורה ציבורית", "שכונה שקטה עם פארקים ושטחים ירוקים", "המחיר הנמוך ביותר, גם אם זה רחוק מהמרכז"] 
+        {
+            question: "מה רמת הפרטיות שאתם צריכים בבית?",
+            options: ["חלל עיקרי אחד מספיק לי", "חשוב לי חדר שינה נפרד", "חשובים לי כמה חללים נפרדים"]
         },
-        { 
-            question: "על מה לא תוכלו לוותר בדירה?", 
-            options: ["חייב/ת מרפסת שמש", "חייבת להיות משופצת ומודרנית", "שתהיה מרוהטת (אפילו חלקית)", "העיקר המחיר, לא קריטי לי כלום"] 
+        {
+            question: "באיזו תדירות תארחו בבית?",
+            options: ["כמעט לא מארח/ת", "מארח/ת לפעמים", "מארח/ת הרבה"]
+        },
+        {
+            question: "מה חשוב יותר בבחירת המיקום?",
+            options: ["קרוב מאוד לעיר המגורים", "איזון בין מרחק למחיר", "מחיר עדיף גם אם רחוק יותר"]
+        },
+        {
+            question: "אם צריך לבחור, על מה תתפשרו קודם?",
+            options: ["לא מתפשר/ת על גודל", "פשרה חלקית על גודל", "מוכן/ה לדירה קטנה יותר בשביל מיקום/מחיר"]
         }
     ];
 
@@ -643,16 +710,50 @@ const RentQuestionnaireModal: React.FC<{ onClose: () => void, style?: React.CSSP
         if (qIndex < questions.length - 1) {
             setStep(qIndex + 1);
         } else {
-            // Calculate results
-            const sizeResult = newAnswers[1].includes('לבד') ? "דירת יחיד / 2 חדרים" : newAnswers[1].includes('אחד/ת') ? "דירת 3 חדרים" : "דירת 4+ חדרים";
-            const locationTypeResult = newAnswers[2].includes('בילוי') ? "אזור עירוני ותוסס" : newAnswers[2].includes('שקטה') ? "שכונה ירוקה ורגועה" : "אזור משתלם כלכלית";
-            const featuresResult = newAnswers[3].includes('העיקר המחיר') ? "התמקדו במחיר הנמוך ביותר" : `חפשו דירות עם דגש על: ${newAnswers[3].split(' ')[1]}`;
+            const budget = newAnswers[0] || '3,500 ₪';
+            const lifestyleAnswer = newAnswers[1] || '';
+            const privacyAnswer = newAnswers[2] || '';
+            const hostingAnswer = newAnswers[3] || '';
+            const locationPriority = newAnswers[4] || '';
+            const compromiseAnswer = newAnswers[5] || '';
+
+            let sizeScore = lifestyleAnswer.includes('גדולה') ? 3 : lifestyleAnswer.includes('בינונית') ? 2 : 1;
+            if (hostingAnswer.includes('הרבה')) sizeScore += 1;
+            if (compromiseAnswer.includes('קטנה יותר')) sizeScore -= 1;
+            if (compromiseAnswer.includes('פשרה חלקית')) sizeScore -= 0.5;
+
+            let roomsScore = privacyAnswer.includes('כמה חללים') ? 3 : privacyAnswer.includes('חדר שינה') ? 2 : 1;
+            if (hostingAnswer.includes('הרבה')) roomsScore += 1;
+            if (compromiseAnswer.includes('קטנה יותר')) roomsScore -= 1;
+
+            const sizeSqm = sizeScore <= 1
+                ? '30-45 מ"ר'
+                : sizeScore <= 2
+                    ? '45-65 מ"ר'
+                    : sizeScore <= 3
+                        ? '65-85 מ"ר'
+                        : '85-105 מ"ר';
+
+            const rooms = roomsScore <= 1
+                ? '1-1.5 חדרים'
+                : roomsScore <= 2
+                    ? '2-2.5 חדרים'
+                    : roomsScore <= 3
+                        ? '3-3.5 חדרים'
+                        : '4 חדרים';
+
+            const baseSuggestions = nearbyCitiesByBase[baseCity] || ['רמת גן', 'גבעתיים', 'חולון', 'בת ים', 'הרצליה'];
+            const locationSuggestions = locationPriority.includes('מחיר נמוך')
+                ? [...baseSuggestions].reverse()
+                : locationPriority.includes('איזון')
+                    ? [baseSuggestions[0], baseSuggestions[2], baseSuggestions[1], baseSuggestions[4], baseSuggestions[3]].filter(Boolean)
+                    : baseSuggestions;
             
             setResults({
-                budget: newAnswers[0],
-                size: sizeResult,
-                locationType: locationTypeResult,
-                features: featuresResult,
+                budget,
+                sizeSqm,
+                rooms,
+                locationSuggestions,
             });
             setStep(qIndex + 1);
         }
@@ -681,10 +782,17 @@ const RentQuestionnaireModal: React.FC<{ onClose: () => void, style?: React.CSSP
                     <div className="text-center">
                         <h3 className="text-2xl font-bold mb-4 text-brand-teal">המלצת החיפוש שלך:</h3>
                         <div className="space-y-3 text-lg bg-gray-50 p-6 rounded-xl text-right">
-                            <p><strong>🏠 סוג דירה:</strong> {results?.size}</p>
-                            <p><strong>💰 תקציב מומלץ:</strong> {results?.budget}</p>
-                            <p><strong>📍 אופי השכונה:</strong> {results?.locationType}</p>
-                            <p><strong>✨ דגשים לחיפוש:</strong> {results?.features}</p>
+                            <p><strong>💰 תקציב השכירות:</strong> {results?.budget}</p>
+                            <p><strong>📐 גודל במ״ר:</strong> {results?.sizeSqm}</p>
+                            <p><strong>🚪 מספר חדרים:</strong> {results?.rooms}</p>
+                            <div>
+                                <p><strong>📍 מיקום מוצע (עד 20 ק״מ מ{baseCity}):</strong></p>
+                                <ul className="list-disc list-inside mt-1">
+                                    {results?.locationSuggestions.map(city => (
+                                        <li key={city}>{city}</li>
+                                    ))}
+                                </ul>
+                            </div>
                         </div>
                         <p className="mt-4">השתמשו בנתונים האלה כדי להתחיל את החיפוש באתר "יד2"!</p>
                         <button onClick={onClose} className="mt-6 w-full bg-brand-magenta text-white font-bold py-3 px-4 rounded-lg">סגור והמשך</button>
@@ -1332,15 +1440,25 @@ const EntertainmentSimulatorModal: React.FC<{
     );
 };
 
-type AccountsAnswers = { people: string; ac: string; shower: string; cooking: string; appliances: string; };
+type AccountsAnswers = {
+    people: string;
+    ac: string;
+    shower: string;
+    cooking: string;
+    appliances: string;
+    homeHours: string;
+    laundry: string;
+    building: string;
+};
 
 const AccountsCalculatorModal: React.FC<{
     onClose: () => void;
     onSave: (monthlyCost: number, note: string) => void;
     answers: AccountsAnswers;
     setAnswers: (answers: AccountsAnswers) => void;
+    selectedCharacter?: Character | null;
     style?: React.CSSProperties;
-}> = ({ onClose, onSave, answers, setAnswers, style }) => {
+}> = ({ onClose, onSave, answers, setAnswers, selectedCharacter, style }) => {
     const [step, setStep] = useState(1);
     const [result, setResult] = useState<{ 
         monthlyPerPerson: number; 
@@ -1352,13 +1470,23 @@ const AccountsCalculatorModal: React.FC<{
         setAnswers({ ...answers, [question]: value });
     };
 
+    const cityMatch = selectedCharacter?.description.match(/גר(?:ה)?\s+ב([א-ת"'\-\s]+)/);
+    const city = cityMatch?.[1]?.trim() || 'תל אביב';
+    const arnonaMonthlyByCity: Record<string, number> = {
+        'תל אביב': 520,
+        'הרצליה': 500,
+        'פתח תקווה': 430,
+        'ירושלים': 400,
+    };
+
     const handleCalculate = () => {
         const peopleNum = parseInt(answers.people);
 
         let baseElectricity = 250;
         let baseWater = 100;
         let baseGas = 50;
-        const baseMunicipal = 300; 
+        const arnonaMonthly = arnonaMonthlyByCity[city] || 460;
+        let vaadMonthly = 120;
 
         baseElectricity *= (1 + (peopleNum - 1) * 0.4);
         baseWater *= (1 + (peopleNum - 1) * 0.6);
@@ -1371,19 +1499,42 @@ const AccountsCalculatorModal: React.FC<{
         if (answers.shower === 'ארוכות וחמות') baseWater += 30;
         if (answers.cooking === 'כל יום') baseGas += 20;
         if (answers.cooking === 'כמעט ולא') baseGas -= 10;
-        
-        const totalBiMonthly = baseElectricity + baseWater + baseGas + baseMunicipal;
-        const monthlyTotal = totalBiMonthly / 2;
+        if (answers.homeHours === 'הרבה') {
+            baseElectricity += 40;
+            baseWater += 15;
+            baseGas += 10;
+        }
+        if (answers.homeHours === 'מעט') {
+            baseElectricity -= 20;
+            baseWater -= 10;
+            baseGas -= 5;
+        }
+        if (answers.laundry === 'גבוהה') {
+            baseElectricity += 10;
+            baseWater += 20;
+        }
+        if (answers.laundry === 'נמוכה') {
+            baseElectricity -= 5;
+            baseWater -= 10;
+        }
+        if (answers.building === 'ללא ועד בית') vaadMonthly = 0;
+        if (answers.building === 'ועד בית גבוה') vaadMonthly = 190;
+
+        const electricityMonthly = baseElectricity / 2;
+        const waterMonthly = baseWater / 2;
+        const gasMonthly = baseGas / 2;
+        const monthlyTotal = electricityMonthly + waterMonthly + gasMonthly + arnonaMonthly + vaadMonthly;
         const monthlyPerPerson = Math.round(monthlyTotal / peopleNum);
 
         const breakdown = [
-            { name: 'חשמל', value: Math.round((baseElectricity / 2) / peopleNum) },
-            { name: 'מים', value: Math.round((baseWater / 2) / peopleNum) },
-            { name: 'גז', value: Math.round((baseGas / 2) / peopleNum) },
-            { name: 'ארנונה ועד בית', value: Math.round((baseMunicipal / 2) / peopleNum) },
+            { name: 'חשמל', value: Math.round(electricityMonthly / peopleNum) },
+            { name: 'מים', value: Math.round(waterMonthly / peopleNum) },
+            { name: 'גז', value: Math.round(gasMonthly / peopleNum) },
+            { name: 'ארנונה', value: Math.round(arnonaMonthly / peopleNum) },
+            { name: 'ועד בית', value: Math.round(vaadMonthly / peopleNum) },
         ];
         
-        const note = `הערכה לפי ${answers.people} נפשות, שימוש ${answers.ac} במזגן, מקלחות ${answers.shower}, בישול ${answers.cooking} ושימוש ${answers.appliances} במכשירים.`;
+        const note = `הערכה לפי ${answers.people} נפשות, עיר ${city} (ארנונה חודשית: ${arnonaMonthly.toLocaleString()} ₪), מזגן ${answers.ac}, מקלחות ${answers.shower}, בישול ${answers.cooking}, מכשירים ${answers.appliances}, שעות בבית ${answers.homeHours}, כביסות ${answers.laundry}, ורמת ועד בית ${answers.building}.`;
 
         setResult({ monthlyPerPerson, note, breakdown });
         setStep(2);
@@ -1399,9 +1550,12 @@ const AccountsCalculatorModal: React.FC<{
     type AnswerKey = keyof typeof answers;
     const questionSet: { key: AnswerKey, label: string, options: string[] }[] = [
         { key: 'people', label: 'כמה אנשים גרים בדירה (כולל אותך)?', options: ['1', '2', '3', '4+'] },
+        { key: 'homeHours', label: 'כמה שעות אתם בבית בימי חול?', options: ['מעט', 'בינוני', 'הרבה'] },
         { key: 'ac', label: 'איך היית מגדיר/ה את השימוש שלך במזגן?', options: ['הרבה', 'לפעמים', 'כמעט ולא'] },
         { key: 'shower', label: 'איך נראות המקלחות שלך בדרך כלל?', options: ['ארוכות וחמות', 'רגילות'] },
+        { key: 'laundry', label: 'מה תדירות הכביסות בדירה?', options: ['נמוכה', 'בינונית', 'גבוהה'] },
         { key: 'cooking', label: 'מה הרגלי הבישול שלך?', options: ['כל יום', 'מדי פעם', 'כמעט ולא'] },
+        { key: 'building', label: 'מה רמת ועד הבית בבניין?', options: ['ללא ועד בית', 'ועד בית בסיסי', 'ועד בית גבוה'] },
         { key: 'appliances', label: 'מה לגבי מכשירי חשמל אחרים (מחשב, טלוויזיה)?', options: ['הרבה', 'ממוצע', 'חיסכון'] },
     ];
     
@@ -1868,7 +2022,16 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
   // States for preserving modal inputs
   const [carPurchaseDetails, setCarPurchaseDetails] = useState({ model: '', adLink: '', year: new Date().getFullYear().toString(), km: '', fuelConsumption: '', hand: '', licensePlate: '', price: '', payments: 36 });
   const [rentDetails, setRentDetails] = useState({ city: '', size: '', rooms: '', floor: '', rent: '', adLink: ''});
-  const [accountsAnswers, setAccountsAnswers] = useState({ people: '1', ac: 'לפעמים', shower: 'רגילות', cooking: 'מדי פעם', appliances: 'ממוצע' });
+    const [accountsAnswers, setAccountsAnswers] = useState<AccountsAnswers>({
+        people: '1',
+        ac: 'לפעמים',
+        shower: 'רגילות',
+        cooking: 'מדי פעם',
+        appliances: 'ממוצע',
+        homeHours: 'בינוני',
+        laundry: 'בינונית',
+        building: 'ועד בית בסיסי'
+    });
   const [entertainmentItems, setEntertainmentItems] = useState([ { id: 1, name: 'מסעדה 🍽️', price: 80, count: 0, isEditable: false, customName: '' }, { id: 2, name: 'מסיבה/סרט 🎉', price: 100, count: 0, isEditable: false, customName: '' }, { id: 3, name: 'טיול יומי 🏞️', price: 150, count: 0, isEditable: false, customName: '' }, { id: 4, name: 'הזמנת אוכל הביתה 🥡', price: 90, count: 0, isEditable: false, customName: '' }, { id: 5, name: 'אחר 🤷', price: 0, count: 0, isEditable: true, customName: '' }, ]);
   const [selectedSubscriptions, setSelectedSubscriptions] = useState<string[]>([]);
   const [maintenanceCostInput, setMaintenanceCostInput] = useState('');
@@ -2250,6 +2413,27 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
     setExpenses(prev => prev.map(e => (e.id === id ? { ...e, note: newNote } : e)));
   };
 
+    const handleAnnualAmountChange = (itemId: number, rawValue: string, setter: (value: string) => void) => {
+        setter(rawValue);
+
+        const annual = parseFloat(rawValue) || 0;
+        const monthly = annual / 4;
+        handleExpenseChange(itemId, Math.round(monthly));
+
+        const currentNote = expenses.find(e => e.id === itemId)?.note || '';
+        const noteWithoutAnnual = currentNote
+            .replace(/עלות שנתית: [\d,]+ ₪/g, '')
+            .replace(/סכום שנתי שהוזן: [\d,]+ ₪/g, '')
+            .trim();
+
+        if (annual > 0) {
+            const annualNote = `סכום שנתי שהוזן: ${annual.toLocaleString()} ₪`;
+            handleNoteChange(itemId, `${noteWithoutAnnual} ${annualNote}`.trim());
+        } else {
+            handleNoteChange(itemId, noteWithoutAnnual);
+        }
+    };
+
   const handleUnforeseenResult = (result: { label: string, value: number }) => {
       const unforeseenItem = expenses.find(e => e.category === 'בלת"מים');
       if (unforeseenItem) {
@@ -2336,7 +2520,7 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
     <ModuleView title={title} onBack={() => setStep(0)}>
       {activeModal?.type === 'unforeseen' && <UnforeseenEventModal style={modalPosition} onClose={closeModal} onResult={handleUnforeseenResult} />}
       {activeModal?.type.startsWith('carQuestionnaire') && <CarQuestionnaireModal style={modalPosition} onClose={closeModal} />}
-      {activeModal?.type.startsWith('rentQuestionnaire') && <RentQuestionnaireModal style={modalPosition} onClose={closeModal} />}
+    {activeModal?.type.startsWith('rentQuestionnaire') && <RentQuestionnaireModal style={modalPosition} onClose={closeModal} selectedCharacter={selectedCharacter} />}
       {activeModal?.type.startsWith('supermarket') && <SupermarketModal
           style={modalPosition}
           onClose={closeModal}
@@ -2355,7 +2539,7 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
       {activeModal?.type.startsWith('maintenanceCalculator') && <CarMaintenanceCalculatorModal cost={maintenanceCostInput} setCost={setMaintenanceCostInput} style={modalPosition} onClose={closeModal} onSave={handleSaveMaintenance} drivingScale={drivingScale} setDrivingScale={setDrivingScale} />}
       {activeModal?.type.startsWith('maintenanceExplanation') && <CarMaintenanceExplanationModal style={modalPosition} onClose={closeModal} />}
       {activeModal?.type.startsWith('entertainmentSimulator') && <EntertainmentSimulatorModal items={entertainmentItems} setItems={setEntertainmentItems} style={modalPosition} onClose={closeModal} onSave={(total, note) => updateBudgetFromModal('בילויים ומסעדות', total, note)} />}
-      {activeModal?.type.startsWith('accountsCalculator') && <AccountsCalculatorModal answers={accountsAnswers} setAnswers={setAccountsAnswers} style={modalPosition} onClose={closeModal} onSave={handleSaveAccounts} />}
+    {activeModal?.type.startsWith('accountsCalculator') && <AccountsCalculatorModal answers={accountsAnswers} setAnswers={setAccountsAnswers} selectedCharacter={selectedCharacter} style={modalPosition} onClose={closeModal} onSave={handleSaveAccounts} />}
       {activeModal?.type === 'createCharacter' && <CreateCharacterModal onClose={closeModal} onCreate={(char) => handleSelectCharacter(char)} />}
       {activeModal?.type === 'explanation' && activeModal.content && <ExplanationModal style={modalPosition} title={activeModal.content.title} content={activeModal.content.content} onClose={closeModal} />}
       {activeModal?.type.startsWith('rentPurchase') && <RentPurchaseModal 
@@ -2419,6 +2603,7 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
                             <span className="text-green-700">הכנסה נטו:</span>
                             <span className="text-green-600 font-mono">{netIncome.toLocaleString('he-IL', {style:'currency', currency:'ILS', minimumFractionDigits: 0})}</span>
                         </div>
+
                     </div>
                 </>
               )}
@@ -2426,39 +2611,56 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
 
             {/* Right Column: Instructions */}
             <div className="bg-white/50 backdrop-blur-md border border-white/30 p-6 rounded-2xl h-full">
-                <h4 className="font-bold text-[2.5rem] mb-3 text-brand-teal">איך מנהלים את התקציב?</h4>
-                <ol className="list-decimal list-inside space-y-3 text-[1.4rem] text-brand-dark-blue/90">
+                <h4 className="font-bold text-[2.2rem] mb-3 text-brand-teal">הנחיות עבודה</h4>
+
+                <ol className="list-decimal list-inside space-y-3 text-[1.25rem] text-brand-dark-blue/90">
+                    {budgetGuideSteps.slice(0, 5).map((guideStep, index) => (
+                        <li key={`instruction-${guideStep.iconLabel}`}>
+                            {(() => {
+                                const useWhiteStyle = index === 0 || index === 4;
+                                const isInfoStep = index === 0;
+                                const badgeClass = useWhiteStyle
+                                    ? 'bg-white text-black border border-gray-400'
+                                    : guideStep.buttonClass;
+                                const iconCircleClass = useWhiteStyle
+                                    ? 'w-6 h-6 rounded-full bg-white border border-gray-400 text-black inline-flex items-center justify-center'
+                                    : 'w-6 h-6 rounded-full bg-white/30 text-current inline-flex items-center justify-center';
+
+                                return (
+                            <span className="inline-flex items-center gap-2 font-bold">
+                                <span className={`py-1 px-3 text-sm inline-flex items-center gap-1 ${isInfoStep ? 'rounded-full border border-gray-400 bg-white text-black' : `rounded-full ${badgeClass}`}`}>
+                                    <span className={isInfoStep ? 'inline-flex items-center justify-center text-gray-500' : iconCircleClass}>{guideStep.icon}</span>
+                                    <span>{guideStep.iconLabel}</span>
+                                </span>
+                                <span>{guideStep.title}</span>
+                            </span>
+                                );
+                            })()}
+                            <p className="mr-2 mt-1 text-[1.05rem] text-brand-dark-blue/80">{guideStep.shortText}</p>
+                        </li>
+                    ))}
                     <li>
-                        <strong>חקרו כל סעיף:</strong> עברו על כל קטגוריה. לחצו על אייקון המידע
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 inline-block mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        כדי ללמוד על חשיבותו.
+                        <span className="inline-flex items-center gap-2 font-bold">
+                            <span className="py-1 px-3 rounded-full text-sm inline-flex items-center gap-1 bg-red-500/25 text-black border border-red-400">
+                                <span className="w-6 h-6 rounded-full bg-white/30 text-current inline-flex items-center justify-center">🎬</span>
+                                <span>סרטון</span>
+                            </span>
+                            <span>צפו בהסבר קצר</span>
+                        </span>
+                        <p className="mr-2 mt-1 text-[1.05rem] text-brand-dark-blue/80">במיוחד בסעיף ניכויי השכר, לחיצה על כפתור הסרטון תפתח הסבר קצר וברור לפני המעבר לקישור החיצוני.</p>
                     </li>
-                    <li>
-                        <strong>בצעו את המשימות:</strong> בכל סעיף יש משימה. השתמשו בכפתורים לפי הסדר (מימין לשמאל) כדי להשלים אותה.
-                         <div className="mt-2 p-4 bg-white/40 rounded-lg text-lg space-y-3 border border-gray-200 shadow-inner">
-                            <div className="flex items-center gap-3">
-                                <span className="text-lg bg-[#1b2550] text-white py-1 px-3 rounded-full">משימה</span>
-                                <span>- משימה לביצוע בסעיף</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <span className="text-lg bg-[#01b2cf] text-black py-1 px-3 rounded-full">כלי עזר</span>
-                                <span>- כלי עזר ופעולות (מחשבון/שאלון/בחירה/רכישה)</span>
-                            </div>
-                             <div className="flex items-center gap-3">
-                                <span className="text-lg bg-brand-teal text-black py-1 px-3 rounded-full">קישור לאתר</span>
-                                <span>- קישור לאתר חיצוני</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <span className="text-lg bg-brand-magenta text-black py-1 px-3 rounded-full">סרטון</span>
-                                <span>- צפייה בסרטון</span>
-                            </div>
-                        </div>
-                    </li>
-                    <li><strong>הזינו את התוצאות:</strong> לאחר כל משימה, הסכום החודשי וההערות יתעדכנו. ודאו שהכל נכון.</li>
-                    <li><strong>נתחו את התקציב:</strong> בסיום, בחנו את תרשים העוגה ואת מאזן ההוצאות מול ההכנסות כדי להבין לאן הכסף שלכם הולך.</li>
-                    <li><strong>הפיקו דו"ח:</strong> לחצו על "הפק דו"ח סיכום" כדי לקבל מסמך מסודר של התקציב שבניתם, אותו תוכלו לשמור או לשתף.</li>
+                    {budgetGuideSteps.slice(5).map(guideStep => (
+                        <li key={`instruction-${guideStep.iconLabel}`}>
+                            <span className="inline-flex items-center gap-2 font-bold">
+                                <span className={`py-1 px-3 rounded-full text-sm inline-flex items-center gap-1 ${guideStep.buttonClass}`}>
+                                    <span className="w-6 h-6 rounded-full bg-white/30 text-current inline-flex items-center justify-center">{guideStep.icon}</span>
+                                    <span>{guideStep.iconLabel}</span>
+                                </span>
+                                <span>{guideStep.title}</span>
+                            </span>
+                            <p className="mr-2 mt-1 text-[1.05rem] text-brand-dark-blue/80">{guideStep.shortText}</p>
+                        </li>
+                    ))}
                 </ol>
             </div>
         </div>
@@ -2488,19 +2690,7 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
                                         type="number" 
                                         placeholder="הזן סכום שנתי"
                                         value={insuranceInputString} 
-                                        onChange={(e) => setInsuranceInputString(e.target.value)}
-                                        onBlur={() => {
-                                            const annual = parseFloat(insuranceInputString) || 0;
-                                            const monthly = annual / 12;
-                                            handleExpenseChange(item.id, Math.round(monthly));
-                                            const currentNote = expenses.find(e => e.id === item.id)?.note || '';
-                                            const noteWithoutAmount = currentNote.replace(/עלות שנתית: [\d,]+ ₪/g, '').trim();
-                                            if (annual > 0) {
-                                                handleNoteChange(item.id, `${noteWithoutAmount} עלות שנתית: ${annual.toLocaleString()} ₪`.trim());
-                                            } else {
-                                                handleNoteChange(item.id, noteWithoutAmount);
-                                            }
-                                        }}
+                                        onChange={(e) => handleAnnualAmountChange(item.id, e.target.value, setInsuranceInputString)}
                                         className={`w-48 text-left py-2 pr-2 pl-12 rounded-lg border-2 shadow-inner bg-white transition-all focus:border-brand-teal focus:ring-1 focus:ring-brand-teal text-base`}
                                     />
                                 ) : item.category === 'הוצאות ביגוד' ? (
@@ -2508,19 +2698,7 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
                                         type="number" 
                                         placeholder="הזן סכום שנתי"
                                         value={clothingInputString} 
-                                        onChange={(e) => setClothingInputString(e.target.value)}
-                                        onBlur={() => {
-                                            const annual = parseFloat(clothingInputString) || 0;
-                                            const monthly = annual / 12;
-                                            handleExpenseChange(item.id, Math.round(monthly));
-                                            const currentNote = expenses.find(e => e.id === item.id)?.note || '';
-                                            const noteWithoutAmount = currentNote.replace(/עלות שנתית: [\d,]+ ₪/g, '').trim();
-                                            if (annual > 0) {
-                                                handleNoteChange(item.id, `${noteWithoutAmount} עלות שנתית: ${annual.toLocaleString()} ₪`.trim());
-                                            } else {
-                                                handleNoteChange(item.id, noteWithoutAmount);
-                                            }
-                                        }}
+                                        onChange={(e) => handleAnnualAmountChange(item.id, e.target.value, setClothingInputString)}
                                         className={`w-48 text-left py-2 pr-2 pl-12 rounded-lg border-2 shadow-inner bg-white transition-all focus:border-brand-teal focus:ring-1 focus:ring-brand-teal text-base`}
                                     />
                                 ) : (
@@ -2543,20 +2721,20 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
                          {/* Bottom controls */}
                         <div className="mt-3 pt-3 border-t border-gray-200 space-y-3">
                             <div className="flex flex-wrap items-center gap-2">
-                               {item.task && ( <button onClick={() => openExplanationModal(item.id, 'משימה', item.task!)} className="text-base bg-[#1b2550] text-white py-1 px-3 rounded-full hover:bg-blue-900">משימה</button> )}
-                                {item.category === 'שכירות' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('rentQuestionnaire', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500">שאלון ההכוונה</button> <ArrowIcon className="w-5 h-5 text-gray-400" /> <a href={categoryLinks[item.category]} target="_blank" rel="noopener noreferrer" className="text-base bg-brand-teal text-black py-1 px-3 rounded-full hover:bg-teal-500">קישור לאתר</a> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('rentPurchase', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500">מלאו את פרטי הדירה</button> </> )}
-                                {item.category === 'קניות בסופר' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('supermarket', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500">ביחרו רשת</button> </> )}
-                                {item.category === 'חשבונות' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('accountsCalculator', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500">מחשבון</button> </> )}
-                                {item.category === 'בילויים ומסעדות' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('entertainmentSimulator', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500">מחשבון</button> </> )}
-                                {item.category === 'בלת"מים' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('unforeseen', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500">בחירה</button> </> )}
-                                {item.category === 'מנויים' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('subscriptions', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500">בחירה</button> </> )}
-                                {item.category === 'רכב - קנייה' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('carQuestionnaire', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500">שאלון הכוונה</button> <ArrowIcon className="w-5 h-5 text-gray-400" /> <a href={categoryLinks[item.category]} target="_blank" rel="noopener noreferrer" className="text-base bg-brand-teal text-black py-1 px-3 rounded-full hover:bg-teal-500">קישור לאתר</a> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('carPurchase', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500">ביצוע הרכישה</button> </> )}
-                                {item.category === 'רכב- ביטוח' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <a href={categoryLinks[item.category]} target="_blank" rel="noopener noreferrer" className="text-base bg-brand-teal text-black py-1 px-3 rounded-full hover:bg-teal-500">קישור לאתר</a> <ArrowIcon className="w-5 h-5 text-gray-400" /> <a href="https://docs.google.com/presentation/d/1N_xUNS_ZQZW4VfumLDKk_dav53gvULiqjxjZ4NDj3fo/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500">הנחיות למילוי</a> </> )}
+                               {item.task && ( <button onClick={() => openExplanationModal(item.id, 'משימה', item.task!)} className="text-base bg-[#1b2550] text-white py-1 px-3 rounded-full hover:bg-blue-900 inline-flex items-center gap-1"><span>✓</span><span>משימה</span></button> )}
+                                {item.category === 'שכירות' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('rentQuestionnaire', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500 inline-flex items-center gap-1"><span>⚙</span><span>שאלון ההכוונה</span></button> <ArrowIcon className="w-5 h-5 text-gray-400" /> <a href={categoryLinks[item.category]} target="_blank" rel="noopener noreferrer" className="text-base bg-brand-teal text-black py-1 px-3 rounded-full hover:bg-teal-500 inline-flex items-center gap-1"><span>🔗</span><span>קישור לאתר</span></a> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('rentPurchase', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500 inline-flex items-center gap-1"><span>⚙</span><span>מלאו את פרטי הדירה</span></button> </> )}
+                                {item.category === 'קניות בסופר' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('supermarket', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500 inline-flex items-center gap-1"><span>⚙</span><span>ביחרו רשת</span></button> </> )}
+                                {item.category === 'חשבונות' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('accountsCalculator', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500 inline-flex items-center gap-1"><span>⚙</span><span>מחשבון</span></button> </> )}
+                                {item.category === 'בילויים ומסעדות' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('entertainmentSimulator', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500 inline-flex items-center gap-1"><span>⚙</span><span>מחשבון</span></button> </> )}
+                                {item.category === 'בלת"מים' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('unforeseen', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500 inline-flex items-center gap-1"><span>⚙</span><span>בחירה</span></button> </> )}
+                                {item.category === 'מנויים' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('subscriptions', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500 inline-flex items-center gap-1"><span>⚙</span><span>בחירה</span></button> </> )}
+                                {item.category === 'רכב - קנייה' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('carQuestionnaire', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500 inline-flex items-center gap-1"><span>⚙</span><span>שאלון הכוונה</span></button> <ArrowIcon className="w-5 h-5 text-gray-400" /> <a href={categoryLinks[item.category]} target="_blank" rel="noopener noreferrer" className="text-base bg-brand-teal text-black py-1 px-3 rounded-full hover:bg-teal-500 inline-flex items-center gap-1"><span>🔗</span><span>קישור לאתר</span></a> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('carPurchase', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500 inline-flex items-center gap-1"><span>⚙</span><span>ביצוע הרכישה</span></button> </> )}
+                                {item.category === 'רכב- ביטוח' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <a href={categoryLinks[item.category]} target="_blank" rel="noopener noreferrer" className="text-base bg-brand-teal text-black py-1 px-3 rounded-full hover:bg-teal-500 inline-flex items-center gap-1"><span>🔗</span><span>קישור לאתר</span></a> <ArrowIcon className="w-5 h-5 text-gray-400" /> <a href="https://docs.google.com/presentation/d/1N_xUNS_ZQZW4VfumLDKk_dav53gvULiqjxjZ4NDj3fo/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500 inline-flex items-center gap-1"><span>⚙</span><span>הנחיות למילוי</span></a> </> )}
                                 {item.category === 'רכב- אגרות' && <></>}
                                 {item.category === 'רכב- דלק' && <></>}
-                                {item.category === 'רכב - טיפולים' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('maintenanceCalculator', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500">מחשבון</button> </> )}
-                                {item.category === 'הוצאות ביגוד' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('clothingStore', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500">ביחרו רשת</button> </> )}
-                                {categoryLinks[item.category] && !['רכב - קנייה', 'רכב- ביטוח', 'שכירות'].includes(item.category) && <a href={categoryLinks[item.category]} target="_blank" rel="noopener noreferrer" className="text-base bg-brand-teal text-black py-1 px-3 rounded-full hover:bg-teal-500">קישור לאתר</a>}
+                                {item.category === 'רכב - טיפולים' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('maintenanceCalculator', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500 inline-flex items-center gap-1"><span>⚙</span><span>מחשבון</span></button> </> )}
+                                {item.category === 'הוצאות ביגוד' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('clothingStore', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500 inline-flex items-center gap-1"><span>⚙</span><span>ביחרו רשת</span></button> </> )}
+                                {categoryLinks[item.category] && !['רכב - קנייה', 'רכב- ביטוח', 'שכירות'].includes(item.category) && <a href={categoryLinks[item.category]} target="_blank" rel="noopener noreferrer" className="text-base bg-brand-teal text-black py-1 px-3 rounded-full hover:bg-teal-500 inline-flex items-center gap-1"><span>🔗</span><span>קישור לאתר</span></a>}
                             </div>
                            
                             {item.category === 'חסכון והשקעות' && ( <div className="mt-2"> <div className="flex items-center gap-2"> <input type="range" min="0" max="50" value={savingsPercentage} onChange={(e) => setSavingsPercentage(Number(e.target.value))} className="w-full" /> <span className="font-bold w-16 text-center">{savingsPercentage}%</span> </div> <p className="text-xs text-center text-gray-600">מהכנסה נטו ({netIncome.toLocaleString()} ₪)</p> </div> )}
@@ -2607,40 +2785,47 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
                            <Tooltip title={item.category} content={termExplanations[item.category] || 'הסבר בקרוב...'} />
                             {item.category === 'מס הכנסה' && (
                                 <>
-                                    <a href="https://youtu.be/s2KRKDfVxMQ" target="_blank" rel="noopener noreferrer" className="text-base bg-brand-magenta text-black py-1 px-3 rounded-full hover:bg-pink-700">
-                                        סרטון
+                                    <a href="https://youtu.be/s2KRKDfVxMQ" target="_blank" rel="noopener noreferrer" className="text-base bg-red-500/25 border border-red-400 text-black py-1 px-3 rounded-full hover:bg-red-500/35 inline-flex items-center gap-1">
+                                        <span>🎬</span>
+                                        <span>סרטון</span>
                                     </a>
                                     <ArrowIcon className="w-5 h-5 text-gray-400" />
-                                    <a href={categoryLinks[item.category]} target="_blank" rel="noopener noreferrer" className="text-base bg-brand-teal text-black py-1 px-3 rounded-full hover:bg-teal-500">
-                                        קישור לאתר
+                                    <a href={categoryLinks[item.category]} target="_blank" rel="noopener noreferrer" className="text-base bg-brand-teal text-black py-1 px-3 rounded-full hover:bg-teal-500 inline-flex items-center gap-1">
+                                        <span>🔗</span>
+                                        <span>קישור לאתר</span>
                                     </a>
                                 </>
                             )}
                             {item.category === 'ביטוח לאומי' && (
                                 <>
-                                    <a href="https://youtu.be/QcPnUSlNffs" target="_blank" rel="noopener noreferrer" className="text-base bg-brand-magenta text-black py-1 px-3 rounded-full hover:bg-pink-700">
-                                        סרטון
+                                    <a href="https://youtu.be/QcPnUSlNffs" target="_blank" rel="noopener noreferrer" className="text-base bg-red-500/25 border border-red-400 text-black py-1 px-3 rounded-full hover:bg-red-500/35 inline-flex items-center gap-1">
+                                        <span>🎬</span>
+                                        <span>סרטון</span>
                                     </a>
                                     <ArrowIcon className="w-5 h-5 text-gray-400" />
-                                    <a href={categoryLinks[item.category]} target="_blank" rel="noopener noreferrer" className="text-base bg-brand-teal text-black py-1 px-3 rounded-full hover:bg-teal-500">
-                                        קישור לאתר
+                                    <a href={categoryLinks[item.category]} target="_blank" rel="noopener noreferrer" className="text-base bg-brand-teal text-black py-1 px-3 rounded-full hover:bg-teal-500 inline-flex items-center gap-1">
+                                        <span>🔗</span>
+                                        <span>קישור לאתר</span>
                                     </a>
                                 </>
                             )}
                             {item.category === 'מס בריאות' && (
                                 <>
-                                    <a href="https://youtu.be/QcPnUSlNffs" target="_blank" rel="noopener noreferrer" className="text-base bg-brand-magenta text-black py-1 px-3 rounded-full hover:bg-pink-700">
-                                        סרטון
+                                    <a href="https://youtu.be/QcPnUSlNffs" target="_blank" rel="noopener noreferrer" className="text-base bg-red-500/25 border border-red-400 text-black py-1 px-3 rounded-full hover:bg-red-500/35 inline-flex items-center gap-1">
+                                        <span>🎬</span>
+                                        <span>סרטון</span>
                                     </a>
                                     <ArrowIcon className="w-5 h-5 text-gray-400" />
-                                    <a href={categoryLinks[item.category]} target="_blank" rel="noopener noreferrer" className="text-base bg-brand-teal text-black py-1 px-3 rounded-full hover:bg-teal-500">
-                                        קישור לאתר
+                                    <a href={categoryLinks[item.category]} target="_blank" rel="noopener noreferrer" className="text-base bg-brand-teal text-black py-1 px-3 rounded-full hover:bg-teal-500 inline-flex items-center gap-1">
+                                        <span>🔗</span>
+                                        <span>קישור לאתר</span>
                                     </a>
                                 </>
                             )}
                             {item.category === 'הפרשה לפנסיה' && (
-                                <a href="https://youtu.be/9g3CmmzXQlM" target="_blank" rel="noopener noreferrer" className="text-base bg-brand-magenta text-black py-1 px-3 rounded-full hover:bg-pink-700">
-                                        סרטון
+                                <a href="https://youtu.be/9g3CmmzXQlM" target="_blank" rel="noopener noreferrer" className="text-base bg-red-500/25 border border-red-400 text-black py-1 px-3 rounded-full hover:bg-red-500/35 inline-flex items-center gap-1">
+                                        <span>🎬</span>
+                                        <span>סרטון</span>
                                 </a>
                             )}
                         </div>
