@@ -36,7 +36,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ userType, description, icon: Icon
             </button>
             <Header />
 
-            <div className="max-w-md mx-auto mt-10 sm:mt-12 bg-white/60 backdrop-blur-lg p-5 sm:p-8 rounded-4xl border-2 border-brand-teal shadow-2xl">
+            <div className="max-w-md mx-auto mt-10 sm:mt-12 card-surface p-5 sm:p-8 rounded-4xl border-2 border-brand-teal shadow-2xl glow-ring">
                 <div className="flex flex-col items-center text-center">
                     <div className="p-4 rounded-full mb-4 shadow-md bg-brand-teal shadow-brand-teal/30">
                         <Icon className="w-12 h-12 text-white" />
@@ -81,13 +81,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ userType, description, icon: Icon
                      <button
                         disabled={showGradeSelector && !selectedGrade}
                         onClick={() => onLogin(selectedGrade)}
-                        className="w-full bg-brand-teal hover:bg-teal-500 text-white font-bold py-3.5 sm:py-4 px-6 rounded-lg text-xl sm:text-2xl transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        className="w-full cta-primary text-white font-bold py-3.5 sm:py-4 px-6 rounded-lg text-xl sm:text-2xl transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
                         כניסה
                     </button>
                     <button
                         onClick={handleGuestLogin}
-                        className="w-full mt-3 bg-transparent hover:bg-brand-light-blue/20 text-brand-light-blue font-bold py-3.5 sm:py-4 px-6 rounded-lg text-xl sm:text-2xl border-2 border-brand-light-blue transition-colors disabled:bg-gray-300/50 disabled:border-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed"
+                        className="w-full mt-3 cta-secondary text-brand-light-blue font-bold py-3.5 sm:py-4 px-6 rounded-lg text-xl sm:text-2xl border-2 border-brand-light-blue transition-colors disabled:bg-gray-300/50 disabled:border-gray-400 disabled:text-gray-500 disabled:cursor-not-allowed"
                     >
                         כניסת אורח
                     </button>

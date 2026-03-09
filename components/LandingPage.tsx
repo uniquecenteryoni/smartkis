@@ -5,6 +5,7 @@ import Header from './Header';
 interface LandingPageProps {
   onSelectProgram: (programId: string) => void;
   onBack: () => void;
+    onOpenQuiz: () => void;
 }
 
 interface ProgramData {
@@ -19,50 +20,51 @@ interface ProgramData {
 const programs: { [key: string]: ProgramData } = {
     hachamBakis: {
         id: 'hacham-bakis',
-        title: 'תוכנית "חכם בכיס"',
+        title: 'חכם בכיס',
         audience: 'תוכנית הדגל לכיתות ט\'-י"א',
         color: 'teal',
         topics: [
-            'בניית תקציב ("מונופול החיים")',
-            'פענוח תלוש שכר וזכויות עובדים',
-            'התנהלות כלכלית נכונה (מינוס וחיסכון)',
-            'הכרת עולם ההשקעות ושוק ההון',
-            'השוואה בין שכירים לעצמאיים',
+            'ניהול התקציב הראשון שלי + מיון הוצאות',
+            'מינוס, ריביות וחסכונות והשקעות בסיס',
+            'זכויות עובדים ותלוש שכר אינטראקטיבי',
+            'שכירים מול עצמאים ומודל SWOT אישי',
+            'חיסכון, ריבית דריבית ולמידת חקר כלכלית',
         ],
         isComingSoon: false
     },
     maBakis: {
         id: 'ma-bakis',
-        title: 'תוכנית "מה בכיס"',
+        title: 'מה בכיס',
         audience: 'תוכנית לכיתות ה\'-ח\'',
         color: 'light-blue',
         topics: [
-            'היכרות עם עולם הכסף',
-            'צרכנות נבונה וניהול תקציב',
-            'חיסכון והצבת מטרות',
-            'הכרת מונופולים ומותגים',
-            'יזמות וחשיבה עסקית',
+            'סיפורו של כסף והמסע מהחליפין לשטרות',
+            'הכסף ואני: תקציב אישי, מינוס ודמי כיס',
+            'כמה זה עולה לי? צרכנות נבונה ומודל חצ"ר',
+            'מונופולים, מותגים ואתגר מנהלי העתיד 5,000',
+            'יזמות, איך להרוויח כסף וניהול זמן הוא כסף',
         ],
         isComingSoon: false
     },
     kisonim: {
         id: 'kisonim',
-        title: 'תוכנית "כיסונים פיננסים"',
+        title: 'כיסונים פיננסים',
         audience: 'תוכנית לכיתות א\'-ד\'',
         color: 'magenta',
         topics: [
-            'מהו כסף ואיך משתמשים בו?',
-            'הבחנה בין צרכים לרצונות',
-            'חשיבות החיסכון ודחיית סיפוקים',
-            'קבלת החלטות פיננסיות פשוטות',
-            'מושגי יסוד: עבודה, תגמול וערך',
+            'מאיפה בא הכסף? מקצועות ודמי כיס ראשונים',
+            'משחק צרכים ורצונות + בנק הצנצנות',
+            'חנות קסומה, שוק צבעוני ומסע מטבעות בעולם',
+            'סודות הפרסומות ומשימות להרוויח כסף',
+            'סיפורי החלטות וכוחה של נתינה בקהילה',
+            'הרפתקת חיסכון עם מטבעות ושטרות צבעוניים',
         ],
         isComingSoon: false
     }
 };
 
 
-const LandingPage: React.FC<LandingPageProps> = ({ onSelectProgram, onBack }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onSelectProgram, onBack, onOpenQuiz }) => {
   return (
     <div className="animate-fade-in">
         <button 
@@ -95,6 +97,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectProgram, onBack }) =>
                 {...programs.kisonim}
                 onClick={() => onSelectProgram(programs.kisonim.id)}
             />
+                        <div className="lg:col-span-3">
+                            <button
+                                onClick={onOpenQuiz}
+                                type="button"
+                                className="w-full mt-4 sm:mt-6 p-4 sm:p-5 rounded-3xl font-bold text-lg sm:text-2xl text-white bg-brand-dark-blue hover:bg-brand-teal transition-all duration-300 shadow-lg glow-ring flex items-center justify-center text-center"
+                            >
+                                לא בטוחים באיזו תוכנית לבחור? בחנו את רמתם!
+                            </button>
+                        </div>
         </main>
     </div>
   );

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ModuleView from '../ModuleView';
+import AsteroidsGame from './AsteroidsGame';
 
 interface SelfEmployedModuleProps {
   onBack: () => void;
@@ -7,7 +8,13 @@ interface SelfEmployedModuleProps {
   onComplete: () => void;
 }
 
-const steps = ["ההבדלים העיקריים", "משחק מיון", "סוגי עצמאיים", "החשבון, בבקשה!", "ניתוח SWOT"];
+const steps = [
+    { label: "ההבדלים העיקריים", icon: '⚖️' },
+    { label: "סוגי עצמאיים", icon: '🧾' },
+    { label: "🚀 אסטראוידים", icon: '🚀' },
+    { label: "החשבון, בבקשה!", icon: '🍽️' },
+    { label: "ניתוח SWOT", icon: '📊' },
+];
 
 // --- Step 1: Differences Introduction (New) ---
 const DifferencesStep: React.FC = () => {
@@ -15,6 +22,32 @@ const DifferencesStep: React.FC = () => {
         <div className="bg-white/40 backdrop-blur-md border border-white/30 p-8 rounded-2xl animate-fade-in">
             <h3 className="text-5xl font-bold text-brand-teal mb-2 text-center">שכיר או עצמאי: מה ההבדל?</h3>
             <p className="text-center text-3xl mb-8 text-brand-dark-blue/90">לפני שנצלול פנימה, בואו נבין את ההבדלים המרכזיים בין שתי דרכי התעסוקה.</p>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div className="bg-white/70 p-4 rounded-xl border border-brand-light-blue/40 text-center">
+                    <p className="text-4xl mb-2">💰</p>
+                    <p className="text-2xl font-bold text-brand-dark-blue">הכנסה</p>
+                    <p className="text-xl text-brand-dark-blue/80">שכיר: יציבה</p>
+                    <p className="text-xl text-brand-dark-blue/80">עצמאי: משתנה</p>
+                </div>
+                <div className="bg-white/70 p-4 rounded-xl border border-brand-magenta/40 text-center">
+                    <p className="text-4xl mb-2">🛡️</p>
+                    <p className="text-2xl font-bold text-brand-dark-blue">זכויות</p>
+                    <p className="text-xl text-brand-dark-blue/80">שכיר: סוציאליות מלאות</p>
+                    <p className="text-xl text-brand-dark-blue/80">עצמאי: באחריות אישית</p>
+                </div>
+                <div className="bg-white/70 p-4 rounded-xl border border-brand-teal/40 text-center">
+                    <p className="text-4xl mb-2">⏱️</p>
+                    <p className="text-2xl font-bold text-brand-dark-blue">זמן עבודה</p>
+                    <p className="text-xl text-brand-dark-blue/80">שכיר: מסגרת קבועה</p>
+                    <p className="text-xl text-brand-dark-blue/80">עצמאי: גמישות גבוהה</p>
+                </div>
+                <div className="bg-white/70 p-4 rounded-xl border border-yellow-500/40 text-center">
+                    <p className="text-4xl mb-2">📋</p>
+                    <p className="text-2xl font-bold text-brand-dark-blue">דיווחים ומסים</p>
+                    <p className="text-xl text-brand-dark-blue/80">שכיר: המעסיק מטפל</p>
+                    <p className="text-xl text-brand-dark-blue/80">עצמאי: העסק מטפל</p>
+                </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="bg-white/60 p-6 rounded-xl border-2 border-brand-light-blue shadow-xl transform hover:-translate-y-1.5 transition-all">
                     <h4 className="text-5xl font-bold text-brand-light-blue mb-4 text-center">👨‍💼 שכיר</h4>
@@ -269,22 +302,34 @@ const SwotPractice: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
     return (
         <div className="bg-white/40 p-6 rounded-2xl">
             <h3 className="text-4xl font-bold text-center mb-2">מודל SWOT: איך מנתחים רעיון עסקי?</h3>
-            <div className="text-right text-[1.65rem] mb-6 text-brand-dark-blue/90 leading-relaxed max-w-4xl mx-auto bg-white/50 p-6 rounded-xl">
-                <p>מודל SWOT הוא כלי ניתוח אסטרטגי חיוני, המשמש עסקים ויזמים להערכת מצבם ולקבלת החלטות מושכלות. הניתוח מתבסס על ארבעה רכיבים מרכזיים, המתחלקים לגורמים פנימיים (שבשליטת העסק) וגורמים חיצוניים (השפעות הסביבה):</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 mt-4">
-                    <div>
-                        <h5 className="font-bold text-brand-light-blue">גורמים פנימיים:</h5>
-                        <ul className="list-disc list-inside space-y-2">
-                            <li><strong className="font-semibold">חוזקות (Strengths):</strong> היתרונות הפנימיים של העסק. מה מייחד אתכם? במה אתם טובים יותר מהמתחרים? (למשל: מוצר ייחודי, צוות מיומן).</li>
-                            <li><strong className="font-semibold">חולשות (Weaknesses):</strong> החסרונות הפנימיים של העסק. מהן המגבלות שלכם? איפה אתם צריכים להשתפר? (למשל: חוסר בתקציב, ניסיון מועט).</li>
-                        </ul>
+            <div className="text-right text-[1.65rem] mb-6 text-brand-dark-blue/90 leading-relaxed max-w-5xl mx-auto bg-white/50 p-6 rounded-xl">
+                <p className="mb-4">מודל SWOT הוא כלי מהיר לבדיקת רעיון עסקי מזווית פנימית וחיצונית. לפני המשחק, זה הסיכום הוויזואלי:</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                    <div className="rounded-xl border-2 border-brand-teal bg-brand-teal/10 p-4">
+                        <h5 className="font-bold text-brand-teal text-3xl mb-2">👍 חוזקות (Strengths)</h5>
+                        <p className="text-2xl">יתרונות פנימיים של העסק: מה אנחנו עושים טוב יותר מאחרים.</p>
                     </div>
-                    <div>
-                        <h5 className="font-bold text-brand-magenta">גורמים חיצוניים:</h5>
-                        <ul className="list-disc list-inside space-y-2">
-                            <li><strong className="font-semibold">הזדמנויות (Opportunities):</strong> גורמים חיצוניים חיוביים שהעסק יכול לנצל. אילו טרנדים או שינויים בשוק יכולים לעזור לכם? (למשל: טכנולוגיה חדשה, צורך חדש בקרב לקוחות).</li>
-                            <li><strong className="font-semibold">איומים (Threats):</strong> גורמים חיצוניים שליליים שעלולים לפגוע בעסק. מהם המכשולים והסיכונים בסביבה? (למשל: כניסת מתחרים חדשים, משבר כלכלי).</li>
-                        </ul>
+                    <div className="rounded-xl border-2 border-brand-magenta bg-brand-magenta/10 p-4">
+                        <h5 className="font-bold text-brand-magenta text-3xl mb-2">👎 חולשות (Weaknesses)</h5>
+                        <p className="text-2xl">חסרונות פנימיים: מה מגביל אותנו ומה דורש שיפור.</p>
+                    </div>
+                    <div className="rounded-xl border-2 border-brand-light-blue bg-brand-light-blue/10 p-4">
+                        <h5 className="font-bold text-brand-light-blue text-3xl mb-2">💡 הזדמנויות (Opportunities)</h5>
+                        <p className="text-2xl">גורמים חיצוניים חיוביים שאפשר לנצל כדי לצמוח.</p>
+                    </div>
+                    <div className="rounded-xl border-2 border-yellow-500 bg-yellow-100 p-4">
+                        <h5 className="font-bold text-yellow-700 text-3xl mb-2">⚠️ איומים (Threats)</h5>
+                        <p className="text-2xl">סיכונים חיצוניים שעלולים לפגוע בהצלחה העסקית.</p>
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-2xl">
+                    <div className="bg-white/70 rounded-lg p-3 border border-brand-light-blue/30">
+                        <p className="font-bold text-brand-light-blue mb-1">גורמים פנימיים (בתוך העסק)</p>
+                        <p>חוזקות + חולשות</p>
+                    </div>
+                    <div className="bg-white/70 rounded-lg p-3 border border-brand-magenta/30">
+                        <p className="font-bold text-brand-magenta mb-1">גורמים חיצוניים (מחוץ לעסק)</p>
+                        <p>הזדמנויות + איומים</p>
                     </div>
                 </div>
             </div>
@@ -347,9 +392,9 @@ const SelfEmployedModule: React.FC<SelfEmployedModuleProps> = ({ onBack, title, 
                         <React.Fragment key={index}>
                             <div className="flex flex-col items-center flex-1">
                                 <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 text-2xl ${currentStep >= index ? 'bg-brand-teal border-brand-teal text-white' : 'bg-white/50 border-gray-300'}`}>
-                                    {index + 1}
+                                    {step.icon}
                                 </div>
-                                <p className={`mt-2 text-lg text-center font-bold ${currentStep >= index ? 'text-brand-teal' : 'text-gray-500'}`}>{step}</p>
+                                <p className={`mt-2 text-lg text-center font-bold ${currentStep >= index ? 'text-brand-teal' : 'text-gray-500'}`}>{step.label}</p>
                             </div>
                             {index < steps.length - 1 && <div className={`flex-1 h-1 mx-2 ${currentStep > index ? 'bg-brand-teal' : 'bg-gray-300'}`}></div>}
                         </React.Fragment>
@@ -357,8 +402,8 @@ const SelfEmployedModule: React.FC<SelfEmployedModuleProps> = ({ onBack, title, 
                 </div>
             </div>
             {currentStep === 0 && <DifferencesStep />}
-            {currentStep === 1 && <SortingGameStep onGameComplete={() => handleStepCompletion(1)} />}
-            {currentStep === 2 && <SelfEmployedTypes onQuizComplete={() => handleStepCompletion(2)} />}
+            {currentStep === 1 && <SelfEmployedTypes onQuizComplete={() => handleStepCompletion(1)} />}
+            {currentStep === 2 && <AsteroidsGame onGameComplete={() => handleStepCompletion(2)} />}
             {currentStep === 3 && <RestaurantExercise />}
             {currentStep === 4 && <SwotPractice onComplete={onComplete} />}
             <div className="flex justify-between mt-8">

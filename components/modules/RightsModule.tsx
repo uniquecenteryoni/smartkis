@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ModuleView from '../ModuleView';
 import { TrophyIcon } from '../icons/Icons';
+import SuperMarioRightsGame from './SuperMarioRightsGame';
 
 interface RightsModuleProps {
   onBack: () => void;
@@ -13,13 +14,17 @@ const FileTextIcon: React.FC<{ className?: string }> = ({ className }) => (<svg 
 const ScaleIcon: React.FC<{ className?: string }> = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" /></svg>);
 const LogOutIcon: React.FC<{ className?: string }> = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>);
 const ShieldCheckIcon: React.FC<{ className?: string }> = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>);
+const ChatIcon: React.FC<{ className?: string }> = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-4l-4 4v-4z" /></svg>);
 const CheckCircleIcon: React.FC<{ className?: string }> = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>);
 const XCircleIcon: React.FC<{ className?: string }> = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>);
+const GamepadIcon: React.FC<{ className?: string }> = ({ className }) => (<svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" /></svg>);
 
 
 const steps = [
   { title: "קבלה לעבודה", icon: FileTextIcon },
   { title: "זכויות בעבודה", icon: ScaleIcon },
+  { title: "🎮 ארקייד זכויות", icon: GamepadIcon },
+  { title: "ראיון עבודה", icon: ChatIcon },
   { title: "סיום העסקה", icon: LogOutIcon },
   { title: "מגני הזכויות", icon: ShieldCheckIcon },
 ];
@@ -90,6 +95,427 @@ const WorkplaceRightsChapter: React.FC = () => {
                     <p className="mt-2 text-[1.75rem] leading-relaxed text-brand-dark-blue/90">{right.content}</p>
                 </details>
             ))}
+        </div>
+    );
+};
+
+interface InterviewQuestion {
+    id: number;
+    text: string;
+}
+
+interface InterviewTrack {
+    id: string;
+    role: string;
+    employer: string;
+    intro: string;
+    questions: InterviewQuestion[];
+}
+
+const interviewTracks: InterviewTrack[] = [
+    {
+        id: 'cafe',
+        role: 'בריסטה בבית קפה',
+        employer: 'מנהלת הסניף',
+        intro: 'מה שלומך? שמחים שהגעת. זה ראיון מקצועי בהתכתבות שמטרתו לתרגל ניסוח תשובות ברורות, ענייניות ובטוחות.',
+        questions: [
+            { id: 1, text: 'מה שלומך? ספר/י בקצרה מה משך אותך לתפקיד בבית הקפה שלנו.' },
+            { id: 2, text: 'איך את/ה מתמודד/ת עם עומס בשעות לחץ ותורים ארוכים?' },
+            { id: 3, text: 'איזה ניסיון קודם יכול לעזור לך לתת שירות טוב יותר ללקוחות?' },
+            { id: 4, text: 'איך את/ה ניגש/ת ללקוח לא מרוצה ורותם/ת אותו לחוויה חיובית?' },
+            { id: 5, text: 'מה בעיניך חשוב יותר במשמרת: מהירות, דיוק או יחס אישי? ולמה?' },
+            { id: 6, text: 'תן/י דוגמה לעבודה בצוות שבה תרמת לפתרון בעיה.' },
+            { id: 7, text: 'איך את/ה מקבל/ת משוב ממנהל/ת משמרת ומיישם/ת אותו?' },
+            { id: 8, text: 'אם לקוח מתלונן על הזמנה שגויה, מה תהיה דרך הפעולה הראשונה שלך?' },
+        ]
+    },
+    {
+        id: 'store',
+        role: 'מוכר/ת בחנות אופנה',
+        employer: 'מנהל החנות',
+        intro: 'מה שלומך? נעים להכיר. זו סימולציה של ראיון עבודה בחנות אופנה, עם דגש על שירות, מכירה ועבודה בצוות.',
+        questions: [
+            { id: 1, text: 'מה שלומך? למה דווקא תחום המכירות מעניין אותך?' },
+            { id: 2, text: 'איך היית ניגש/ת ללקוח מתלבט שלא מצליח להחליט?' },
+            { id: 3, text: 'תן/י דוגמה למצב שבו הצלחת לשכנע לקוח.' },
+            { id: 4, text: 'מה הדרך שלך לזהות צורך של לקוח בלי להיות אגרסיבי/ת במכירה?' },
+            { id: 5, text: 'איך את/ה מתמודד/ת עם התנגדות למחיר?' },
+            { id: 6, text: 'איזה יעד מכירה אישי היית מציב/ה לעצמך בחודש הראשון?' },
+            { id: 7, text: 'איך את/ה שומר/ת על אנרגיה גבוהה לאורך משמרת?' },
+            { id: 8, text: 'אם לקוח מבקש החזרה חריגה, איך תפעל/י?' },
+        ]
+    },
+    {
+        id: 'office',
+        role: 'פקיד/ת שירות לקוחות במשרד',
+        employer: 'רכזת משאבי אנוש',
+        intro: 'מה שלומך? זו סימולציה לתפקיד שירות לקוחות במשרד, עם שאלות שמתמקדות בתקשורת, סדר ופתרון בעיות.',
+        questions: [
+            { id: 1, text: 'מה שלומך? מה הניסיון שלך במתן שירות ללקוחות בטלפון או במייל?' },
+            { id: 2, text: 'איך את/ה מתעדף/ת פניות כשיש כמה פניות דחופות במקביל?' },
+            { id: 3, text: 'תן/י דוגמה למקרה שבו פתרת בעיה של לקוח בצורה עצמאית.' },
+            { id: 4, text: 'איך את/ה מתעד/ת מידע כדי למנוע טעויות בהמשך?' },
+            { id: 5, text: 'מה חשוב לך ממנהל/ת ישיר/ה כדי להצליח בתפקיד?' },
+            { id: 6, text: 'איך את/ה מתמודד/ת עם לקוח כועס?' },
+            { id: 7, text: 'איך תמדוד/י הצלחה בתפקיד אחרי חודש עבודה?' },
+            { id: 8, text: 'כיצד תאזן/י בין איכות שירות למהירות טיפול?' },
+        ]
+    },
+    {
+        id: 'warehouse',
+        role: 'מחסנאי/ת ולוגיסטיקה',
+        employer: 'מנהל תפעול',
+        intro: 'מה שלומך? זה ראיון לתפקיד לוגיסטי שמתמקד בבטיחות, סדר, דיוק ועבודת צוות.',
+        questions: [
+            { id: 1, text: 'מה שלומך? איזה ניסיון יש לך בעבודה עם מלאי, קבלות סחורה וסידור מחסן?' },
+            { id: 2, text: 'איך את/ה שומר/ת על סדר ובטיחות בזמן לחץ?' },
+            { id: 3, text: 'איך את/ה עובד/ת עם צוות כשיש משימה דחופה בסוף יום?' },
+            { id: 4, text: 'איזה כלי או תהליך עזרו לך למנוע טעויות בליקוט?' },
+            { id: 5, text: 'איך את/ה מתמודד/ת עם פער בין מלאי פיזי למלאי במערכת?' },
+            { id: 6, text: 'מה חשוב לך לקבל בהכשרה בשבוע הראשון?' },
+            { id: 7, text: 'תן/י דוגמה לשיפור תהליך תפעולי שהצעת או יישמת.' },
+            { id: 8, text: 'כיצד את/ה מנהל/ת סדר עדיפויות כשהכול דחוף?' },
+        ]
+    },
+    {
+        id: 'sales',
+        role: 'נציג/ת מכירות טלפוניות',
+        employer: 'ראש צוות מכירות',
+        intro: 'מה שלומך? זה ראיון מכירות טלפוניות עם דגש על תקשורת, סגירת עסקאות, הקשבה והתמדה.',
+        questions: [
+            { id: 1, text: 'מה שלומך? מה מניע אותך להצליח בתפקידי מכירות?' },
+            { id: 2, text: 'איך את/ה פותח/ת שיחה עם לקוח שלא מכיר את המוצר?' },
+            { id: 3, text: 'איך את/ה מגיב/ה להתנגדות של לקוח למחיר?' },
+            { id: 4, text: 'תן/י דוגמה ליעד שהצבת לעצמך והצלחת לעמוד בו.' },
+            { id: 5, text: 'איך את/ה שומר/ת על התמדה גם אחרי כמה תשובות שליליות ברצף?' },
+            { id: 6, text: 'איך תזהה/י מתי נכון לסגור עסקה ומתי להמשיך בירור צרכים?' },
+            { id: 7, text: 'מה חשוב לך לקבל מהמנהל/ת כדי להתפתח בתפקיד?' },
+            { id: 8, text: 'איך את/ה מודד/ת הצלחה אישית ביום עבודה טיפוסי?' },
+        ]
+    },
+];
+
+type SeverityLevel = 'critical' | 'high' | 'medium' | 'low';
+
+interface RubricItem {
+    category: string;
+    criteria: string;
+    weight: number;
+}
+
+interface ModerationFinding {
+    word: string;
+    level: SeverityLevel;
+}
+
+const InterviewSystem = {
+    rubric: [
+        { category: 'תוכן', criteria: 'שימוש במודל STAR (סיטואציה, מטלה, פעולה, תוצאה)', weight: 0.3 },
+        { category: 'מקצועיות', criteria: 'הימנעות מסלנג ושימוש במונחים מקצועיים', weight: 0.25 },
+        { category: 'ביטחון עצמי', criteria: 'שטף דיבור והימנעות ממילות היסוס', weight: 0.2 },
+        { category: 'התאמה לתפקיד', criteria: 'חיבור הניסיון הקודם לדרישות המשרה', weight: 0.25 }
+    ] as RubricItem[],
+
+    forbiddenWords: {
+        critical: ['נאצי', 'היטלר', 'לרצוח', 'לשחוט', 'מוות ל', 'פיגוע', 'כושיה', 'ערבוש', 'יהודון'],
+        high: ['זונה', 'כוסאמק', 'בן זונה', 'שרמוטה', 'מניאק', 'חרא', 'זבל', 'מזדיין', 'כוסית', 'מפגר', 'מטומטם', 'קוקסינל', 'הומו', 'אפס'],
+        medium: ['על הזין', 'זיבי', 'חארטה', 'עף על עצמו', 'פראייר', 'נוכלים', 'רמאים', 'מקום פח', 'חברה זבל'],
+        low: ['אחי', 'נשמה', 'גבר', 'וואלה', 'סבבה', 'כאילו', 'כזה', 'זורם', 'תכלס', 'בגדול']
+    } as Record<SeverityLevel, string[]>,
+
+    analyzeResponse(text: string) {
+        const findings: ModerationFinding[] = [];
+        let severityLevel = 0;
+
+        (Object.entries(this.forbiddenWords) as [SeverityLevel, string[]][]).forEach(([level, words]) => {
+            words.forEach(word => {
+                if (text.includes(word)) {
+                    findings.push({ word, level });
+                    if (level === 'critical') severityLevel = 5;
+                    else if (level === 'high' && severityLevel < 4) severityLevel = 4;
+                    else if (level === 'medium' && severityLevel < 3) severityLevel = 3;
+                    else if (level === 'low' && severityLevel < 2) severityLevel = 2;
+                }
+            });
+        });
+
+        return {
+            hasIssues: findings.length > 0,
+            severity: severityLevel,
+            details: findings,
+            feedback: this.generateFeedback(severityLevel)
+        };
+    },
+
+    generateFeedback(severity: number) {
+        if (severity >= 4) return 'שגיאה קריטית: נעשה שימוש בשפה בוטה או פוגענית. הראיון נפסל.';
+        if (severity === 3) return 'שים/י לב: סגנון הדיבור שלך כולל ביטויים שאינם הולמים סביבת עבודה.';
+        if (severity === 2) return 'טיפ: כדאי להפחית בשימוש בסלנג כדי להישמע מקצועי יותר.';
+        return 'השפה תקינה ומקצועית.';
+    }
+};
+
+const roleKeywordsByTrack: Record<string, string[]> = {
+    cafe: ['שירות', 'לקוחות', 'משמרת', 'קופה', 'צוות', 'עומס', 'דיוק'],
+    store: ['מכירה', 'לקוחות', 'מדידה', 'יעד', 'מלאי', 'שכנוע', 'שירות'],
+    office: ['שירות', 'פניות', 'מייל', 'תיעוד', 'מערכת', 'פתרון', 'סדר'],
+    warehouse: ['מלאי', 'ליקוט', 'לוגיסטיקה', 'בטיחות', 'מחסן', 'קבלה', 'תפעול'],
+    sales: ['מכירה', 'שיחה', 'התנגדות', 'יעד', 'ליד', 'סגירה', 'לקוח']
+};
+
+const evaluateInterviewByRubric = (answers: string[], trackId: string) => {
+    const joined = answers.join(' ').toLowerCase();
+    const moderation = InterviewSystem.analyzeResponse(joined);
+
+    const starSignals = {
+        situation: ['סיטואציה', 'מצב', 'קרה', 'במהלך'],
+        task: ['משימה', 'מטלה', 'נדרשתי', 'הייתי צריך'],
+        action: ['פעלתי', 'עשיתי', 'ביצעתי', 'ניהלתי'],
+        result: ['תוצאה', 'בסוף', 'הצלחתי', 'שיפרתי']
+    };
+    const hasSituation = starSignals.situation.some(token => joined.includes(token));
+    const hasTask = starSignals.task.some(token => joined.includes(token));
+    const hasAction = starSignals.action.some(token => joined.includes(token));
+    const hasResult = starSignals.result.some(token => joined.includes(token));
+    const starParts = [hasSituation, hasTask, hasAction, hasResult].filter(Boolean).length;
+    const starScore = Math.round((starParts / 4) * 100);
+
+    const professionalTerms = ['ניסיון', 'תהליך', 'לקוח', 'צוות', 'פתרון', 'אחריות', 'יעד', 'שירות', 'תקשורת', 'דיוק', 'ניהול', 'עמידה בזמנים'];
+    const professionalHits = professionalTerms.filter(term => joined.includes(term)).length;
+    const professionalismBase = Math.min(100, 40 + professionalHits * 8);
+    const professionalismPenalty =
+        moderation.severity >= 4 ? 80 :
+        moderation.severity === 3 ? 35 :
+        moderation.severity === 2 ? 15 :
+        0;
+    const professionalismScore = Math.max(0, Math.min(100, professionalismBase - professionalismPenalty));
+
+    const hesitationWords = ['אממ', 'אהה', 'כאילו', 'בערך', 'נראה לי', 'אני חושב', 'סוג של'];
+    const hesitationHits = hesitationWords.reduce((sum, word) => sum + (joined.split(word).length - 1), 0);
+    const confidencePenalty = Math.min(70, hesitationHits * 8);
+    const confidenceBase = Math.max(0, 100 - confidencePenalty);
+    const confidenceScore = moderation.severity >= 4
+        ? Math.min(confidenceBase, 20)
+        : moderation.severity === 3
+            ? Math.min(confidenceBase, 55)
+            : confidenceBase;
+
+    const roleKeywords = roleKeywordsByTrack[trackId] || [];
+    const roleHits = roleKeywords.filter(keyword => joined.includes(keyword)).length;
+    const roleFitScore = roleKeywords.length > 0
+        ? Math.round((roleHits / roleKeywords.length) * 100)
+        : 50;
+
+    const rubricScores = {
+        תוכן: starScore,
+        מקצועיות: professionalismScore,
+        'ביטחון עצמי': confidenceScore,
+        'התאמה לתפקיד': roleFitScore,
+    } as Record<string, number>;
+
+    const weightedScore = Math.round(
+        InterviewSystem.rubric.reduce((sum, item) => {
+            const criterionScore = rubricScores[item.category] ?? 0;
+            return sum + criterionScore * item.weight;
+        }, 0)
+    );
+
+    return {
+        moderation,
+        rubricScores,
+        weightedScore,
+    };
+};
+
+const JobInterviewChapter: React.FC = () => {
+    const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
+    const [questionIndex, setQuestionIndex] = useState(0);
+    const [draftAnswer, setDraftAnswer] = useState('');
+    const [candidateAnswers, setCandidateAnswers] = useState<Record<number, string>>({});
+    const [isFinished, setIsFinished] = useState(false);
+    const [interviewStopped, setInterviewStopped] = useState(false);
+    const [stopFeedback, setStopFeedback] = useState<string>('');
+    const [stopWords, setStopWords] = useState<string[]>([]);
+
+    const selectedTrack = interviewTracks.find(track => track.id === selectedTrackId) || null;
+    const currentQuestion = selectedTrack?.questions[questionIndex];
+
+    const resetInterview = () => {
+        setQuestionIndex(0);
+        setDraftAnswer('');
+        setCandidateAnswers({});
+        setIsFinished(false);
+        setInterviewStopped(false);
+        setStopFeedback('');
+        setStopWords([]);
+    };
+
+    const startTrack = (trackId: string) => {
+        setSelectedTrackId(trackId);
+        resetInterview();
+    };
+
+    const submitAnswer = () => {
+        if (!selectedTrack || !currentQuestion || !draftAnswer.trim()) return;
+
+        const cleanAnswer = draftAnswer.trim();
+        const moderationForAnswer = InterviewSystem.analyzeResponse(cleanAnswer.toLowerCase());
+        setCandidateAnswers(prev => ({ ...prev, [currentQuestion.id]: cleanAnswer }));
+        setDraftAnswer('');
+
+        if (moderationForAnswer.severity >= 4) {
+            setInterviewStopped(true);
+            setStopFeedback(moderationForAnswer.feedback);
+            setStopWords(moderationForAnswer.details.map(detail => detail.word));
+            setIsFinished(true);
+            return;
+        }
+
+        if (questionIndex < selectedTrack.questions.length - 1) {
+            setQuestionIndex(prev => prev + 1);
+        } else {
+            setIsFinished(true);
+        }
+    };
+
+    const answeredCount = selectedTrack
+        ? selectedTrack.questions.filter(question => !!candidateAnswers[question.id]).length
+        : 0;
+
+    const allAnswers = selectedTrack
+        ? selectedTrack.questions.map(question => candidateAnswers[question.id]).filter(Boolean) as string[]
+        : [];
+
+    const interviewEvaluation = selectedTrack
+        ? evaluateInterviewByRubric(allAnswers, selectedTrack.id)
+        : null;
+
+    const weightedScore = interviewEvaluation?.weightedScore ?? 0;
+    const moderationSeverity = interviewEvaluation?.moderation.severity ?? 0;
+    const moderationFeedback = interviewEvaluation?.moderation.feedback ?? 'השפה תקינה ומקצועית.';
+    const moderationWords = interviewEvaluation?.moderation.details.map(detail => detail.word) ?? [];
+
+    const feedbackLevel =
+        weightedScore >= 85 ? 'מצוין' :
+        weightedScore >= 70 ? 'טוב' :
+        weightedScore >= 55 ? 'בסיסי' :
+        'דורש חיזוק';
+
+    const feedbackText =
+        moderationSeverity >= 4
+            ? 'הראיון נפסל עקב שימוש בשפה פוגענית/בוטה. מומלץ לתרגל ניסוח מכבד ומקצועי ולבצע סימולציה מחדש.'
+            : feedbackLevel === 'מצוין'
+                ? 'הצגת מענה בוגר ומקצועי מאוד. שילבת תוכן ברור, התאמה לתפקיד ותקשורת בטוחה.'
+                : feedbackLevel === 'טוב'
+                    ? 'הביצוע טוב. לחיזוק נוסף: השתמש/י יותר במבנה STAR והדגיש/י תוצאות מדידות מהניסיון שלך.'
+                    : feedbackLevel === 'בסיסי'
+                        ? 'יש בסיס טוב, אך כדאי לחזק ניסוח מקצועי ולהרחיב תשובות עם דוגמאות ותוצאות.'
+                        : 'מומלץ לתרגל שוב: לבנות תשובות לפי STAR, להפחית מילויי דיבור, ולחבר כל תשובה לדרישות המשרה.';
+
+    if (!selectedTrack) {
+        return (
+            <div className="space-y-6 animate-fade-in">
+                <div className="bg-white/60 p-6 rounded-2xl border border-white/40 shadow-lg">
+                    <h4 className="text-4xl font-bold text-brand-light-blue mb-3">ראיון עבודה — סימולציה</h4>
+                    <p className="text-2xl text-brand-dark-blue/90">בפרק הזה מתקיים ראיון עבודה בהתכתבות. המעסיק ישאל שאלות מקצועיות, ואתם תתרגלו איך לענות בצורה ברורה, עניינית ומשכנעת. בסוף תקבלו משוב אישי על איכות התשובות שלכם.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {interviewTracks.map(track => (
+                        <button
+                            key={track.id}
+                            onClick={() => startTrack(track.id)}
+                            className="bg-white/70 hover:bg-white border border-white/50 rounded-2xl p-5 text-right shadow-md transition-transform hover:-translate-y-1"
+                        >
+                            <p className="text-xl text-brand-dark-blue/70">משרה</p>
+                            <p className="text-3xl font-bold text-brand-dark-blue mt-1">{track.role}</p>
+                            <p className="text-2xl text-brand-teal mt-3">להתחיל ראיון</p>
+                        </button>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-6 animate-fade-in">
+            <div className="bg-white/60 p-5 rounded-2xl border border-white/40 shadow-lg">
+                <div className="flex items-center justify-between gap-4">
+                    <div>
+                        <h4 className="text-4xl font-bold text-brand-light-blue">ראיון: {selectedTrack.role}</h4>
+                        <p className="text-2xl text-brand-dark-blue/80 mt-1">מראיין/ת: {selectedTrack.employer}</p>
+                    </div>
+                    <button onClick={() => setSelectedTrackId(null)} className="bg-gray-200 hover:bg-gray-300 text-brand-dark-blue font-bold py-2 px-4 rounded-lg text-xl">בחירת משרה אחרת</button>
+                </div>
+                <p className="text-2xl text-brand-dark-blue/90 mt-3">{selectedTrack.intro}</p>
+                <p className="text-xl text-brand-dark-blue/70 mt-2">התקדמות: {answeredCount} / {selectedTrack.questions.length}</p>
+            </div>
+
+            <div className="bg-white/50 backdrop-blur-md border border-white/30 rounded-3xl p-6 shadow-xl space-y-4">
+                {!isFinished && currentQuestion && (
+                    <div className="space-y-3 bg-white/80 rounded-2xl p-5 border border-white/60">
+                        <p className="text-xl text-brand-dark-blue/70">{selectedTrack.employer}</p>
+                        <p className="text-3xl font-semibold text-brand-dark-blue">{currentQuestion.text}</p>
+
+                        <textarea
+                            value={draftAnswer}
+                            onChange={(event) => setDraftAnswer(event.target.value)}
+                            onKeyDown={(event) => {
+                                if (event.key === 'Enter' && !event.shiftKey) {
+                                    event.preventDefault();
+                                    if (draftAnswer.trim()) {
+                                        submitAnswer();
+                                    }
+                                }
+                            }}
+                            placeholder="התשובה שלכם לשאלה מופיעה כאן, מתחת לשאלה..."
+                            className="w-full min-h-[140px] rounded-2xl border border-gray-300 p-4 text-2xl bg-white focus:outline-none focus:ring-2 focus:ring-brand-teal"
+                        />
+
+                        <div className="flex justify-end">
+                            <button
+                                onClick={submitAnswer}
+                                disabled={!draftAnswer.trim()}
+                                className="bg-brand-teal hover:bg-teal-500 text-white font-bold py-2 px-6 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed text-2xl"
+                            >
+                                שלח תשובה
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {isFinished && (
+                    <div className="bg-yellow-100/80 border-r-4 border-yellow-500 rounded-2xl p-5 space-y-3">
+                        <h5 className="text-4xl font-bold text-yellow-900">משוב למרואיין/ת</h5>
+                        <p className="text-2xl text-yellow-900/90">דירוג מענה: <strong>{feedbackLevel}</strong> (ציון משוקלל: <strong>{weightedScore}</strong>/100)</p>
+                        <p className="text-2xl text-yellow-900/90">עניתם על <strong>{allAnswers.length}</strong> מתוך <strong>{selectedTrack.questions.length}</strong> שאלות.</p>
+                        <div className="bg-white/70 border border-yellow-300 rounded-xl p-3 space-y-1">
+                            <p className="text-xl font-bold text-yellow-900">פירוט מחוון:</p>
+                            <p className="text-xl text-yellow-900/90">תוכן (STAR): <strong>{interviewEvaluation?.rubricScores['תוכן'] ?? 0}</strong></p>
+                            <p className="text-xl text-yellow-900/90">מקצועיות: <strong>{interviewEvaluation?.rubricScores['מקצועיות'] ?? 0}</strong></p>
+                            <p className="text-xl text-yellow-900/90">ביטחון עצמי: <strong>{interviewEvaluation?.rubricScores['ביטחון עצמי'] ?? 0}</strong></p>
+                            <p className="text-xl text-yellow-900/90">התאמה לתפקיד: <strong>{interviewEvaluation?.rubricScores['התאמה לתפקיד'] ?? 0}</strong></p>
+                        </div>
+                        <p className="text-2xl text-yellow-900/90"><strong>בדיקת שפה:</strong> {moderationFeedback}</p>
+                        {moderationWords.length > 0 && (
+                            <p className="text-xl text-yellow-900/90">מילים שנתפסו: {moderationWords.join(', ')}</p>
+                        )}
+                        {interviewStopped && (
+                            <div className="bg-red-100 border border-red-300 rounded-xl p-3">
+                                <p className="text-2xl font-bold text-red-700">הראיון נעצר עקב שפה פוגענית.</p>
+                                <p className="text-xl text-red-700/90">{stopFeedback}</p>
+                                {stopWords.length > 0 && <p className="text-lg text-red-700/80">מילים שגרמו לעצירה: {stopWords.join(', ')}</p>}
+                            </div>
+                        )}
+                        <p className="text-2xl text-yellow-900/90">{feedbackText}</p>
+                        <ul className="list-disc list-inside text-2xl text-yellow-900/90 space-y-1">
+                            <li>נסחו תשובות במבנה קצר: מצב, פעולה, תוצאה.</li>
+                            <li>שלבו דוגמה ממשית מניסיון קודם כדי לחזק אמינות.</li>
+                            <li>הדגישו כישורים רלוונטיים לתפקיד: שירות, אחריות, תקשורת ועבודת צוות.</li>
+                        </ul>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
@@ -237,11 +663,13 @@ const RightsModule: React.FC<RightsModuleProps> = ({ onBack, title, onComplete }
 
   const renderStepContent = () => {
     switch (currentStep) {
-        case 0: return <GettingHiredChapter />;
-        case 1: return <WorkplaceRightsChapter />;
-        case 2: return <EndingEmploymentChapter />;
-        case 3: return <RightsDefendersGame onGameComplete={onComplete} />;
-        default: return <GettingHiredChapter />;
+      case 0: return <GettingHiredChapter />;
+      case 1: return <WorkplaceRightsChapter />;
+      case 2: return <SuperMarioRightsGame onBack={() => setCurrentStep(1)} />;
+      case 3: return <JobInterviewChapter />;
+      case 4: return <EndingEmploymentChapter />;
+      case 5: return <RightsDefendersGame onGameComplete={onComplete} />;
+      default: return <GettingHiredChapter />;
     }
   };
 

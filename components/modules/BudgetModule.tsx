@@ -127,16 +127,18 @@ const initialExpenses: (BudgetItem & { task?: React.ReactNode })[] = [
         <ol className="list-decimal list-inside text-right space-y-2">
             <li>למדו על סוגי הביטוח דרך <b className="font-bold">אייקון המידע</b>.</li>
             <li>כנסו לאתר "חובה" דרך כפתור ה<b className="font-bold">קישור לאתר</b>.</li>
-            <li>מלאו את פרטי הרכב והנהג שלב אחרי שלב.</li>
-            <li>* היעזרו בהסבר שבכפתור הנחיות למילוי.</li>
+            <li>הזינו את פרטי הרכב, הנהג וענו על השאלות, ביחרו הצעת ביטוח, חלקו את הסכום ל-12 והזינו בתיבת הסכום.</li>
+            <li className="list-none text-center font-bold">או</li>
+            <li>פתחו את <b className="font-bold">מחשבון ביטוח</b> וענו על כל 10 השאלות.</li>
             <li>בחרו את הצעת הביטוח המשתלמת ביותר.</li>
-            <li>רשמו את המחיר ב<b className="font-bold">תיבת הסכום</b> ואת הפרטים העיקריים ב<b className="font-bold">תיבת ההערות</b>.</li>
+            <li>לאחר בחירה, הסכום החודשי וההערות יתעדכנו אוטומטית.</li>
         </ol>
     )},
     { id: 11, category: 'רכב- אגרות', amount: 0, task: (
         <ol className="list-decimal list-inside text-right space-y-2">
             <li>למדו מהן אגרות רישוי דרך <b className="font-bold">אייקון המידע</b>.</li>
             <li>עלות האגרה <b className="font-bold">חושבה אוטומטית</b>.</li>
+            <li>במידה ומצאתם טעות בסכום, כנסו לאתר בקישור, הזינו את פרטי הרכב, קבלו את העלות השנתית, חלקו אותה ל-12 והזינו בתיבת הסכום.</li>
         </ol>
     )},
     { id: 12, category: 'רכב- דלק', amount: 0, task: (
@@ -157,7 +159,8 @@ const initialExpenses: (BudgetItem & { task?: React.ReactNode })[] = [
             <li>למדו על הוצאות ביגוד דרך <b className="font-bold">אייקון המידע</b>.</li>
             <li>בחרו רשת ביגוד בעזרת כפתור <b className="font-bold">בחרו רשת</b>.</li>
             <li>באתר הרשת, צרו לעצמכם מלתחה לשנה שלמה.</li>
-            <li>הזינו את הסכום ב<b className="font-bold">תיבת הסכום</b>.</li>
+            <li>חלקו את הסכום הכולל ב-12 חודשים.</li>
+            <li>הזינו את הסכום החודשי ב<b className="font-bold">תיבת הסכום</b>.</li>
         </ol>
     )},
 ];
@@ -575,6 +578,12 @@ const CarQuestionnaireModal: React.FC<{ onClose: () => void, style?: React.CSSPr
     const [step, setStep] = useState(0);
     const [answers, setAnswers] = useState<Record<number, string>>({});
     const [results, setResults] = useState<{
+        vehicleType: 'מיני' | 'גודל רגיל' | 'משפחתי' | 'אופנוע';
+        recommendedFuel: string;
+        priceRange: string;
+        productionYears: string;
+        propulsionType: string;
+        mileageRange: string;
         price: string;
         consumption: string;
         type: string;
@@ -583,11 +592,34 @@ const CarQuestionnaireModal: React.FC<{ onClose: () => void, style?: React.CSSPr
     } | null>(null);
 
     const questions = [
-        { question: "מה התקציב החודשי הכולל שלך לרכב (תשלומים, ביטוח, דלק)?", options: ["עד 1,500 ₪", "1,500 - 2,500 ₪", "מעל 2,500 ₪"] },
-        { question: "כמה אנשים בדרך כלל תיסע איתם ברכב?", options: ["לרוב לבד או עם עוד מישהו", "3-4 אנשים", "5 אנשים או יותר"] },
-        { question: "מה סדר העדיפויות שלך ברכישת רכב?", options: ["אמינות ושקט נפשי, גם אם המחיר גבוה יותר", "המחיר הזול ביותר, גם אם יידרשו תיקונים"] },
-        { question: "מה יותר חשוב לך בנסיעה?", options: ["חיסכון בדלק, גם אם הרכב פחות חזק", "ביצועים וכוח, גם אם צריכת הדלק גבוהה"] },
-        { question: "למה הרכב ישמש אותך בעיקר?", options: ["נסיעות עירוניות קצרות", "נסיעות ארוכות וטיולים", "גם וגם, שימוש מעורב"] }
+        {
+            question: "איך נראה שבוע נסיעות רגיל שלך?",
+            options: ["בעיקר עיר וחניה צפופה", "שילוב עיר ובין-עירוני", "הרבה בין-עירוני/כבישים מהירים"]
+        },
+        {
+            question: "באיזו תדירות נוסעים איתך יותר מ-2 נוסעים?",
+            options: ["כמעט אף פעם", "לפעמים", "לעיתים קרובות"]
+        },
+        {
+            question: "מה חשוב לך יותר ביום-יום?",
+            options: ["להקטין הוצאות שוטפות", "איזון בין נוחות לעלות", "נוחות וביצועים"]
+        },
+        {
+            question: "מה מצב החניה הקבוע שלך?",
+            options: ["אין חניה קבועה", "חניה קבועה", "חניה קבועה עם אפשרות טעינה"]
+        },
+        {
+            question: "כמה חשוב לך ראש שקט מתקלות?",
+            options: ["קריטי לי, מעדיפ/ה רכב צעיר", "חשוב אבל לא בכל מחיר", "מוכן/ה להתפשר על שנתון בשביל מחיר"]
+        },
+        {
+            question: "מה רמת ההתחייבות החודשית שנוחה לך לאורך זמן?",
+            options: ["נמוכה", "בינונית", "גבוהה"]
+        },
+        {
+            question: "כמה ק" + '"' + "מ אתה עושה בערך בחודש?",
+            options: ["עד 800", "800-1,500", "מעל 1,500"]
+        }
     ];
 
     const handleAnswer = (qIndex: number, answer: string) => {
@@ -597,19 +629,137 @@ const CarQuestionnaireModal: React.FC<{ onClose: () => void, style?: React.CSSPr
         if (qIndex < questions.length - 1) {
             setStep(qIndex + 1);
         } else {
-            // Calculate results based on all answers
-            const priceResult = newAnswers[0] === 'עד 1,500 ₪' ? "עד 40,000 ₪" : newAnswers[0] === '1,500 - 2,500 ₪' ? "40,000 - 80,000 ₪" : "מעל 80,000 ₪";
-            const typeResult = newAnswers[1] === '5 אנשים או יותר' ? "רכב גדול / 7 מקומות" : newAnswers[1] === '3-4 אנשים' ? "רכב משפחתי" : "רכב קטן / סופר-מיני";
-            const reliabilityResult = newAnswers[2] === 'אמינות ושקט נפשי, גם אם המחיר גבוה יותר' ? "רכבים חדשים ואמינים יותר (לרוב יפניים/קוריאניים)" : "רכבים ישנים יותר, שעלולים לדרוש תחזוקה";
-            const yearResult = newAnswers[2] === 'אמינות ושקט נפשי, גם אם המחיר גבוה יותר' ? "5 שנים ומטה" : "מעל 7 שנים";
-            const consumptionResult = newAnswers[3] === 'חיסכון בדלק, גם אם הרכב פחות חזק' ? "מעל 15 ק\"מ/ליטר" : "סביב 12-15 ק\"מ/ליטר";
+            const scores = {
+                mini: 0,
+                regular: 0,
+                family: 0,
+                motorcycle: 0,
+            };
+
+            if (newAnswers[0] === 'בעיקר עיר וחניה צפופה') {
+                scores.mini += 3;
+                scores.motorcycle += 3;
+                scores.regular += 1;
+            } else if (newAnswers[0] === 'שילוב עיר ובין-עירוני') {
+                scores.regular += 3;
+                scores.mini += 1;
+                scores.family += 1;
+            } else {
+                scores.family += 3;
+                scores.regular += 2;
+            }
+
+            if (newAnswers[1] === 'כמעט אף פעם') {
+                scores.motorcycle += 2;
+                scores.mini += 2;
+            } else if (newAnswers[1] === 'לפעמים') {
+                scores.regular += 2;
+                scores.family += 1;
+            } else {
+                scores.family += 4;
+                scores.regular += 2;
+                scores.motorcycle -= 3;
+            }
+
+            if (newAnswers[2] === 'להקטין הוצאות שוטפות') {
+                scores.mini += 2;
+                scores.motorcycle += 2;
+            } else if (newAnswers[2] === 'איזון בין נוחות לעלות') {
+                scores.regular += 3;
+                scores.family += 1;
+            } else {
+                scores.family += 2;
+                scores.regular += 2;
+            }
+
+            if (newAnswers[3] === 'אין חניה קבועה') {
+                scores.mini += 2;
+                scores.motorcycle += 2;
+            } else if (newAnswers[3] === 'חניה קבועה') {
+                scores.regular += 1;
+                scores.family += 1;
+            } else {
+                scores.regular += 2;
+                scores.family += 1;
+            }
+
+            if (newAnswers[4] === 'קריטי לי, מעדיפ/ה רכב צעיר') {
+                scores.regular += 1;
+                scores.family += 1;
+            } else if (newAnswers[4] === 'מוכן/ה להתפשר על שנתון בשביל מחיר') {
+                scores.mini += 1;
+                scores.motorcycle += 1;
+            }
+
+            const sortedTypes = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+            const topType = sortedTypes[0][0];
+
+            const vehicleType: 'מיני' | 'גודל רגיל' | 'משפחתי' | 'אופנוע' =
+                topType === 'motorcycle'
+                    ? 'אופנוע'
+                    : topType === 'family'
+                        ? 'משפחתי'
+                        : topType === 'regular'
+                            ? 'גודל רגיל'
+                            : 'מיני';
+
+            const monthlyCommitment = newAnswers[5];
+            const monthlyKm = newAnswers[6];
+
+            const priceByCommitment: Record<string, string> = {
+                'נמוכה': vehicleType === 'אופנוע' ? '12,000 - 35,000 ₪' : '20,000 - 55,000 ₪',
+                'בינונית': vehicleType === 'אופנוע' ? '25,000 - 55,000 ₪' : '55,000 - 95,000 ₪',
+                'גבוהה': vehicleType === 'אופנוע' ? '45,000 - 90,000 ₪' : '95,000 - 160,000 ₪',
+            };
+
+            const yearsByReliability: Record<string, string> = {
+                'קריטי לי, מעדיפ/ה רכב צעיר': '2021-2026',
+                'חשוב אבל לא בכל מחיר': '2018-2024',
+                'מוכן/ה להתפשר על שנתון בשביל מחיר': '2014-2021',
+            };
+
+            const fuelByTypeAndUsage = (() => {
+                if (vehicleType === 'אופנוע') return '25-35 ק"מ/ליטר';
+                if (vehicleType === 'מיני') return monthlyKm === 'מעל 1,500' ? '17-22 ק"מ/ליטר' : '15-20 ק"מ/ליטר';
+                if (vehicleType === 'משפחתי') return monthlyKm === 'מעל 1,500' ? '14-18 ק"מ/ליטר' : '12-16 ק"מ/ליטר';
+                return monthlyKm === 'מעל 1,500' ? '15-19 ק"מ/ליטר' : '13-17 ק"מ/ליטר';
+            })();
+
+            const propulsionType = (() => {
+                if (vehicleType === 'אופנוע') return 'בנזין חסכוני (250-500 סמ"ק)';
+                if (newAnswers[3] === 'חניה קבועה עם אפשרות טעינה') return 'חשמלי/פלאג-אין היברידי';
+                if (monthlyKm === 'מעל 1,500') return 'היברידי';
+                return 'בנזין חסכוני או היברידי';
+            })();
+
+            const mileageRange = (() => {
+                if (newAnswers[4] === 'קריטי לי, מעדיפ/ה רכב צעיר') {
+                    return vehicleType === 'אופנוע' ? 'עד 30,000 ק"מ' : 'עד 80,000 ק"מ';
+                }
+                if (newAnswers[4] === 'חשוב אבל לא בכל מחיר') {
+                    return vehicleType === 'אופנוע' ? '30,000-60,000 ק"מ' : '80,000-140,000 ק"מ';
+                }
+                return vehicleType === 'אופנוע' ? '60,000-90,000 ק"מ' : '140,000-200,000 ק"מ';
+            })();
+
+            const reliabilityResult = newAnswers[4] === 'קריטי לי, מעדיפ/ה רכב צעיר'
+                ? 'התמקדו ברכב עם היסטוריית טיפולים מלאה ויד נמוכה.'
+                : newAnswers[4] === 'חשוב אבל לא בכל מחיר'
+                    ? 'חפשו איזון בין מחיר, תחזוקה וקילומטראז\'.'
+                    : 'בדקו היטב מצב מכני לפני קנייה כדי לחסוך בעלות הרכישה.';
             
             setResults({
-                price: priceResult,
-                type: typeResult,
+                vehicleType,
+                recommendedFuel: fuelByTypeAndUsage,
+                priceRange: priceByCommitment[monthlyCommitment] || '20,000 - 90,000 ₪',
+                productionYears: yearsByReliability[newAnswers[4]] || '2018-2024',
+                propulsionType,
+                mileageRange,
+                price: priceByCommitment[monthlyCommitment] || '20,000 - 90,000 ₪',
+                type: vehicleType,
                 reliability: reliabilityResult,
-                year: yearResult,
-                consumption: consumptionResult
+                year: yearsByReliability[newAnswers[4]] || '2018-2024',
+                consumption: fuelByTypeAndUsage
             });
             setStep(qIndex + 1);
         }
@@ -637,10 +787,12 @@ const CarQuestionnaireModal: React.FC<{ onClose: () => void, style?: React.CSSPr
                     <div className="text-center">
                         <h3 className="text-2xl font-bold mb-4 text-brand-teal">המלצת החיפוש שלך:</h3>
                         <div className="space-y-3 text-lg bg-gray-50 p-6 rounded-xl">
-                            <p><strong>סוג הרכב:</strong> {results?.type}</p>
-                            <p><strong>טווח מחיר:</strong> {results?.price}</p>
-                            <p><strong>שנתון מומלץ:</strong> {results?.year}</p>
-                            <p><strong>צריכת דלק מומלצת:</strong> {results?.consumption}</p>
+                            <p><strong>סוג הרכב:</strong> {results?.vehicleType}</p>
+                            <p><strong>צריכת דלק מומלצת:</strong> {results?.recommendedFuel}</p>
+                            <p><strong>טווח מחיר:</strong> {results?.priceRange}</p>
+                            <p><strong>טווח שנות ייצור:</strong> {results?.productionYears}</p>
+                            <p><strong>סוג הנעה מומלץ:</strong> {results?.propulsionType}</p>
+                            <p><strong>טווח קילומטראז׳ מומלץ ביד2:</strong> {results?.mileageRange}</p>
                             <p><strong>דגש בחיפוש:</strong> {results?.reliability}</p>
                             <p className="text-sm mt-2 pt-2 border-t border-gray-300">
                                 - שאר הקריטריונים כמו: יד, קילומטראז ודגם ישפיעו על המחיר ועליכם למצוא את הבחירה הכי מתשלמת.
@@ -1043,8 +1195,9 @@ const CarPurchaseModal: React.FC<{
     onPurchaseComplete: (details: { monthlyPayment: number; note: string; fuelConsumption: string; year: string; price: string; adLink: string; }) => void;
     details: any;
     setDetails: (details: any) => void;
+    netIncome: number;
     style?: React.CSSProperties;
-}> = ({ onClose, onPurchaseComplete, details, setDetails, style }) => {
+}> = ({ onClose, onPurchaseComplete, details, setDetails, netIncome, style }) => {
     
     const { model, adLink, year, km, fuelConsumption, hand, licensePlate, price, payments } = details;
     
@@ -1054,23 +1207,18 @@ const CarPurchaseModal: React.FC<{
 
     const [validationError, setValidationError] = useState('');
     const [kmWarning, setKmWarning] = useState('');
-    const [priceWarning, setPriceWarning] = useState('');
     const [monthlyPayment, setMonthlyPayment] = useState<number | null>(null);
-
-    const getEstimatedPrice = (yearNum: number, kmNum: number) => {
-        if (isNaN(yearNum) || yearNum < 1990) return 0;
-        const age = new Date().getFullYear() - yearNum;
-        return Math.max(0, 120000 - (age * 7000) - (kmNum * 0.2));
-    };
 
     useEffect(() => {
         const yearNum = parseInt(year);
         const kmNum = parseInt(km);
-        if (!isNaN(yearNum) && !isNaN(kmNum) && yearNum < new Date().getFullYear()) {
-            const age = new Date().getFullYear() - yearNum;
-            const avgKmPerYear = age > 0 ? kmNum / age : kmNum;
+        const currentYear = new Date().getFullYear();
+
+        if (!isNaN(yearNum) && !isNaN(kmNum) && yearNum <= currentYear) {
+            const yearsOnRoad = Math.max(1, currentYear - yearNum);
+            const avgKmPerYear = kmNum / yearsOnRoad;
             if (avgKmPerYear > 18000) {
-                setKmWarning(`שימו לב: ממוצע הקילומטראז' לשנה (${Math.round(avgKmPerYear).toLocaleString()} ק"מ) גבוה מהממוצע הארצי (כ-18,000 ק"מ).`);
+                setKmWarning('הק"מ שנסעו ברכב נחשב יחסית גבוה');
             } else {
                 setKmWarning('');
             }
@@ -1078,22 +1226,6 @@ const CarPurchaseModal: React.FC<{
             setKmWarning('');
         }
     }, [km, year]);
-
-    useEffect(() => {
-        const yearNum = parseInt(year);
-        const kmNum = parseInt(km);
-        const priceNum = parseFloat(price);
-        if (!isNaN(yearNum) && !isNaN(kmNum) && !isNaN(priceNum)) {
-            const estimatedPrice = getEstimatedPrice(yearNum, kmNum);
-            if (estimatedPrice > 0 && priceNum > estimatedPrice * 1.1) { 
-                setPriceWarning(`שימו לב: המחיר המבוקש גבוה ממחיר המחירון המשוער (כ-${Math.round(estimatedPrice).toLocaleString()} ₪)`);
-            } else {
-                setPriceWarning('');
-            }
-        } else {
-            setPriceWarning('');
-        }
-    }, [price, year, km]);
 
     useEffect(() => {
         const priceNum = parseFloat(price);
@@ -1111,8 +1243,14 @@ const CarPurchaseModal: React.FC<{
             setMonthlyPayment(null);
         }
     }, [price, payments]);
+
+    const showPaymentBudgetWarning =
+        payments > 0 &&
+        monthlyPayment !== null &&
+        netIncome > 0 &&
+        monthlyPayment > netIncome * 0.15;
     
-    const allFieldsFilled = !!(model && adLink && year && km && fuelConsumption && hand && price);
+    const allFieldsFilled = !!(model && year && km && fuelConsumption && hand && licensePlate && price);
 
     const handleConfirmPurchase = () => {
         if (!allFieldsFilled) {
@@ -1130,7 +1268,7 @@ const CarPurchaseModal: React.FC<{
         const paymentNote = payments > 0 ? `(${payments} תשלומים)` : '(תשלום מלא)';
         const note = `דגם: ${model}, שנה: ${year}, ק"מ: ${km}, יד: ${hand}, צריכה: 1/${fuelConsumption}, ${licensePlate ? `רישוי: ${licensePlate}, ` : ''}מחיר: ${price}₪ ${paymentNote}.`;
         onPurchaseComplete({
-            monthlyPayment: payments > 0 ? Math.round(monthlyPayment) : 0,
+            monthlyPayment: Math.round(monthlyPayment),
             note: note,
             fuelConsumption: fuelConsumption,
             year: year,
@@ -1156,7 +1294,7 @@ const CarPurchaseModal: React.FC<{
                     {renderField("model", "דגם*", "לדוגמא: מיצובישי לנסר", model, (v) => setField('model', v))}
                     {renderField("year", "שנת ייצור*", "רשמו את שנת ייצור הרכב", year, (v) => setField('year', v), "number")}
                     <div className="md:col-span-2">
-                        {renderField("adLink", "קישור למודעה*", "הדביקו כאן את הקישור", adLink, (v) => setField('adLink', v), "url")}
+                        {renderField("adLink", "קישור למודעה", "אופציונלי", adLink, (v) => setField('adLink', v), "url")}
                     </div>
                     {renderField("km", "קילומטראז'*", 'כמה ק"מ נסעו ברכב סה"כ', km, (v) => setField('km', v), "number", kmWarning)}
                     <div>
@@ -1168,8 +1306,8 @@ const CarPurchaseModal: React.FC<{
                         </div>
                     </div>
                     {renderField("hand", "יד*", "איזו יד הרכב", hand, (v) => setField('hand', v), "number")}
-                    {renderField("licensePlate", "מספר לוחית רישוי", "אופציונלי", licensePlate, (v) => setField('licensePlate', v))}
-                    {renderField("price", "מחיר*", "כמה עולה הרכב", price, (v) => setField('price', v), "number", priceWarning)}
+                    {renderField("licensePlate", "מספר לוחית רישוי*", "הזינו מספר לוחית רישוי", licensePlate, (v) => setField('licensePlate', v))}
+                    {renderField("price", "מחיר*", "כמה עולה הרכב", price, (v) => setField('price', v), "number")}
                     
                     <div className="md:col-span-2">
                         <label className="font-medium text-sm text-gray-700">חלוקה לתשלומים ({payments > 0 ? `${payments} חודשים` : 'תשלום מלא'})</label>
@@ -1186,6 +1324,11 @@ const CarPurchaseModal: React.FC<{
                     <div className="mt-6 p-4 bg-gray-100 rounded-lg text-center">
                         <h4 className="font-bold text-lg">{payments > 0 ? 'תשלום חודשי (כולל ריבית):' : 'סכום לתשלום מלא:'}</h4>
                         <p className="font-bold text-2xl text-brand-teal">{payments > 0 ? `${Math.round(monthlyPayment)} ₪` : `${parseFloat(price).toLocaleString()} ₪`}</p>
+                        {showPaymentBudgetWarning && (
+                            <p className="mt-2 text-sm text-yellow-800 bg-yellow-100/70 p-2 rounded-md border border-yellow-300">
+                                ייתכן שהתשלום גבוה מידי עבור התקציב שלך
+                            </p>
+                        )}
                     </div>
                  )}
                  <div className="mt-6 flex flex-col gap-2">
@@ -1202,58 +1345,142 @@ const CarPurchaseModal: React.FC<{
     );
 };
 
-const InsuranceExplanationModal: React.FC<{ onClose: () => void, style?: React.CSSProperties }> = ({ onClose, style }) => {
-    const [slideIndex, setSlideIndex] = useState(0);
+const InsuranceCalculatorModal: React.FC<{
+    onClose: () => void;
+    onSelect: (annualPrice: number, company: string, insuranceType: string) => void;
+    style?: React.CSSProperties;
+}> = ({ onClose, onSelect, style }) => {
+    const [step, setStep] = useState(0);
+    const [answers, setAnswers] = useState<Record<number, string>>({});
 
-    const slides = [
-        {
-            title: "ביטוחי רכב",
-            content: "קיימים 3 סוגי ביטוחים עיקריים לרכב. בואו נבין מה כל אחד מהם מכסה."
-        },
-        {
-            title: "ביטוח חובה",
-            content: "כשמו כן הוא - חובה על פי חוק. מכסה נזקי גוף (פציעות) לנהג, לנוסעים ולהולכי רגל. הוא לא מכסה נזק לרכב שלך או לרכב אחר."
-        },
-        {
-            title: "ביטוח צד ג'",
-            content: "ביטוח רשות (לא חובה). מכסה נזקים שגרמת לרכוש של מישהו אחר (הצד השלישי), למשל, לרכב אחר בתאונה."
-        },
-        {
-            title: "ביטוח מקיף",
-            content: "ביטוח רשות והיקר ביותר. הוא כולל בתוכו גם ביטוח חובה וגם צד ג', ובנוסף מכסה נזקים לרכב שלך (מתאונה, גניבה, שריפה וכו')."
-        },
-        {
-            title: "מה משפיע על מחיר הביטוח?",
-            content: "המחיר (פרמיה) נקבע לפי: גיל הנהג, ותק הנהיגה, עבר ביטוחי (תאונות), סוג הרכב, גילו ואמצעי המיגון שמותקנים בו."
-        },
-        {
-            title: "מהי השתתפות עצמית?",
-            content: "הסכום הראשוני שאתה תשלם מכיסך במקרה של תביעה. ככל שההשתתפות העצמית גבוהה יותר, כך מחיר הביטוח (הפרמיה) בדרך כלל נמוך יותר."
-        },
-        {
-            title: "מה חשוב לבדוק?",
-            content: "לפני שבוחרים ביטוח, חשוב להשוות מחירים, לבדוק את גובה הכיסוי, את סכום ההשתתפות העצמית ואת איכות השירות של חברת הביטוח."
-        }
+    const questions = [
+        { question: 'מה שווי הרכב המשוער?', options: ['עד 40,000 ₪', '40,000-90,000 ₪', 'מעל 90,000 ₪'] },
+        { question: 'בן כמה הרכב?', options: ['עד 5 שנים', '6-10 שנים', 'מעל 10 שנים'] },
+        { question: 'מה גיל הנהג/ת הצעיר/ה בפוליסה?', options: ['מעל 30', '24-30', 'מתחת ל-24'] },
+        { question: 'כמה שנות ותק נהיגה יש לנהג/ת העיקרי/ת?', options: ['מעל 7 שנים', '3-7 שנים', 'עד שנתיים'] },
+        { question: 'מה היסטוריית התאונות ב-3 השנים האחרונות?', options: ['ללא תאונות', 'תאונה אחת', '2 תאונות ומעלה'] },
+        { question: 'מה הקילומטראז׳ השנתי הממוצע?', options: ['עד 12,000 ק"מ', '12,000-20,000 ק"מ', 'מעל 20,000 ק"מ'] },
+        { question: 'איפה הרכב חונה בדרך כלל בלילה?', options: ['חניה פרטית/מקורה', 'רחוב באזור שקט', 'רחוב באזור עמוס'] },
+        { question: 'מה השימוש העיקרי ברכב?', options: ['נסיעות פרטיות קצרות', 'שימוש מעורב', 'נסיעות יומיות ארוכות'] },
+        { question: 'מי נוהג ברכב?', options: ['נהג/ת יחיד/ה', 'זוג נהגים קבועים', 'כמה נהגים כולל צעירים'] },
+        { question: 'מה הכי חשוב בביטוח?', options: ['מחיר נמוך', 'איזון בין מחיר לכיסוי', 'כיסוי רחב ושירות'] },
     ];
 
-    const currentSlide = slides[slideIndex];
+    const handleAnswer = (qIndex: number, answer: string) => {
+        const nextAnswers = { ...answers, [qIndex]: answer };
+        setAnswers(nextAnswers);
+
+        if (qIndex < questions.length - 1) {
+            setStep(qIndex + 1);
+        } else {
+            setStep(questions.length);
+        }
+    };
+
+    const calculateOffers = () => {
+        const riskScore =
+            (answers[2] === 'מתחת ל-24' ? 3 : answers[2] === '24-30' ? 1 : 0) +
+            (answers[3] === 'עד שנתיים' ? 3 : answers[3] === '3-7 שנים' ? 1 : 0) +
+            (answers[4] === '2 תאונות ומעלה' ? 4 : answers[4] === 'תאונה אחת' ? 2 : 0) +
+            (answers[5] === 'מעל 20,000 ק"מ' ? 2 : answers[5] === '12,000-20,000 ק"מ' ? 1 : 0) +
+            (answers[6] === 'רחוב באזור עמוס' ? 2 : answers[6] === 'רחוב באזור שקט' ? 1 : 0) +
+            (answers[8] === 'כמה נהגים כולל צעירים' ? 2 : answers[8] === 'זוג נהגים קבועים' ? 1 : 0);
+
+        const coverageScore =
+            (answers[0] === 'מעל 90,000 ₪' ? 3 : answers[0] === '40,000-90,000 ₪' ? 2 : 1) +
+            (answers[1] === 'עד 5 שנים' ? 2 : answers[1] === '6-10 שנים' ? 1 : 0) +
+            (answers[9] === 'כיסוי רחב ושירות' ? 3 : answers[9] === 'איזון בין מחיר לכיסוי' ? 2 : 1);
+
+        const mandatoryBase = 1700 + riskScore * 120;
+        const thirdPartyBase = 2800 + riskScore * 150;
+        const comprehensiveBase = 4300 + riskScore * 180 + coverageScore * 120;
+        const premiumComprehensiveBase = 5200 + riskScore * 200 + coverageScore * 170;
+
+        return [
+            {
+                company: 'הפניקס',
+                insuranceType: 'חובה',
+                annualPrice: Math.round(mandatoryBase),
+                coverages: 'נזקי גוף לנהג/נוסעים/צד ג\' בלבד',
+            },
+            {
+                company: 'מגדל',
+                insuranceType: 'חובה + צד ג\'',
+                annualPrice: Math.round(thirdPartyBase),
+                coverages: 'נזקי גוף + נזקי רכוש לצד ג\'',
+            },
+            {
+                company: 'כלל',
+                insuranceType: 'מקיף בסיסי',
+                annualPrice: Math.round(comprehensiveBase),
+                coverages: 'חובה + צד ג\' + גניבה + נזקי תאונה + שמשות',
+            },
+            {
+                company: 'מנורה',
+                insuranceType: 'מקיף מורחב',
+                annualPrice: Math.round(premiumComprehensiveBase),
+                coverages: 'מקיף מלא + רכב חלופי + שירותי דרך + גרירה',
+            },
+        ];
+    };
+
+    const offers = calculateOffers();
 
     return (
         <div className="absolute bg-black bg-opacity-50 z-50 animate-fade-in" style={style}>
-            <div className="bg-white p-8 rounded-2xl w-full max-w-lg shadow-2xl text-center">
-                <h3 className="text-2xl font-bold mb-4 text-brand-light-blue">{currentSlide.title}</h3>
-                <div className="min-h-[120px] flex items-center justify-center">
-                    <p className="text-lg">{currentSlide.content}</p>
-                </div>
-                <div className="flex justify-between items-center mt-6">
-                    <button onClick={() => setSlideIndex(s => s - 1)} disabled={slideIndex === 0} className="bg-gray-300 py-2 px-4 rounded-lg disabled:opacity-50">הקודם</button>
-                    <span>{slideIndex + 1} / {slides.length}</span>
-                    {slideIndex < slides.length - 1 ? (
-                        <button onClick={() => setSlideIndex(s => s + 1)} className="bg-brand-teal text-white py-2 px-4 rounded-lg">הבא</button>
-                    ) : (
-                        <button onClick={onClose} className="bg-brand-magenta text-white py-2 px-4 rounded-lg">סיום</button>
-                    )}
-                </div>
+            <div className="bg-white p-6 rounded-2xl w-full max-w-2xl shadow-2xl overflow-y-auto max-h-[90vh]">
+                {step < questions.length ? (
+                    <>
+                        <h3 className="text-2xl font-bold mb-2 text-brand-light-blue">מחשבון ביטוח ({step + 1}/{questions.length})</h3>
+                        <p className="text-lg font-semibold mb-4">{questions[step].question}</p>
+                        <div className="space-y-3">
+                            {questions[step].options.map(option => (
+                                <button
+                                    key={option}
+                                    onClick={() => handleAnswer(step, option)}
+                                    className="w-full bg-gray-100 hover:bg-gray-200 p-4 rounded-lg text-right transition-colors"
+                                >
+                                    {option}
+                                </button>
+                            ))}
+                        </div>
+                        <button onClick={onClose} className="mt-6 w-full bg-gray-300 hover:bg-gray-400 text-brand-dark-blue font-bold py-2 px-4 rounded-lg transition-colors">
+                            ביטול
+                        </button>
+                    </>
+                ) : (
+                    <>
+                        <h3 className="text-2xl font-bold mb-4 text-brand-teal text-center">4 הצעות ביטוח מותאמות</h3>
+                        <div className="space-y-3">
+                            {offers.map(offer => (
+                                <div key={`${offer.company}-${offer.insuranceType}`} className="border border-gray-200 rounded-xl p-4 bg-gray-50">
+                                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                                        <div>
+                                            <p className="font-bold text-lg">{offer.company} - {offer.insuranceType}</p>
+                                            <p className="text-sm text-gray-700">{offer.coverages}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="font-bold text-brand-teal text-xl">{offer.annualPrice.toLocaleString()} ₪ לשנה</p>
+                                            <p className="text-sm text-gray-600">כ-{Math.round(offer.annualPrice / 12).toLocaleString()} ₪ לחודש</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            onSelect(offer.annualPrice, offer.company, offer.insuranceType);
+                                            onClose();
+                                        }}
+                                        className="mt-3 w-full bg-brand-magenta text-white font-bold py-2 rounded-lg hover:bg-pink-700"
+                                    >
+                                        בחרו בהצעה הזו
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                        <button onClick={onClose} className="mt-6 w-full bg-gray-300 hover:bg-gray-400 text-brand-dark-blue font-bold py-2 px-4 rounded-lg transition-colors">
+                            סגור
+                        </button>
+                    </>
+                )}
             </div>
         </div>
     );
@@ -1448,7 +1675,7 @@ type AccountsAnswers = {
     appliances: string;
     homeHours: string;
     laundry: string;
-    building: string;
+    apartmentSize: string;
 };
 
 const AccountsCalculatorModal: React.FC<{
@@ -1460,6 +1687,7 @@ const AccountsCalculatorModal: React.FC<{
     style?: React.CSSProperties;
 }> = ({ onClose, onSave, answers, setAnswers, selectedCharacter, style }) => {
     const [step, setStep] = useState(1);
+    const [removedBreakdownItems, setRemovedBreakdownItems] = useState<string[]>([]);
     const [result, setResult] = useState<{ 
         monthlyPerPerson: number; 
         note: string;
@@ -1472,11 +1700,11 @@ const AccountsCalculatorModal: React.FC<{
 
     const cityMatch = selectedCharacter?.description.match(/גר(?:ה)?\s+ב([א-ת"'\-\s]+)/);
     const city = cityMatch?.[1]?.trim() || 'תל אביב';
-    const arnonaMonthlyByCity: Record<string, number> = {
-        'תל אביב': 520,
-        'הרצליה': 500,
-        'פתח תקווה': 430,
-        'ירושלים': 400,
+    const arnonaRatePerSqmByCity: Record<string, number> = {
+        'תל אביב': 8.5,
+        'הרצליה': 8.1,
+        'פתח תקווה': 7.2,
+        'ירושלים': 6.8,
     };
 
     const handleCalculate = () => {
@@ -1485,8 +1713,10 @@ const AccountsCalculatorModal: React.FC<{
         let baseElectricity = 250;
         let baseWater = 100;
         let baseGas = 50;
-        const arnonaMonthly = arnonaMonthlyByCity[city] || 460;
-        let vaadMonthly = 120;
+        const apartmentSizeNum = Math.max(25, parseInt(answers.apartmentSize) || 70);
+        const arnonaRate = arnonaRatePerSqmByCity[city] || 7.6;
+        const arnonaMonthly = Math.round((arnonaRate * apartmentSizeNum) / 2);
+        const vaadMonthly = apartmentSizeNum >= 95 ? 170 : apartmentSizeNum >= 70 ? 130 : 90;
 
         baseElectricity *= (1 + (peopleNum - 1) * 0.4);
         baseWater *= (1 + (peopleNum - 1) * 0.6);
@@ -1517,9 +1747,6 @@ const AccountsCalculatorModal: React.FC<{
             baseElectricity -= 5;
             baseWater -= 10;
         }
-        if (answers.building === 'ללא ועד בית') vaadMonthly = 0;
-        if (answers.building === 'ועד בית גבוה') vaadMonthly = 190;
-
         const electricityMonthly = baseElectricity / 2;
         const waterMonthly = baseWater / 2;
         const gasMonthly = baseGas / 2;
@@ -1534,28 +1761,41 @@ const AccountsCalculatorModal: React.FC<{
             { name: 'ועד בית', value: Math.round(vaadMonthly / peopleNum) },
         ];
         
-        const note = `הערכה לפי ${answers.people} נפשות, עיר ${city} (ארנונה חודשית: ${arnonaMonthly.toLocaleString()} ₪), מזגן ${answers.ac}, מקלחות ${answers.shower}, בישול ${answers.cooking}, מכשירים ${answers.appliances}, שעות בבית ${answers.homeHours}, כביסות ${answers.laundry}, ורמת ועד בית ${answers.building}.`;
+        const note = `הערכה לפי ${answers.people} נפשות, דירה בגודל ${apartmentSizeNum} מ״ר, עיר ${city} (ארנונה חודשית מחושבת: גודל × תעריף למ״ר ÷ 2 = ${arnonaMonthly.toLocaleString()} ₪), מזגן ${answers.ac}, מקלחות ${answers.shower}, בישול ${answers.cooking}, מכשירים ${answers.appliances}, שעות בבית ${answers.homeHours}, כביסות ${answers.laundry}.`;
 
         setResult({ monthlyPerPerson, note, breakdown });
+        setRemovedBreakdownItems([]);
         setStep(2);
     };
+
+    const handleRemoveBreakdownItem = (itemName: string) => {
+        setRemovedBreakdownItems(prev => prev.includes(itemName) ? prev : [...prev, itemName]);
+    };
+
+    const activeBreakdown = result
+        ? result.breakdown.filter(item => !removedBreakdownItems.includes(item.name))
+        : [];
+    const adjustedMonthlyPerPerson = activeBreakdown.reduce((sum, item) => sum + item.value, 0);
     
     const handleSave = () => {
         if (result) {
-            onSave(result.monthlyPerPerson, result.note);
+            const removedText = removedBreakdownItems.length > 0
+                ? ` הוסרו מהחישוב: ${removedBreakdownItems.join(', ')}.`
+                : '';
+            onSave(adjustedMonthlyPerPerson, `${result.note}${removedText}`);
             onClose();
         }
     };
 
     type AnswerKey = keyof typeof answers;
-    const questionSet: { key: AnswerKey, label: string, options: string[] }[] = [
+    const questionSet: { key: AnswerKey, label: string, options?: string[], inputType?: 'number' }[] = [
         { key: 'people', label: 'כמה אנשים גרים בדירה (כולל אותך)?', options: ['1', '2', '3', '4+'] },
         { key: 'homeHours', label: 'כמה שעות אתם בבית בימי חול?', options: ['מעט', 'בינוני', 'הרבה'] },
         { key: 'ac', label: 'איך היית מגדיר/ה את השימוש שלך במזגן?', options: ['הרבה', 'לפעמים', 'כמעט ולא'] },
         { key: 'shower', label: 'איך נראות המקלחות שלך בדרך כלל?', options: ['ארוכות וחמות', 'רגילות'] },
         { key: 'laundry', label: 'מה תדירות הכביסות בדירה?', options: ['נמוכה', 'בינונית', 'גבוהה'] },
         { key: 'cooking', label: 'מה הרגלי הבישול שלך?', options: ['כל יום', 'מדי פעם', 'כמעט ולא'] },
-        { key: 'building', label: 'מה רמת ועד הבית בבניין?', options: ['ללא ועד בית', 'ועד בית בסיסי', 'ועד בית גבוה'] },
+        { key: 'apartmentSize', label: 'מה גודל הדירה במ"ר?', inputType: 'number' },
         { key: 'appliances', label: 'מה לגבי מכשירי חשמל אחרים (מחשב, טלוויזיה)?', options: ['הרבה', 'ממוצע', 'חיסכון'] },
     ];
     
@@ -1570,21 +1810,33 @@ const AccountsCalculatorModal: React.FC<{
                             {questionSet.map(q => (
                                 <div key={q.key}>
                                     <label className="font-bold text-lg">{q.label}</label>
-                                    <div className="flex flex-wrap gap-2 mt-2">
-                                        {q.options.map(opt => (
-                                            <button
-                                                key={opt}
-                                                onClick={() => handleAnswerChange(q.key, opt)}
-                                                className={`py-2 px-4 rounded-full font-semibold transition-colors ${
-                                                    answers[q.key] === opt
-                                                        ? 'bg-brand-teal text-white'
-                                                        : 'bg-gray-200 hover:bg-gray-300'
-                                                }`}
-                                            >
-                                                {opt}
-                                            </button>
-                                        ))}
-                                    </div>
+                                    {q.inputType === 'number' ? (
+                                        <input
+                                            type="number"
+                                            min={20}
+                                            max={250}
+                                            value={answers[q.key]}
+                                            onChange={(e) => handleAnswerChange(q.key, e.target.value)}
+                                            placeholder="לדוגמה: 70"
+                                            className="w-full mt-2 p-3 rounded-lg border border-gray-300 focus:border-brand-teal focus:ring-1 focus:ring-brand-teal"
+                                        />
+                                    ) : (
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {q.options?.map(opt => (
+                                                <button
+                                                    key={opt}
+                                                    onClick={() => handleAnswerChange(q.key, opt)}
+                                                    className={`py-2 px-4 rounded-full font-semibold transition-colors ${
+                                                        answers[q.key] === opt
+                                                            ? 'bg-brand-teal text-white'
+                                                            : 'bg-gray-200 hover:bg-gray-300'
+                                                    }`}
+                                                >
+                                                    {opt}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
@@ -1599,17 +1851,26 @@ const AccountsCalculatorModal: React.FC<{
                 {step === 2 && result && (
                     <div className="text-center animate-fade-in">
                         <h4 className="font-bold text-xl">הערכת ההוצאה החודשית שלך:</h4>
-                        <p className="font-bold text-6xl text-brand-magenta my-4">{result.monthlyPerPerson.toLocaleString()} ₪</p>
+                        <p className="font-bold text-6xl text-brand-magenta my-4">{adjustedMonthlyPerPerson.toLocaleString()} ₪</p>
                         <div className="bg-gray-100 p-4 rounded-lg text-right">
                             <h5 className="font-bold text-lg mb-2">פירוט ההערכה:</h5>
                             <ul className="space-y-1">
-                                {result.breakdown.map(item => (
-                                    <li key={item.name} className="flex justify-between">
+                                {activeBreakdown.map(item => (
+                                    <li
+                                        key={item.name}
+                                        onClick={() => handleRemoveBreakdownItem(item.name)}
+                                        className="group relative flex justify-between cursor-pointer rounded-md px-2 py-1 transition-colors hover:bg-red-50"
+                                        title="לחצו להסרת החשבון"
+                                    >
                                         <span>{item.name}:</span>
                                         <span className="font-mono">{item.value.toLocaleString()} ₪</span>
+                                        <span className="pointer-events-none absolute left-2 right-2 top-1/2 hidden -translate-y-1/2 border-t-2 border-red-400 group-hover:block" />
                                     </li>
                                 ))}
                             </ul>
+                            <p className="mt-3 text-sm text-gray-600">
+                                ניתן להסיר חשבונות שכלולים בתשלום השכירות של הדירה שלכם
+                            </p>
                         </div>
                         <div className="mt-8 flex flex-col gap-2">
                             <button onClick={handleSave} className="w-full text-white font-bold py-3 rounded-lg bg-brand-teal hover:bg-teal-600">
@@ -1988,6 +2249,48 @@ const ArrowIcon: React.FC<{ className?: string }> = ({ className }) => (
     </svg>
 );
 
+type TriviaDifficulty = 'קל' | 'בינוני' | 'מאתגר';
+type TriviaQuestion = { question: string; options: string[]; answer: string };
+
+const budgetTriviaByDifficulty: Record<TriviaDifficulty, TriviaQuestion[]> = {
+    קל: [
+        { question: 'מה נחשב יעד בריא לחיסכון חודשי מההכנסה הנטו?', options: ['1%-2%', '5%-10%', '20%-30%', 'לא צריך לחסוך בכלל'], answer: '5%-10%' },
+        { question: 'איזו פעולה עוזרת הכי הרבה להימנע ממינוס?', options: ['להימנע ממעקב', 'לשלם רק במזומן תמיד', 'לעקוב אחרי הוצאות מול הכנסות', 'לקחת הלוואה קטנה כל חודש'], answer: 'לעקוב אחרי הוצאות מול הכנסות' },
+        { question: 'איך נכון להתייחס להוצאה שנתית (למשל ביטוח)?', options: ['להזין רק בחודש התשלום', 'לחלק ל-12 חודשים', 'להתעלם ממנה', 'להכפיל ב-12'], answer: 'לחלק ל-12 חודשים' },
+        { question: 'מה המשמעות של מאזן חודשי חיובי?', options: ['ההוצאות גבוהות מההכנסות', 'אין הכנסות בכלל', 'נשאר כסף אחרי כל ההוצאות', 'צריך להגדיל הלוואות'], answer: 'נשאר כסף אחרי כל ההוצאות' },
+        { question: 'לפני רכישה גדולה, מה צעד נכון?', options: ['לקנות מיד', 'לבדוק השפעה על התקציב החודשי', 'להגדיל מסגרת אשראי', 'להתעלם מהוצאות נוספות'], answer: 'לבדוק השפעה על התקציב החודשי' },
+        { question: 'איזו הוצאה נחשבת בדרך כלל קבועה?', options: ['בילויים', 'שכירות', 'קניות ספונטניות', 'מתנות'], answer: 'שכירות' },
+        { question: 'למה חשוב להשוות מחירים לפני קנייה?', options: ['כדי לבזבז יותר זמן', 'כדי לבחור מוצר יקר יותר', 'כדי לחסוך כסף', 'אין חשיבות להשוואה'], answer: 'כדי לחסוך כסף' },
+        { question: 'מה נכון לעשות עם הוצאה גדולה לא צפויה?', options: ['להתעלם ממנה', 'לעדכן את התקציב מיד', 'להוציא עוד כסף כדי לאזן', 'למחוק אותה מהדוח'], answer: 'לעדכן את התקציב מיד' },
+        { question: 'מהו יתרון מרכזי של מעקב תקציב?', options: ['מבלבל יותר', 'נותן שליטה על הכסף', 'מבטל את כל ההוצאות', 'מיותר לתלמידים'], answer: 'נותן שליטה על הכסף' },
+        { question: 'כאשר ההוצאות עולות על ההכנסות, המאזן הוא:', options: ['חיובי', 'מאוזן', 'שלילי', 'לא רלוונטי'], answer: 'שלילי' }
+    ],
+    בינוני: [
+        { question: 'אם הכנסת הנטו היא 9,000 ₪, כמה בערך כדאי לחסוך ב-10%?', options: ['90 ₪', '450 ₪', '900 ₪', '1,500 ₪'], answer: '900 ₪' },
+        { question: 'הוצאה שנתית של 2,400 ₪ צריכה להופיע בתקציב חודשי כ:', options: ['100 ₪', '150 ₪', '200 ₪', '400 ₪'], answer: '200 ₪' },
+        { question: 'מה היתרון המרכזי בשימוש בדוח סיכום תקציב?', options: ['רק לצורך עיצוב', 'לזיהוי דפוסי הוצאות ושיפור החלטות', 'אין יתרון מעשי', 'להגדלת הכנסות אוטומטית'], answer: 'לזיהוי דפוסי הוצאות ושיפור החלטות' },
+        { question: 'מה עדיף לבדוק לפני התחייבות לתשלומים?', options: ['רק מחיר המוצר', 'רק מספר התשלומים', 'השפעה על מאזן חודשי + עלות כוללת', 'רק המלצה מחבר'], answer: 'השפעה על מאזן חודשי + עלות כוללת' },
+        { question: 'איזו הוצאה הכי סביר לסווג כמשתנה?', options: ['שכירות', 'ארנונה', 'קניות בסופר', 'קרן פנסיה'], answer: 'קניות בסופר' },
+        { question: 'אם המאזן החודשי קטן מאוד אך חיובי, מה צעד נכון?', options: ['להתעלם', 'להוסיף הוצאה קבועה חדשה', 'לייצר כרית ביטחון בהדרגה', 'להפסיק לעקוב'], answer: 'לייצר כרית ביטחון בהדרגה' },
+        { question: 'מה המשמעות של "כרית ביטחון"?', options: ['הלוואה מהבנק', 'חיסכון לשעת חירום', 'קנייה גדולה מתוכננת', 'כרטיס אשראי נוסף'], answer: 'חיסכון לשעת חירום' },
+        { question: 'מדוע חשוב לעדכן הערות ליד סעיפי הוצאה?', options: ['זה רק לעיצוב', 'כדי להבין מה עומד מאחורי המספר', 'כדי לנפח דוח', 'אין משמעות'], answer: 'כדי להבין מה עומד מאחורי המספר' },
+        { question: 'איזה מצב מעיד לרוב על סיכון תקציבי?', options: ['חיסכון קבוע קטן', 'הוצאות גדולות קבועות בלי בדיקה', 'מאזן חיובי יציב', 'השוואת מחירים'], answer: 'הוצאות גדולות קבועות בלי בדיקה' },
+        { question: 'הדרך היעילה לשיפור תקציב היא בדרך כלל:', options: ['צעד חד וקיצוני', 'מעקב ושינויים קטנים עקביים', 'עצירת כל ההוצאות', 'הימנעות מכל תכנון'], answer: 'מעקב ושינויים קטנים עקביים' }
+    ],
+    מאתגר: [
+        { question: 'הכנסה נטו 11,200 ₪ והוצאות 10,360 ₪. מה המאזן?', options: ['840 ₪', '740 ₪', '1,200 ₪', '960 ₪'], answer: '840 ₪' },
+        { question: 'אם הוספת הוצאה קבועה של 350 ₪ בחודש, מה צריך לבדוק קודם?', options: ['רק האם היא נחוצה', 'רק אם יש הנחה', 'אם המאזן החדש נשאר חיובי לאורך זמן', 'רק דעת חברים'], answer: 'אם המאזן החדש נשאר חיובי לאורך זמן' },
+        { question: 'עלות שנתית 6,600 ₪ הופכת לחודשית של:', options: ['450 ₪', '500 ₪', '550 ₪', '600 ₪'], answer: '550 ₪' },
+        { question: 'מה עלול לקרות אם משתמשים בתשלומים בלי לבדוק עלות כוללת?', options: ['אין השפעה', 'העלות הכוללת עלולה לעלות משמעותית', 'המחיר תמיד יורד', 'זה תמיד עדיף ממזומן'], answer: 'העלות הכוללת עלולה לעלות משמעותית' },
+        { question: 'איזה צירוף מעיד על התנהלות תקציבית נכונה?', options: ['מאזן שלילי וחוסר מעקב', 'מאזן חיובי + מעקב + חיסכון', 'אין חיסכון ומינוס קבוע', 'הוצאות ספונטניות גבוהות'], answer: 'מאזן חיובי + מעקב + חיסכון' },
+        { question: 'כיצד נכון להעריך השפעת רכישת רכב על התקציב?', options: ['רק מחיר הרכב', 'רק דלק', 'סכום תשלומים + ביטוח + דלק + אגרות + טיפולים', 'רק מחיר ביטוח'], answer: 'סכום תשלומים + ביטוח + דלק + אגרות + טיפולים' },
+        { question: 'מה משמעות התאמת תקציב לדמות (פרופיל הכנסה)?', options: ['אותו תקציב לכולם', 'התאמת החלטות להיקף הכנסה אמיתי', 'בחירה אקראית בהוצאות', 'התעלמות מהכנסה נטו'], answer: 'התאמת החלטות להיקף הכנסה אמיתי' },
+        { question: 'מתי עדיף להפחית הוצאות משתנות?', options: ['רק כשיש עודף גדול', 'כשמאזן נחלש או יעד חיסכון לא מושג', 'אין צורך להפחית לעולם', 'רק בסוף שנה'], answer: 'כשמאזן נחלש או יעד חיסכון לא מושג' },
+        { question: 'אם יעד חיסכון הוא 8% מ-9,500 ₪, מה יעד החיסכון החודשי?', options: ['560 ₪', '660 ₪', '760 ₪', '860 ₪'], answer: '760 ₪' },
+        { question: 'איזו החלטה מעידה על חשיבה ארוכת טווח?', options: ['להתמקד רק בחודש הנוכחי', 'להתחשב בהוצאות שנתיות וחירום בתכנון', 'להתעלם מביטוח ודלק', 'לבטל מעקב אחרי קניות'], answer: 'להתחשב בהוצאות שנתיות וחירום בתכנון' }
+    ]
+};
+
 
 const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }) => {
   const rowRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -2014,8 +2317,7 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
   const [carDetails, setCarDetails] = useState<{ year: string; price: string; } | null>(null);
   const FUEL_PRICE_PER_LITER = 7.5; // Approximation
 
-  const [insuranceInputString, setInsuranceInputString] = useState('');
-  const [clothingInputString, setClothingInputString] = useState('');
+    const [clothingInputString, setClothingInputString] = useState('0');
 
   const [drivingScale, setDrivingScale] = useState(5);
   
@@ -2030,11 +2332,92 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
         appliances: 'ממוצע',
         homeHours: 'בינוני',
         laundry: 'בינונית',
-        building: 'ועד בית בסיסי'
+        apartmentSize: '70'
     });
   const [entertainmentItems, setEntertainmentItems] = useState([ { id: 1, name: 'מסעדה 🍽️', price: 80, count: 0, isEditable: false, customName: '' }, { id: 2, name: 'מסיבה/סרט 🎉', price: 100, count: 0, isEditable: false, customName: '' }, { id: 3, name: 'טיול יומי 🏞️', price: 150, count: 0, isEditable: false, customName: '' }, { id: 4, name: 'הזמנת אוכל הביתה 🥡', price: 90, count: 0, isEditable: false, customName: '' }, { id: 5, name: 'אחר 🤷', price: 0, count: 0, isEditable: true, customName: '' }, ]);
   const [selectedSubscriptions, setSelectedSubscriptions] = useState<string[]>([]);
   const [maintenanceCostInput, setMaintenanceCostInput] = useState('');
+  const [triviaQuestionIndex, setTriviaQuestionIndex] = useState(0);
+  const [triviaScore, setTriviaScore] = useState(0);
+  const [triviaSelectedAnswer, setTriviaSelectedAnswer] = useState<string | null>(null);
+  const [triviaFeedback, setTriviaFeedback] = useState('');
+  const [triviaFinished, setTriviaFinished] = useState(false);
+    const [triviaDifficulty, setTriviaDifficulty] = useState<TriviaDifficulty | null>(null);
+    const [hasOpenedBudgetGame, setHasOpenedBudgetGame] = useState(false);
+    
+
+    const activeTriviaQuestions = triviaDifficulty ? budgetTriviaByDifficulty[triviaDifficulty] : [];
+
+    const goToStep = (targetStep: number) => {
+        if (targetStep > 0 && !selectedCharacter) return;
+        if (targetStep === 2 && !canMoveToSummaryChapter) return;
+        setStep(targetStep);
+    };
+
+  const handleTriviaAnswer = (answer: string) => {
+    if (triviaSelectedAnswer) return;
+        if (!activeTriviaQuestions.length) return;
+    setTriviaSelectedAnswer(answer);
+        const correct = activeTriviaQuestions[triviaQuestionIndex].answer;
+    if (answer === correct) {
+        setTriviaScore(prev => prev + 1);
+        setTriviaFeedback('נכון מאוד!');
+    } else {
+        setTriviaFeedback(`תשובה לא נכונה. התשובה הנכונה היא: ${correct}`);
+    }
+  };
+
+  const handleNextTriviaQuestion = () => {
+        if (triviaQuestionIndex < activeTriviaQuestions.length - 1) {
+        setTriviaQuestionIndex(prev => prev + 1);
+        setTriviaSelectedAnswer(null);
+        setTriviaFeedback('');
+    } else {
+        setTriviaFinished(true);
+        if (!reportGenerated) {
+            onComplete();
+            setReportGenerated(true);
+        }
+    }
+  };
+
+  const resetTrivia = () => {
+    setTriviaQuestionIndex(0);
+    setTriviaScore(0);
+    setTriviaSelectedAnswer(null);
+    setTriviaFeedback('');
+    setTriviaFinished(false);
+        setTriviaDifficulty(null);
+  };
+
+  const renderProgressBar = () => {
+    const steps = [
+        { id: 0, label: 'בחירת דמות', icon: '👤' },
+        { id: 1, label: 'ניהול תקציב', icon: '📊' },
+        { id: 2, label: 'דוח סיכום', icon: '📄' },
+        { id: 3, label: 'טריוויה', icon: '🧠' },
+    ];
+
+    return (
+        <div className="mb-8 bg-white/40 backdrop-blur-md border border-white/30 rounded-2xl p-4">
+            <div className="flex items-start">
+                {steps.map((stage, index) => (
+                    <React.Fragment key={stage.id}>
+                        <div className="flex flex-col items-center flex-1 cursor-default">
+                            <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${step >= stage.id ? 'bg-brand-teal border-brand-teal text-white' : 'bg-white/60 border-gray-300 text-gray-500'}`}>
+                                <span className="text-2xl">{stage.icon}</span>
+                            </div>
+                            <p className={`mt-2 text-sm md:text-base text-center font-bold ${step >= stage.id ? 'text-brand-teal' : 'text-gray-500'}`}>{stage.label}</p>
+                        </div>
+                        {index < steps.length - 1 && (
+                            <div className={`flex-1 h-1 mt-7 mx-2 ${step > stage.id ? 'bg-brand-teal' : 'bg-gray-300'}`}></div>
+                        )}
+                    </React.Fragment>
+                ))}
+            </div>
+        </div>
+    );
+  };
 
 
   const handleOpenShareModal = () => {
@@ -2158,13 +2541,9 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
   };
 
     useEffect(() => {
-        const insuranceItem = expenses.find(e => e.category === 'רכב- ביטוח');
-        if (insuranceItem) {
-            setInsuranceInputString(String(insuranceItem.note?.match(/(\d+,?)+/) ? insuranceItem.note.match(/(\d+,?)+/)![0].replace(/,/g, '') : ''));
-        }
         const clothingItem = expenses.find(e => e.category === 'הוצאות ביגוד');
         if (clothingItem) {
-            setClothingInputString(String(clothingItem.note?.match(/(\d+,?)+/) ? clothingItem.note.match(/(\d+,?)+/)![0].replace(/,/g, '') : ''));
+            setClothingInputString(String(clothingItem.note?.match(/(\d+,?)+/) ? clothingItem.note.match(/(\d+,?)+/)![0].replace(/,/g, '') : '0'));
         }
     }, [expenses]);
 
@@ -2302,6 +2681,54 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
           .every(e => e.amount > 0);
   }, [userExpenses]);
 
+    const canMoveToSummaryChapter = areAllExpensesFilled && hasOpenedBudgetGame;
+
+    const openBudgetGame = () => {
+        window.open('https://wordwall.net/resource/104754308', '_blank', 'noopener,noreferrer');
+        setHasOpenedBudgetGame(true);
+    };
+
+    const renderChapterNavigation = () => {
+        const isFirstStep = step === 0;
+        const isLastStep = step === 3;
+        const canGoNext =
+            step === 0 ? !!selectedCharacter :
+            step === 1 ? canMoveToSummaryChapter :
+            step === 2 ? true :
+            false;
+
+        const handlePrev = () => {
+            if (isFirstStep) return;
+            goToStep(step - 1);
+        };
+
+        const handleNext = () => {
+            if (!canGoNext || isLastStep) return;
+            goToStep(step + 1);
+        };
+
+        return (
+            <div className="sticky bottom-0 mt-8 z-20">
+                <div className="bg-white/85 backdrop-blur-md border border-white/40 rounded-2xl p-3 flex items-center justify-between gap-3">
+                    <button
+                        onClick={handlePrev}
+                        disabled={isFirstStep}
+                        className="bg-gray-300 hover:bg-gray-400 text-brand-dark-blue font-bold py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed text-xl"
+                    >
+                        לפרק הקודם
+                    </button>
+                    <button
+                        onClick={handleNext}
+                        disabled={!canGoNext || isLastStep}
+                        className={`font-bold py-3 px-6 rounded-lg text-xl text-white ${canGoNext && !isLastStep ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}`}
+                    >
+                        לפרק הבא
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
   useEffect(() => {
     if (netIncome > 0) {
         const savingsAmount = Math.round((savingsPercentage / 100) * Number(netIncome));
@@ -2402,6 +2829,7 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
   
   const handleSelectCharacter = (character: Character) => {
     setSelectedCharacter(character);
+        setHasOpenedBudgetGame(false);
     setStep(1);
   };
   
@@ -2480,10 +2908,16 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
       updateBudgetFromModal('חשבונות', monthlyCost, note);
   };
 
+  const handleSaveInsurance = (annualPrice: number, company: string, insuranceType: string) => {
+      const monthlyPrice = Math.round(annualPrice / 12);
+      updateBudgetFromModal('רכב- ביטוח', monthlyPrice, `חברת הביטוח: ${company}, סוג הביטוח: ${insuranceType}, תשלום שנתי: ${annualPrice.toLocaleString()} ₪`);
+  };
+
 
   if (step === 0) {
     return (
         <ModuleView title={title} onBack={onBack}>
+            {renderProgressBar()}
             {activeModal?.type === 'createCharacter' && <CreateCharacterModal 
                 onClose={closeModal}
                 onCreate={(char) => {
@@ -2512,12 +2946,139 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
                     <p className="text-lg">התאימו את התקציב לנתונים שלכם</p>
                 </div>
             </div>
+            {renderChapterNavigation()}
         </ModuleView>
     );
   }
 
+    if (step === 2) {
+        return (
+            <ModuleView title={title} onBack={() => setStep(1)}>
+                {renderProgressBar()}
+                {reportDataForPdf && (
+                    <div ref={reportRef} style={{ position: 'absolute', left: '-9999px', top: 0, zIndex: -1 }}>
+                            <SummaryReportForPdf {...reportDataForPdf} />
+                    </div>
+                )}
+                <ShareReportModal
+                    isOpen={isShareModalOpen}
+                    onClose={() => setIsShareModalOpen(false)}
+                    onDownload={handleDownload}
+                    onShare={handleShare}
+                    onCopyLink={handleCopyLink}
+                    isProcessing={isProcessing}
+                    isCopied={isCopied}
+                    style={shareModalStyle}
+                />
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="bg-white/50 backdrop-blur-md border border-white/30 p-8 rounded-2xl space-y-6">
+                        <h3 className="text-center font-bold text-2xl">ניתוח תזרים</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center my-6">
+                            <div><p className="text-lg">הכנסה נטו</p><p className="font-bold text-3xl text-green-600">{netIncome.toLocaleString('he-IL', {style:'currency', currency:'ILS'})}</p></div>
+                            <div><p className="text-lg">סה"כ הוצאות</p><p className="font-bold text-3xl text-red-500">{totalUserExpenses.toLocaleString('he-IL', {style:'currency', currency:'ILS'})}</p></div>
+                            <div><p className="text-lg">מאזן חודשי</p><p className={`font-bold text-3xl ${balance >= 0 ? 'text-brand-teal' : 'text-brand-magenta'}`}>{balance.toLocaleString('he-IL', {style:'currency', currency:'ILS'})}</p></div>
+                        </div>
+                        <div className="h-96 w-full">
+                            <h4 className="text-center font-bold text-lg mb-2">פירוט הוצאות</h4>
+                            <ResponsiveContainer width="100%" height="90%">
+                                <PieChart>
+                                    <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" label={({ percent }) => `${((Number(percent) || 0) * 100).toFixed(0)}%`}>
+                                        {chartData.map((entry, index) => <Cell key={`summary-cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                                    </Pie>
+                                    <RechartsTooltip />
+                                    <Legend />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+                    <div className="bg-white/50 backdrop-blur-md border border-white/30 p-6 rounded-2xl flex flex-col items-center justify-center">
+                        <h3 className="text-center font-bold text-2xl mb-4">דוח הסיכום שלכם מוכן</h3>
+                        <p className="text-center mb-4">כאן תוכלו להפיק, להוריד ולשתף את הדוח המסכם של התקציב שבניתם.</p>
+                        <button
+                            ref={shareButtonRef}
+                            onClick={handleOpenShareModal}
+                            title='הפק דו"ח סיכום'
+                            className="w-full bg-brand-magenta hover:bg-pink-700 text-white font-bold py-4 px-4 rounded-xl transition-all transform hover:scale-105 text-3xl shadow-lg"
+                        >
+                            הפק דו"ח סיכום
+                        </button>
+                    </div>
+                </div>
+                {renderChapterNavigation()}
+            </ModuleView>
+        );
+    }
+
+    if (step === 3) {
+        const currentQuestion = activeTriviaQuestions[triviaQuestionIndex];
+        return (
+            <ModuleView title={title} onBack={() => setStep(2)}>
+                {renderProgressBar()}
+                <div className="bg-white/50 backdrop-blur-md border border-white/30 p-8 rounded-2xl max-w-4xl mx-auto">
+                    <h3 className="text-center font-bold text-4xl mb-4 text-brand-light-blue">טריוויה ניהול תקציב</h3>
+                    {!triviaDifficulty ? (
+                        <div className="text-center space-y-4">
+                            <p className="text-2xl text-brand-dark-blue/80">בחרו רמת קושי לפני שמתחילים:</p>
+                            <div className="flex flex-wrap gap-3 justify-center">
+                                <button onClick={() => setTriviaDifficulty('קל')} className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg text-2xl">קל</button>
+                                <button onClick={() => setTriviaDifficulty('בינוני')} className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-8 rounded-lg text-2xl">בינוני</button>
+                                <button onClick={() => setTriviaDifficulty('מאתגר')} className="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-lg text-2xl">מאתגר</button>
+                            </div>
+                        </div>
+                    ) : !triviaFinished && currentQuestion ? (
+                        <>
+                            <p className="text-center text-xl mb-1 text-brand-dark-blue/80">רמה: <span className="font-bold">{triviaDifficulty}</span></p>
+                            <p className="text-center text-xl mb-3 text-brand-dark-blue/80">שאלה {triviaQuestionIndex + 1} מתוך {activeTriviaQuestions.length}</p>
+                            <h4 className="font-bold text-3xl mb-6 text-center">{currentQuestion.question}</h4>
+                            <div className="space-y-3">
+                                {currentQuestion.options.map(option => {
+                                    const isSelected = triviaSelectedAnswer === option;
+                                    const isCorrect = option === currentQuestion.answer;
+                                    const className = triviaSelectedAnswer
+                                        ? isCorrect
+                                            ? 'bg-green-500 text-white'
+                                            : isSelected
+                                                ? 'bg-red-500 text-white'
+                                                : 'bg-gray-200 text-gray-600'
+                                        : 'bg-white hover:bg-brand-light-blue/20';
+
+                                    return (
+                                        <button
+                                            key={option}
+                                            onClick={() => handleTriviaAnswer(option)}
+                                            disabled={!!triviaSelectedAnswer}
+                                            className={`w-full text-right p-4 rounded-lg border border-gray-300 text-2xl transition-colors ${className}`}
+                                        >
+                                            {option}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            {triviaFeedback && <p className="mt-4 text-center font-bold text-xl">{triviaFeedback}</p>}
+                            {triviaSelectedAnswer && (
+                                <button onClick={handleNextTriviaQuestion} className="w-full mt-4 bg-brand-teal text-white font-bold py-3 rounded-lg text-2xl">
+                                    {triviaQuestionIndex < activeTriviaQuestions.length - 1 ? 'לשאלה הבאה' : 'סיום טריוויה'}
+                                </button>
+                            )}
+                        </>
+                    ) : (
+                        <div className="text-center">
+                            <p className="text-3xl font-bold mb-3">סיימתם את הטריוויה!</p>
+                            <p className="text-2xl mb-2">רמה: <span className="font-bold">{triviaDifficulty}</span></p>
+                            <p className="text-2xl mb-4">הציון שלכם: {triviaScore} מתוך {activeTriviaQuestions.length}</p>
+                            <button onClick={resetTrivia} className="bg-brand-magenta hover:bg-pink-700 text-white font-bold py-3 px-8 rounded-lg text-2xl">נסו שוב</button>
+                        </div>
+                    )}
+                </div>
+                {renderChapterNavigation()}
+            </ModuleView>
+        );
+    }
+
   return (
     <ModuleView title={title} onBack={() => setStep(0)}>
+            {renderProgressBar()}
       {activeModal?.type === 'unforeseen' && <UnforeseenEventModal style={modalPosition} onClose={closeModal} onResult={handleUnforeseenResult} />}
       {activeModal?.type.startsWith('carQuestionnaire') && <CarQuestionnaireModal style={modalPosition} onClose={closeModal} />}
     {activeModal?.type.startsWith('rentQuestionnaire') && <RentQuestionnaireModal style={modalPosition} onClose={closeModal} selectedCharacter={selectedCharacter} />}
@@ -2532,8 +3093,8 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
           onSelect={(name) => handleNoteChange(14, `רשת: ${name}`)}
       />}
       {activeModal?.type.startsWith('subscriptions') && <SubscriptionsModal initialSelected={selectedSubscriptions} setInitialSelected={setSelectedSubscriptions} style={modalPosition} onClose={closeModal} onSave={handleSaveSubscriptions} />}
-      {activeModal?.type.startsWith('carPurchase') && <CarPurchaseModal details={carPurchaseDetails} setDetails={setCarPurchaseDetails} style={modalPosition} onClose={closeModal} onPurchaseComplete={handlePurchaseComplete} />}
-      {activeModal?.type.startsWith('insurance') && <InsuranceExplanationModal style={modalPosition} onClose={closeModal} />}
+    {activeModal?.type.startsWith('carPurchase') && <CarPurchaseModal details={carPurchaseDetails} setDetails={setCarPurchaseDetails} netIncome={netIncome} style={modalPosition} onClose={closeModal} onPurchaseComplete={handlePurchaseComplete} />}
+    {activeModal?.type.startsWith('insuranceCalculator') && <InsuranceCalculatorModal style={modalPosition} onClose={closeModal} onSelect={handleSaveInsurance} />}
       {activeModal?.type.startsWith('licenseFee') && <LicenseFeeExplanationModal style={modalPosition} onClose={closeModal} />}
       {activeModal?.type.startsWith('fuelCost') && <FuelCostExplanationModal style={modalPosition} onClose={closeModal} />}
       {activeModal?.type.startsWith('maintenanceCalculator') && <CarMaintenanceCalculatorModal cost={maintenanceCostInput} setCost={setMaintenanceCostInput} style={modalPosition} onClose={closeModal} onSave={handleSaveMaintenance} drivingScale={drivingScale} setDrivingScale={setDrivingScale} />}
@@ -2685,30 +3246,21 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
                                 )}
                             </div>
                             <div className="relative flex-shrink-0">
-                                {item.category === 'רכב- ביטוח' ? (
+                                {item.category === 'הוצאות ביגוד' ? (
                                     <input 
                                         type="number" 
-                                        placeholder="הזן סכום שנתי"
-                                        value={insuranceInputString} 
-                                        onChange={(e) => handleAnnualAmountChange(item.id, e.target.value, setInsuranceInputString)}
-                                        className={`w-48 text-left py-2 pr-2 pl-12 rounded-lg border-2 shadow-inner bg-white transition-all focus:border-brand-teal focus:ring-1 focus:ring-brand-teal text-base`}
-                                    />
-                                ) : item.category === 'הוצאות ביגוד' ? (
-                                    <input 
-                                        type="number" 
-                                        placeholder="הזן סכום שנתי"
                                         value={clothingInputString} 
                                         onChange={(e) => handleAnnualAmountChange(item.id, e.target.value, setClothingInputString)}
-                                        className={`w-48 text-left py-2 pr-2 pl-12 rounded-lg border-2 shadow-inner bg-white transition-all focus:border-brand-teal focus:ring-1 focus:ring-brand-teal text-base`}
+                                        className={`w-36 text-left py-2 pr-2 pl-12 rounded-lg border-2 shadow-inner bg-white transition-all focus:border-brand-teal focus:ring-1 focus:ring-brand-teal text-base`}
                                     />
                                 ) : (
                                     <input 
                                         type="number" 
                                         value={item.amount || ''} 
                                         onChange={(e) => handleExpenseChange(item.id, parseFloat(e.target.value) || 0)}
-                                        readOnly={['חסכון והשקעות', 'רכב- דלק', 'מנויים', 'רכב- אגרות', 'רכב - טיפולים', 'בילויים ומסעדות', 'חשבונות', 'שכירות', 'רכב - קנייה'].includes(item.category)}
+                                        readOnly={['חסכון והשקעות', 'רכב- דלק', 'מנויים', 'רכב - טיפולים', 'בילויים ומסעדות', 'חשבונות', 'שכירות', 'רכב - קנייה'].includes(item.category)}
                                         className={`w-36 text-left py-2 pr-2 pl-12 rounded-lg border-2 shadow-inner bg-slate-50 transition-all focus:border-brand-teal focus:ring-1 focus:ring-brand-teal text-base ${
-                                        ['חסכון והשקעות', 'רכב- דלק', 'מנויים', 'רכב- אגרות', 'רכב - טיפולים', 'בילויים ומסעדות', 'חשבונות', 'שכירות', 'רכב - קנייה'].includes(item.category) 
+                                        ['חסכון והשקעות', 'רכב- דלק', 'מנויים', 'רכב - טיפולים', 'בילויים ומסעדות', 'חשבונות', 'שכירות', 'רכב - קנייה'].includes(item.category) 
                                         ? 'bg-gray-200 cursor-not-allowed' 
                                         : 'bg-white'}`
                                     }
@@ -2729,8 +3281,8 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
                                 {item.category === 'בלת"מים' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('unforeseen', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500 inline-flex items-center gap-1"><span>⚙</span><span>בחירה</span></button> </> )}
                                 {item.category === 'מנויים' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('subscriptions', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500 inline-flex items-center gap-1"><span>⚙</span><span>בחירה</span></button> </> )}
                                 {item.category === 'רכב - קנייה' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('carQuestionnaire', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500 inline-flex items-center gap-1"><span>⚙</span><span>שאלון הכוונה</span></button> <ArrowIcon className="w-5 h-5 text-gray-400" /> <a href={categoryLinks[item.category]} target="_blank" rel="noopener noreferrer" className="text-base bg-brand-teal text-black py-1 px-3 rounded-full hover:bg-teal-500 inline-flex items-center gap-1"><span>🔗</span><span>קישור לאתר</span></a> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('carPurchase', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500 inline-flex items-center gap-1"><span>⚙</span><span>ביצוע הרכישה</span></button> </> )}
-                                {item.category === 'רכב- ביטוח' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <a href={categoryLinks[item.category]} target="_blank" rel="noopener noreferrer" className="text-base bg-brand-teal text-black py-1 px-3 rounded-full hover:bg-teal-500 inline-flex items-center gap-1"><span>🔗</span><span>קישור לאתר</span></a> <ArrowIcon className="w-5 h-5 text-gray-400" /> <a href="https://docs.google.com/presentation/d/1N_xUNS_ZQZW4VfumLDKk_dav53gvULiqjxjZ4NDj3fo/edit?usp=sharing" target="_blank" rel="noopener noreferrer" className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500 inline-flex items-center gap-1"><span>⚙</span><span>הנחיות למילוי</span></a> </> )}
-                                {item.category === 'רכב- אגרות' && <></>}
+                                {item.category === 'רכב- ביטוח' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <a href={categoryLinks[item.category]} target="_blank" rel="noopener noreferrer" className="text-base bg-brand-teal text-black py-1 px-3 rounded-full hover:bg-teal-500 inline-flex items-center gap-1"><span>🔗</span><span>קישור לאתר</span></a> <span className="text-base font-bold text-gray-600">או</span> <button onClick={() => openModal('insuranceCalculator', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500 inline-flex items-center gap-1"><span>⚙</span><span>מחשבון ביטוח</span></button> </> )}
+                                {item.category === 'רכב- אגרות' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <a href="https://www.carzone.co.il/finance/registration-tax/" target="_blank" rel="noopener noreferrer" className="text-base bg-brand-teal text-black py-1 px-3 rounded-full hover:bg-teal-500 inline-flex items-center gap-1"><span>🔗</span><span>קישור לאתר</span></a> </> )}
                                 {item.category === 'רכב- דלק' && <></>}
                                 {item.category === 'רכב - טיפולים' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('maintenanceCalculator', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500 inline-flex items-center gap-1"><span>⚙</span><span>מחשבון</span></button> </> )}
                                 {item.category === 'הוצאות ביגוד' && ( <> <ArrowIcon className="w-5 h-5 text-gray-400" /> <button onClick={() => openModal('clothingStore', item.id)} className="text-base bg-[#01b2cf] text-black py-1 px-3 rounded-full hover:bg-cyan-500 inline-flex items-center gap-1"><span>⚙</span><span>ביחרו רשת</span></button> </> )}
@@ -2846,45 +3398,28 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
               )}
         </div>
         
-        {/* Bottom Section: Analysis + AI Feedback */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-white/50 backdrop-blur-md border border-white/30 p-8 rounded-2xl space-y-6">
-                <h3 className="text-center font-bold text-2xl">ניתוח תזרים</h3>
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center my-6">
-                    <div><p className="text-lg">הכנסה נטו</p><p className="font-bold text-3xl text-green-600">{netIncome.toLocaleString('he-IL', {style:'currency', currency:'ILS'})}</p></div>
-                    <div><p className="text-lg">סה"כ הוצאות</p><p className="font-bold text-3xl text-red-500">{totalUserExpenses.toLocaleString('he-IL', {style:'currency', currency:'ILS'})}</p></div>
-                     <div><p className="text-lg">מאזן חודשי</p><p className={`font-bold text-3xl ${balance >= 0 ? 'text-brand-teal' : 'text-brand-magenta'}`}>{balance.toLocaleString('he-IL', {style:'currency', currency:'ILS'})}</p></div>
-                </div>
-                <div className="h-96 w-full">
-                    <h4 className="text-center font-bold text-lg mb-2">פירוט הוצאות</h4>
-                    <ResponsiveContainer width="100%" height="90%">
-                        <PieChart>
-                            <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" label={({ name, percent }) => `${((Number(percent) || 0) * 100).toFixed(0)}%`}>
-                                {chartData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-                            </Pie>
-                            <RechartsTooltip />
-                            <Legend />
-                        </PieChart>
-                    </ResponsiveContainer>
-                </div>
-            </div>
+        {/* Bottom Section: External game task */}
+        <div className="grid grid-cols-1 gap-8">
             <div className="bg-white/50 backdrop-blur-md border border-white/30 p-6 rounded-2xl flex flex-col items-center justify-center">
-                <h3 className="text-center font-bold text-2xl mb-4">סיימתם לבנות את התקציב!</h3>
+                <h3 className="text-center font-bold text-2xl mb-4">משימת משחק מסכמת</h3>
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-40 h-40 my-2 text-brand-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="text-center mb-4">כל הכבוד על השלמת המשימה. עכשיו תוכלו לשתף את דו"ח התקציב המסודר שהכנתם.</p>
+                <p className="text-center mb-4">השלימו את כל משימות התקציב, שחקו במשחק החיצוני, ואז תוכלו לעבור לפרק הבא.</p>
                 <button 
-                    ref={shareButtonRef}
-                    onClick={handleOpenShareModal}
-                    disabled={!areAllExpensesFilled}
-                    title={!areAllExpensesFilled ? 'מלאו את סעיפי ההוצאות' : 'הפק דו"ח סיכום'}
-                    className="w-full bg-brand-magenta hover:bg-pink-700 text-white font-bold py-4 px-4 rounded-xl transition-all transform hover:scale-105 text-3xl shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    onClick={openBudgetGame}
+                    title='פתח משחק חיצוני'
+                    className="w-full bg-brand-magenta hover:bg-pink-700 text-white font-bold py-4 px-4 rounded-xl transition-all transform hover:scale-105 text-2xl shadow-lg"
                 >
-                    {areAllExpensesFilled ? 'הפק דו"ח סיכום' : 'מלאו את סעיפי ההוצאות'}
+                    מעבר למשחק
                 </button>
+                {hasOpenedBudgetGame && <p className="mt-3 text-green-700 font-bold text-xl">המשחק נפתח ✅</p>}
+                {!canMoveToSummaryChapter && (
+                    <p className="mt-2 text-center text-brand-dark-blue/80 text-lg">הכפתור יופעל אחרי השלמת כל משימות הטבלה והמשחק.</p>
+                )}
             </div>
         </div>
+        {renderChapterNavigation()}
       </div>
     </ModuleView>
   );

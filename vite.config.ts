@@ -6,7 +6,7 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
       // הגדרת ה-base הכרחית כדי שהאתר לא יהיה לבן בגיטהאב
-      base: '/smartkis/', 
+      base: mode === 'production' ? '/smartkis/' : '/', 
       server: {
         port: 3000,
         host: '0.0.0.0', // מאפשר גישה למכשירים אחרים ברשת (Network)

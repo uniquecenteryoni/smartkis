@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AliasPlayerView } from './components/modules/AliasGame';
 import Header from './components/Header';
 import ModuleCard from './components/ModuleCard';
 import { Module } from './types';
@@ -14,6 +15,7 @@ import LinksModule from './components/modules/LinksModule';
 // FIX: SelfEmployedModule now has a default export.
 import SelfEmployedModule from './components/modules/SelfEmployedModule';
 import LandingPage from './components/LandingPage';
+import ProgramRecommendationQuiz from './components/ProgramRecommendationQuiz';
 import PlaceholderModule from './components/PlaceholderModule';
 import MainLandingPage from './components/MainLandingPage';
 import InstructorsPage from './components/InstructorsPage';
@@ -29,8 +31,7 @@ import HowToEarnModule from './components/modules/HowToEarnModule';
 import TimeManagementModule from './components/modules/TimeManagementModule';
 import PublicSpeakingModule from './components/modules/PublicSpeakingModule';
 import BuildBusinessModule from './components/modules/BuildBusinessModule';
-import HatsarModelModule from './components/modules/HatsarModelModule';
-import FutureManagersChallengeModule from './components/modules/FutureManagersChallengeModule';
+import JeopardyModule from './components/modules/JeopardyModule';
 import { BudgetIcon, SalaryIcon, InterestIcon, OverdraftIcon, ExpensesIcon, ResearchIcon, LockIcon, TrophyIcon, RightsIcon, LinksIcon, SelfEmployedIcon, TimeIcon, PodiumIcon, BusinessIcon, PiggyBankIcon, HeartIcon, CoinIcon, GlobeIcon, StarIcon, StoreIcon } from './components/icons/Icons';
 import WhereMoneyComesFromModule from './components/modules/kisonim/WhereMoneyComesFromModule';
 import NeedsVsWantsModule from './components/modules/kisonim/NeedsVsWantsModule';
@@ -63,18 +64,26 @@ const KisonimBusinessIcon: React.FC<{ className?: string }> = ({ className }) =>
 const hachamBakisModules: Module[] = [
   {
     id: 'budget',
-    title: 'ניהול תקציב ראשון',
+    title: 'ניהול התקציב הראשון שלי',
     description: 'בנו תקציב חודשי מאוזן באמצעות משימות אינטראקטיביות, ולמדו לנתח את ההוצאות שלכם. בסיום, הפיקו דו"ח PDF מסכם.',
     icon: BudgetIcon,
     component: BudgetModule,
     completionGoal: 'השלמת כל סעיפי ההוצאה הנדרשים והפקת דו"ח.'
   },
   {
-    id: 'salary',
-    title: 'פענוח תלוש שכר',
-    description: 'גלו מה מסתתר בתלוש השכר שלכם! לחצו על כל רכיב בתלוש אינטראקטיבי כדי לקבל הסבר, ובחנו את הידע שלכם.',
-    icon: SalaryIcon,
-    component: SalaryModule,
+    id: 'expenses',
+    title: 'איך מנהלים הוצאות?',
+    description: 'התמודדו עם "אתגר מיון ההוצאות"! למדו על סוגי הוצאות ומודל חצ"ר בחמישה שלבים, שחקו וסווגו הוצאות.',
+    icon: ExpensesIcon,
+    component: ExpensesModule,
+    completionGoal: 'השלמת שני משחקי המיון בהצלחה.'
+  },
+  {
+    id: 'overdraft',
+    title: 'הסכנה שבמינוס',
+    description: 'גלו מהו מינוס ואיך הוא תופח בעזרת סימולטור אינטראקטיבי. שאלו את היועץ הפיננסי שאלות ובחנו את הידע שלכם.',
+    icon: OverdraftIcon,
+    component: OverdraftModule,
     completionGoal: 'יש להשיג ציון של 80% ומעלה בבוחן המסכם.'
   },
   {
@@ -86,19 +95,20 @@ const hachamBakisModules: Module[] = [
     completionGoal: 'יש לפתור נכון לפחות 8 מתוך 10 תיקים.'
   },
   {
+    id: 'salary',
+    title: 'פענוח תלוש שכר',
+    description: 'גלו מה מסתתר בתלוש השכר שלכם! לחצו על כל רכיב בתלוש אינטראקטיבי כדי לקבל הסבר, ובחנו את הידע שלכם.',
+    icon: SalaryIcon,
+    component: SalaryModule,
+    completionGoal: 'יש להשיג ציון של 80% ומעלה בבוחן המסכם.'
+  },
+  {
     id: 'selfEmployed',
     title: 'שכירים ועצמאיים',
     description: 'גלו את ההבדלים בין שכיר לעצמאי דרך משחקי מיון, בחנו תרחישים עסקיים, נתחו הוצאות של עסק, ובחנו את עצמכם עם מודל SWOT.',
     icon: SelfEmployedIcon,
     component: SelfEmployedModule,
     completionGoal: 'השלמת כל חמשת הפרקים במודול.'
-  },
-  {
-    id: 'links',
-    title: 'מסמכים וקישורים שימושיים',
-    description: 'מאגר קישורים לאתרים, מחשבונים וכלים פיננסיים שיעזרו לכם להתנהל נכון עם הכסף שלכם. כולל בוחן קצר.',
-    icon: LinksIcon,
-    component: LinksModule,
   },
   {
     id: 'interest',
@@ -109,28 +119,19 @@ const hachamBakisModules: Module[] = [
     completionGoal: 'יש להשיג ציון של 80% ומעלה בבוחן הידע.'
   },
   {
-    id: 'overdraft',
-    title: 'הסכנה שבמינוס (אוברדראפט)',
-    description: 'גלו מהו מינוס ואיך הוא תופח בעזרת סימולטור אינטראקטיבי. שאלו את היועץ הפיננסי שאלות ובחנו את הידע שלכם.',
-    icon: OverdraftIcon,
-    component: OverdraftModule,
-    completionGoal: 'יש להשיג ציון של 80% ומעלה בבוחן המסכם.'
-  },
-  {
-    id: 'expenses',
-    title: 'איך מנהלים הוצאות?',
-    description: 'התמודדו עם "אתגר מיון ההוצאות"! למדו על סוגי הוצאות ומודל חצ"ר בחמישה שלבים, שחקו וסווגו הוצאות, והשתמשו בסורק המחירים.',
-    icon: ExpensesIcon,
-    component: ExpensesModule,
-    completionGoal: 'השלמת שני משחקי המיון בהצלחה.'
-  },
-  {
     id: 'research',
     title: 'משימת למידת חקר',
     description: 'הפכו לבלשים פיננסיים! הבינו מהי אינפלציה, איך היא משפיעה על הכסף שלכם, ותרגלו חקר כלכלי עצמאי ברשת.',
     icon: ResearchIcon,
     component: ResearchModule,
     completionGoal: 'יש להשיג ציון של 80% ומעלה בבוחן הידע.'
+  },
+  {
+    id: 'links',
+    title: 'מסמכים וקישורים שימושיים',
+    description: 'מאגר קישורים לאתרים, מחשבונים וכלים פיננסיים שיעזרו לכם להתנהל נכון עם הכסף שלכם. פתוח תמיד.',
+    icon: LinksIcon,
+    component: LinksModule,
   },
 ];
 
@@ -158,22 +159,6 @@ const maBakisModules: Module[] = [
     icon: ExpensesIcon,
     component: HowMuchCostModule,
     completionGoal: 'השלמת בוחן הידע בהצלחה.',
-  },
-  {
-    id: 'hatsar-model',
-    title: 'מחשבון מודל החצ״ר',
-    description: 'יחידת תרגול אינטראקטיבית לקבלת החלטות קנייה לפי סדר עדיפויות: חייב, צריך, רוצה.',
-    icon: StarIcon,
-    component: HatsarModelModule,
-    completionGoal: 'השלמת סימולציית קבלת החלטה אחת לפחות.',
-  },
-  {
-    id: 'future-managers-5000',
-    title: 'מנהלי העתיד: אתגר ה-5,000',
-    description: 'לוח בקרה כיתתי לתרגול ניהול תקציב קבוצתי, חקר מחירים, ועמידה מול בלת״מים לאורך החודש.',
-    icon: StoreIcon,
-    component: FutureManagersChallengeModule,
-    completionGoal: 'יש להשלים הזנת כל 5 הקטגוריות עבור צוות אחד לפחות.',
   },
   {
     id: 'monopolies',
@@ -345,13 +330,22 @@ const programModules: Record<string, Module[]> = {
   'kisonim': kisonimModules,
 };
 
-type AppState = 'user_selection' | 'student_login' | 'instructor_login' | 'parent_login' | 'program_selection' | 'instructors_page' | 'parents_page';
+type AppState = 'user_selection' | 'student_login' | 'instructor_login' | 'parent_login' | 'program_selection' | 'program_quiz' | 'instructors_page' | 'parents_page';
 
 const App: React.FC = () => {
+  const [isAliasPlayer, setIsAliasPlayer] = useState(() => window.location.hash === '#alias-player');
   const [appState, setAppState] = useState<AppState>('user_selection');
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [visitedModules, setVisitedModules] = useState<Set<string>>(new Set());
   const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
+  const [unlockedPrograms, setUnlockedPrograms] = useState<Set<string>>(new Set());
+  const [navHistory, setNavHistory] = useState<Array<{appState: AppState; selectedProgram: string | null; selectedModule: Module | null}>>([]);
+
+  useEffect(() => {
+    const onHash = () => setIsAliasPlayer(window.location.hash === '#alias-player');
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
 
   useEffect(() => {
     const storedVisited = localStorage.getItem('visitedModules');
@@ -360,28 +354,53 @@ const App: React.FC = () => {
     }
   }, []);
 
+  const pushHistory = () => {
+    setNavHistory(prev => [...prev, { appState, selectedProgram, selectedModule }]);
+  };
+
+  const goBack = () => {
+    setNavHistory(prev => {
+      if (prev.length === 0) return prev;
+      const last = prev[prev.length - 1];
+      setAppState(last.appState);
+      setSelectedProgram(last.selectedProgram);
+      setSelectedModule(last.selectedModule);
+      return prev.slice(0, -1);
+    });
+  };
+
   const handleSelectProgram = (programId: string) => {
+    pushHistory();
     setSelectedProgram(programId);
   };
   
   const handleSelectModule = (module: Module) => {
+    pushHistory();
     setSelectedModule(module);
   };
 
-  const handleBackToUserSelection = () => {
-    setAppState('user_selection');
+  const handleOpenProgramQuiz = () => {
+    pushHistory();
     setSelectedProgram(null);
+    setSelectedModule(null);
+    setAppState('program_quiz');
   };
-  
-  const handleBackToProgramSelection = () => {
-    setSelectedProgram(null);
-    setAppState('program_selection');
-  }
+
+  // Hidden shortcut: click the header logo to lift locks (without marking completion) for the current program.
+  const handleLogoClick = () => {
+    if (!selectedProgram) return;
+    setUnlockedPrograms(prev => {
+      const updated = new Set(prev);
+      updated.add(selectedProgram);
+      return updated;
+    });
+  };
 
   const handleStudentLogin = (grade?: string) => {
+    pushHistory();
     if (!grade) {
         setAppState('program_selection');
-        setSelectedProgram(null); // Ensure no program is pre-selected
+        setSelectedProgram(null);
         return;
     }
 
@@ -400,14 +419,9 @@ const App: React.FC = () => {
 
     if (programId) {
         setSelectedProgram(programId);
-        // Fall through to render the module grid directly
     } else {
         alert('אנא בחר כיתה חוקית.');
     }
-  };
-
-  const handleBackFromModule = () => {
-    setSelectedModule(null);
   };
 
   const handleModuleComplete = (moduleId: string) => {
@@ -424,13 +438,46 @@ const App: React.FC = () => {
     if (selectedProgram) {
          const currentProgramModules = programModules[selectedProgram] || [];
          const requiredModules = currentProgramModules.filter(m => m.completionGoal);
+        const sequentialMap: Record<string, string[]> = {
+          'hacham-bakis': ['budget', 'expenses', 'overdraft', 'rights', 'salary', 'selfEmployed', 'interest', 'research'],
+          'ma-bakis': ['story-of-money', 'money-and-me', 'how-much-cost', 'hatsar-model', 'future-managers-5000', 'monopolies', 'smart-consumerism', 'relationships-money', 'how-to-earn', 'time-management', 'public-speaking', 'build-business', 'jeopardy'],
+          'kisonim': ['where-money-comes-from', 'needs-vs-wants', 'savings-adventure', 'magic-store', 'jar-bank', 'world-tour', 'ad-secrets', 'earning-missions', 'colorful-market', 'coins-vs-bills', 'power-of-giving', 'small-decisions'],
+        };
+        const sequentialModuleIds = sequentialMap[selectedProgram] || [];
+        const alwaysOpenIds = new Set<string>([
+          selectedProgram === 'hacham-bakis' ? 'links' : '',
+          selectedProgram === 'ma-bakis' ? 'useful-docs' : '',
+        ].filter(Boolean));
+
+        const getModuleLockedState = (module: Module) => {
+          if (unlockedPrograms.has(selectedProgram)) return false;
+          if (alwaysOpenIds.has(module.id)) return false;
+          if (sequentialModuleIds.length === 0) return false;
+
+          const sequenceIndex = sequentialModuleIds.indexOf(module.id);
+          if (sequenceIndex === -1) return false;
+          if (sequenceIndex === 0) return false;
+
+          const previousId = sequentialModuleIds[sequenceIndex - 1];
+          return !visitedModules.has(previousId);
+        };
+
+        const handleResetCurrentProgramProgress = () => {
+          setVisitedModules(prev => {
+            const resetVisited = new Set(prev);
+            currentProgramModules.forEach(module => resetVisited.delete(module.id));
+            localStorage.setItem('visitedModules', JSON.stringify(Array.from(resetVisited)));
+            return resetVisited;
+          });
+          setSelectedModule(null);
+        };
          
 
          if (selectedModule) {
             const ModuleComponent = selectedModule.component;
             return (
                 <ModuleComponent 
-                onBack={handleBackFromModule} 
+                onBack={goBack} 
                 title={selectedModule.title}
                 onComplete={() => handleModuleComplete(selectedModule.id)}
                 />
@@ -444,16 +491,30 @@ const App: React.FC = () => {
 
         return (
             <>
-                <Header />
+                <Header onLogoClick={handleLogoClick} />
                 <button 
-                  onClick={handleBackToProgramSelection}
-                  className="mb-8 w-full sm:w-auto bg-brand-magenta hover:bg-pink-700 text-white font-bold py-2.5 sm:py-3 px-5 sm:px-8 text-base sm:text-2xl rounded-full flex items-center justify-center transition-colors duration-300"
+                  onClick={goBack}
+                  className="mb-8 w-full sm:w-auto bg-brand-magenta hover:bg-pink-700 text-white font-bold py-2.5 sm:py-3 px-5 sm:px-8 text-base sm:text-2xl rounded-full flex items-center justify-center transition-colors duration-300 shadow-lg glow-ring"
                 >
                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H15a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
                     </svg>
-                  חזרה לבחירת תוכנית
+                  חזרה
                 </button>
+                  {requiredModules.length > 0 && (
+                    <div className="mb-6 card-surface glow-ring p-5 rounded-2xl">
+                        <h4 className="font-bold text-3xl text-center mb-2">חכם בכיס: סרגל ההתקדמות שלך</h4>
+                        <p className="text-center text-brand-dark-blue/80 text-xl mb-3">לפניכם פרקי למידה שונים. בכל פעם שתשלימו את יעד הפרק הנוכחי, הפרק הבא ייפתח.<br />לאחר שתשלימו 80% מיעדי התוכנית, בוחן הסיום שבתחתית העמוד ייפתח עבורכם.</p>
+                      <div className="w-full progress-rail rounded-full h-8 border border-white/60 overflow-hidden">
+                        <div 
+                          className="bg-gradient-to-r from-brand-teal to-brand-light-blue h-full rounded-full flex items-center justify-center text-white font-bold text-xl transition-all duration-500"
+                          style={{ width: `${progress}%` }}
+                        >
+                          {Math.round(progress)}%
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 <main className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 ${selectedProgram === 'kisonim' ? 'kisonim-grid' : ''}`}>
                   {currentProgramModules.map(module => (
                     <ModuleCard
@@ -464,35 +525,30 @@ const App: React.FC = () => {
                       onClick={() => handleSelectModule(module)}
                       isVisited={visitedModules.has(module.id)}
                       completionGoal={module.completionGoal}
+                      isLocked={getModuleLockedState(module)}
                     />
                   ))}
                    <div className="md:col-span-2 lg:col-span-3">
-                        {requiredModules.length > 0 && (
-                            <div className="mb-4 bg-white/60 p-4 rounded-2xl shadow-lg">
-                                <h4 className="font-bold text-2xl text-center mb-2">התקדמות לקראת בוחן הסיום</h4>
-                                <div className="w-full bg-gray-200 rounded-full h-8 border-2 border-white/50">
-                                    <div 
-                                        className="bg-brand-teal h-full rounded-full flex items-center justify-center text-white font-bold text-xl transition-all duration-500"
-                                        style={{ width: `${progress}%` }}
-                                    >
-                                        {Math.round(progress)}%
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                       
                        {(selectedProgram === 'hacham-bakis' || selectedProgram === 'ma-bakis' || selectedProgram === 'kisonim') && (
-                           <button
-                            onClick={() => handleSelectModule({ id: 'final-exam', title: 'בוחן סיום', description: '', icon: TrophyIcon, component: FinalExam })}
-                            disabled={!canTakeExam}
-                            className={`w-full p-4 md:p-6 rounded-3xl text-white font-bold text-lg sm:text-3xl transition-all duration-300 flex items-center justify-center gap-2 sm:gap-4 ${!canTakeExam ? 'bg-gray-400 cursor-not-allowed' : 'bg-brand-magenta hover:bg-pink-700 transform hover:-translate-y-1'}`}
-                          >
-                            <TrophyIcon className="w-8 h-8"/>
-                            <span>
-                                {canTakeExam ? "כל הכבוד! אפשר לגשת לבוחן הסיום" : "עליכם להשלים 80% מהנושאים כדי לגשת לבוחן"}
-                            </span>
-                            {!canTakeExam && <LockIcon className="w-8 h-8"/>}
-                          </button>
+                           <>
+                             <button
+                              onClick={() => handleSelectModule({ id: 'final-exam', title: 'בוחן סיום', description: '', icon: TrophyIcon, component: FinalExam })}
+                              disabled={!canTakeExam}
+                                className={`w-full p-4 md:p-6 rounded-3xl text-white font-bold text-lg sm:text-3xl transition-all duration-300 flex items-center justify-center gap-2 sm:gap-4 shadow-lg ${!canTakeExam ? 'bg-gray-400 cursor-not-allowed' : 'bg-brand-magenta hover:bg-pink-700 transform hover:-translate-y-1 glow-ring'}`}
+                            >
+                              <TrophyIcon className="w-8 h-8"/>
+                              <span>
+                                  {canTakeExam ? "כל הכבוד! אפשר לגשת לבוחן הסיום" : "עליכם להשלים 80% מהנושאים כדי לגשת לבוחן"}
+                              </span>
+                              {!canTakeExam && <LockIcon className="w-8 h-8"/>}
+                            </button>
+                            <button
+                              onClick={handleResetCurrentProgramProgress}
+                              className="mt-3 w-full text-center text-sm sm:text-base text-brand-dark-blue/80 hover:text-brand-magenta underline"
+                            >
+                              איפוס התקדמות התוכנית והתחלה מחדש
+                            </button>
+                           </>
                        )}
                   </div>
                 </main>
@@ -505,9 +561,9 @@ const App: React.FC = () => {
         case 'user_selection':
             return (
                 <MainLandingPage 
-                    onSelectStudents={() => setAppState('student_login')}
-                    onSelectInstructors={() => setAppState('instructor_login')}
-                    onSelectParents={() => setAppState('parent_login')}
+                    onSelectStudents={() => { pushHistory(); setAppState('student_login'); }}
+                    onSelectInstructors={() => { pushHistory(); setAppState('instructor_login'); }}
+                    onSelectParents={() => { pushHistory(); setAppState('parent_login'); }}
                 />
             );
         case 'student_login':
@@ -517,7 +573,7 @@ const App: React.FC = () => {
                     description="ברוכים הבאים! בחרו את כיתתכם כדי שניקח אתכם לתוכנית הלמידה המתאימה לכם, או היכנסו כאורחים כדי לבחור תוכנית בעצמכם."
                     icon={RightsIcon}
                     onLogin={handleStudentLogin}
-                    onBack={handleBackToUserSelection}
+                    onBack={goBack}
                     showGradeSelector={true}
                 />
             );
@@ -527,8 +583,8 @@ const App: React.FC = () => {
                     userType="מדריכים"
                     description="כאן תוכלו למצוא מערכי שיעור, עזרים, סרטונים ולעקוב אחר התקדמות הקבוצות שלכם."
                     icon={PodiumIcon}
-                    onLogin={() => setAppState('instructors_page')}
-                    onBack={handleBackToUserSelection}
+                    onLogin={() => { pushHistory(); setAppState('instructors_page'); }}
+                    onBack={goBack}
                 />
             );
         case 'parent_login':
@@ -537,35 +593,48 @@ const App: React.FC = () => {
                     userType="הורים"
                     description="עקבו אחר תהליך הלמידה של ילדכם וקבלו כלים ועזרים להמשך החינוך הפיננסי בבית."
                     icon={HeartIcon}
-                    onLogin={() => setAppState('parents_page')}
-                    onBack={handleBackToUserSelection}
+                    onLogin={() => { pushHistory(); setAppState('parents_page'); }}
+                    onBack={goBack}
                 />
             );
         case 'program_selection':
              return (
                 <LandingPage 
                     onSelectProgram={handleSelectProgram} 
-                    onBack={handleBackToUserSelection}
+              onBack={goBack}
+              onOpenQuiz={handleOpenProgramQuiz}
                 />
             );
+        case 'program_quiz':
+           return (
+            <ProgramRecommendationQuiz
+              onBack={goBack}
+            />
+           );
         case 'instructors_page':
-            return <InstructorsPage onBack={handleBackToUserSelection} />;
+            return <InstructorsPage onBack={goBack} />;
         case 'parents_page':
-            return <ParentsPage onBack={handleBackToUserSelection} />;
+            return <ParentsPage onBack={goBack} />;
         default:
              return (
                 <MainLandingPage 
-                    onSelectStudents={() => setAppState('student_login')}
-                    onSelectInstructors={() => setAppState('instructor_login')}
-                    onSelectParents={() => setAppState('parent_login')}
+                    onSelectStudents={() => { pushHistory(); setAppState('student_login'); }}
+                    onSelectInstructors={() => { pushHistory(); setAppState('instructor_login'); }}
+                    onSelectParents={() => { pushHistory(); setAppState('parent_login'); }}
                 />
             );
     }
   };
   
   return (
-    <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
-        {renderContent()}
+    isAliasPlayer ? <AliasPlayerView /> :
+    <div className="app-shell floating-coins">
+      <div className="financial-backdrop"></div>
+      <div className="financial-grid"></div>
+      <div className="finance-icons-pattern"></div>
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8">
+          {renderContent()}
+      </div>
     </div>
   )
 };

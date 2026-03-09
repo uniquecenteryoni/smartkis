@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ModuleView from '../ModuleView';
 import { TrophyIcon } from '../icons/Icons';
+import { FutureManagersChallengeContent } from './FutureManagersChallengeModule';
 
 interface MoneyAndMeModuleProps {
   onBack: () => void;
@@ -8,7 +9,7 @@ interface MoneyAndMeModuleProps {
   onComplete: () => void;
 }
 
-const steps = ["הרגשות שלי", "מציבים מטרה", "איך מרוויחים?", "הסכנה שבמינוס", "בוחן ידע"];
+const steps = ["הרגשות שלי", "מציבים מטרה", "איך מרוויחים?", "הסכנה שבמינוס", "אתגר ה-5,000", "בוחן ידע"];
 
 // --- Visual Components for Quiz ---
 const CheckIcon: React.FC = () => (
@@ -671,7 +672,8 @@ const MoneyAndMeModule: React.FC<MoneyAndMeModuleProps> = ({ onBack, title, onCo
             case 1: return <GoalSettingStep />;
             case 2: return <EarningMoneyStep />;
             case 3: return <OverdraftStep onComplete={() => setOverdraftGameCompleted(true)} />;
-            case 4: return <QuizStep onComplete={onComplete} />;
+            case 4: return <FutureManagersChallengeContent onComplete={() => {}} />;
+            case 5: return <QuizStep onComplete={onComplete} />;
             default: return <FeelingsStep />;
         }
     };

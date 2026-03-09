@@ -19,7 +19,7 @@ const CrossIcon: React.FC = () => (
     </svg>
 );
 
-const steps = ["יוצאים לקניות!", "האתגר בסופרמרקט", "הגיע הזמן לשלם", "מה למדנו?", "בוחן ידע"];
+const steps = ["יוצאים לקניות!", "האתגר בסופרמרקט", "הגיע הזמן לשלם", "מה למדנו?", 'מודל החצ"ר', "בוחן ידע"];
 
 type ItemType = 'צריך' | 'רוצה';
 interface Item {
@@ -387,6 +387,149 @@ const QuizStep: React.FC<{onComplete: () => void}> = ({ onComplete }) => {
 };
 
 
+// ─── Step 5: Hatsar Model ────────────────────────────────────────────────────
+type HatsarType = 'חייב' | 'צריך' | 'רוצה';
+type HatsarAnswer = 'כן' | 'לא';
+type HatsarStatus = 'buy' | 'wait';
+interface HatsarState { type: HatsarType | ''; q1: HatsarAnswer | null; q2: HatsarAnswer | null; }
+interface HatsarResult { status: HatsarStatus; priority: string; text: string; }
+
+const getHatsarResult = (data: HatsarState): HatsarResult | null => {
+  const { type, q1, q2 } = data;
+  if (!type || !q1 || !q2) return null;
+  if (type === 'חייב') {
+    const priority = 'עדיפות 1: הכרח';
+    if (q1 === 'כן' && q2 === 'לא') return { status: 'buy', priority, text: 'אתה חייב את זה עכשיו ואין מחיר טוב יותר כרגע — זו קנייה נבונה.' };
+    if (q1 === 'כן' && q2 === 'כן') return { status: 'wait', priority, text: 'אתה חייב את זה, אך המחיר גבוה. חפש מקום זול יותר לפני הרכישה.' };
+    if (q1 === 'לא' && q2 === 'כן') return { status: 'wait', priority, text: 'לא חייב עכשיו וגם המחיר גבוה — כדאי להמתין.' };
+    return { status: 'wait', priority, text: 'המחיר טוב, אך אינך חייב את זה כרגע — עדיף לחסוך למה שאתה חייב קודם.' };
+  }
+  if (type === 'צריך') {
+    const priority = 'עדיפות 2: צורך';
+    if (q1 === 'כן' && q2 === 'כן') return { status: 'buy', priority, text: 'אתה צריך ויכול להרשות לעצמך. שים לב: אם יש "חייב" שטרם קנית — הוא קודם.' };
+    if (q1 === 'כן' && q2 === 'לא') return { status: 'wait', priority, text: 'אתה צריך, אך התקציב לא מאפשר זאת בצורה בטוחה כרגע.' };
+    if (q1 === 'לא' && q2 === 'כן') return { status: 'wait', priority, text: 'אתה יכול להרשות לעצמך אך לא באמת צריך כרגע — עלול לפגוע בעתיד.' };
+    return { status: 'wait', priority, text: 'לא צריך ולא יכול להרשות לעצמך — אין סיבה כלכלית לבצע את הרכישה.' };
+  }
+  const priority = 'עדיפות 3: רצון';
+  if (q1 === 'כן' && q2 === 'כן') return { status: 'buy', priority, text: 'אתה רוצה ויכול להרשות לעצמך. מותר להתפנק — רק ודא שאין "חייב" או "צריך" לפניך.' };
+  if (q1 === 'כן' && q2 === 'לא') return { status: 'wait', priority, text: 'רצון שאינו תואם את היכולת הכלכלית כרגע — כדאי לחסוך עבורו בנפרד.' };
+  if (q1 === 'לא' && q2 === 'כן') return { status: 'wait', priority, text: 'יכול להרשות לעצמך, אך לא באמת רוצה מספיק — חבל לבזבז כסף על רגש חולף.' };
+  return { status: 'wait', priority, text: 'לא רוצה ולא יכול להרשות לעצמך — זהו בזבוז מוחלט.' };
+};
+
+export const HatsarStep: React.FC = () => {
+  const [phase, setPhase] = React.useState<0 | 2 | 3 | 4>(0);
+  const [data, setData] = React.useState<HatsarState>({ type: '', q1: null, q2: null });
+
+  const restart = () => { setData({ type: '', q1: null, q2: null }); setPhase(0); };
+
+  const q1Text = data.type === 'חייב' ? 'האם אתה חייב את זה עכשיו?' : data.type === 'צריך' ? 'האם אתה באמת צריך את זה?' : 'האם אתה באמת רוצה את זה?';
+  const q2Text = data.type === 'חייב' ? 'האם ניתן להשיג במחיר טוב יותר?' : 'האם אתה יכול להרשות לעצמך כרגע?';
+  const result = getHatsarResult(data);
+
+  return (
+    <div className="bg-white/40 backdrop-blur-md border border-white/30 p-8 rounded-2xl animate-fade-in" dir="rtl">
+      <div className="text-center mb-6">
+        <div className="text-5xl mb-3">🧠💸</div>
+        <h3 className="text-3xl font-bold text-brand-dark-blue mb-2">מחשבון מודל החצ״ר</h3>
+        <p className="text-lg text-brand-dark-blue/75">
+          לפני כל קנייה — עוצרים ושואלים: האם זה <strong>חייב</strong>, <strong>צריך</strong> או <strong>רוצה</strong>?
+        </p>
+      </div>
+
+      {phase === 0 && (
+        <div className="text-center">
+          <p className="text-xl font-semibold text-brand-dark-blue/80 mb-6">בחרו את הקטגוריה שמתאימה לפריט שאתם שוקלים לקנות:</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xl mx-auto">
+            {(['חייב', 'צריך', 'רוצה'] as HatsarType[]).map((t, i) => {
+              const colors = [
+                'bg-brand-magenta hover:bg-pink-700',
+                'bg-brand-teal hover:bg-teal-600',
+                'bg-brand-light-blue hover:bg-cyan-600',
+              ];
+              return (
+                <button key={t} onClick={() => { setData({ type: t, q1: null, q2: null }); setPhase(2); }}
+                  className={`${colors[i]} text-white rounded-2xl py-5 text-2xl font-black transition-colors shadow-lg`}>
+                  {t}
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-brand-dark-blue/70 max-w-xl mx-auto">
+            <div className="bg-pink-50 border border-pink-200 rounded-xl p-4">
+              <p className="font-bold text-brand-magenta text-base mb-1">🔴 חייב — עדיפות 1</p>
+              <p>הכרחי לקיום: שכר דירה, מזון, תרופות, חשמל.</p>
+            </div>
+            <div className="bg-teal-50 border border-teal-200 rounded-xl p-4">
+              <p className="font-bold text-brand-teal text-base mb-1">🟡 צריך — עדיפות 2</p>
+              <p>חשוב אך לא דחוף: בגדים, כלי עבודה, שיפורים.</p>
+            </div>
+            <div className="bg-cyan-50 border border-cyan-200 rounded-xl p-4">
+              <p className="font-bold text-brand-light-blue text-base mb-1">🟢 רוצה — עדיפות 3</p>
+              <p>גחמות ופינוקים: גאדג'טים, בילויים, מותרות.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {(phase === 2 || phase === 3) && data.type && (
+        <div className="max-w-md mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <button onClick={() => setPhase(phase === 2 ? 0 : 2)}
+              className="bg-brand-magenta/10 hover:bg-brand-magenta/20 text-brand-magenta font-bold px-4 py-2 rounded-xl transition-colors">
+              ← חזרה
+            </button>
+            <span className="bg-brand-dark-blue text-white px-4 py-2 rounded-full font-bold">{data.type}</span>
+          </div>
+          <h4 className="text-2xl font-bold text-brand-dark-blue mb-8 text-center">
+            {phase === 2 ? q1Text : q2Text}
+          </h4>
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={() => {
+                if (phase === 2) { setData(d => ({ ...d, q1: 'כן' })); setPhase(3); }
+                else { setData(d => ({ ...d, q2: 'כן' })); setPhase(4); }
+              }}
+              className="bg-brand-dark-blue hover:opacity-90 text-white rounded-2xl py-5 text-2xl font-black transition-opacity">
+              כן
+            </button>
+            <button
+              onClick={() => {
+                if (phase === 2) { setData(d => ({ ...d, q1: 'לא' })); setPhase(3); }
+                else { setData(d => ({ ...d, q2: 'לא' })); setPhase(4); }
+              }}
+              className="bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-2xl py-5 text-2xl font-black transition-colors">
+              לא
+            </button>
+          </div>
+        </div>
+      )}
+
+      {phase === 4 && result && (
+        <div className="max-w-md mx-auto text-center">
+          <div className="mb-3 inline-block px-4 py-1 rounded-full bg-brand-dark-blue/10 text-brand-dark-blue text-sm font-bold">{result.priority}</div>
+          <div className={`mx-auto mb-5 w-24 h-24 rounded-3xl flex items-center justify-center text-5xl ${
+            result.status === 'buy' ? 'bg-brand-teal/20 border-2 border-brand-teal' : 'bg-brand-magenta/20 border-2 border-brand-magenta'
+          }`}>
+            {result.status === 'buy' ? '✅' : '🛑'}
+          </div>
+          <h4 className="text-3xl font-black mb-4 text-brand-dark-blue">
+            {result.status === 'buy' ? 'קונים! ✓' : 'לא קונים!'}
+          </h4>
+          <p className="bg-white/80 border border-slate-100 p-5 rounded-2xl text-lg text-brand-dark-blue/90 font-semibold leading-relaxed mb-8">
+            {result.text}
+          </p>
+          <button onClick={restart}
+            className="bg-brand-dark-blue hover:opacity-90 text-white font-black text-lg px-8 py-3 rounded-full transition-opacity">
+            🔄 בדיקה נוספת
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Main Module Component
 const HowMuchCostModule: React.FC<HowMuchCostModuleProps> = ({ onBack, title, onComplete }) => {
     const [currentStep, setCurrentStep] = useState(0);
@@ -414,7 +557,8 @@ const HowMuchCostModule: React.FC<HowMuchCostModuleProps> = ({ onBack, title, on
             case 1: return <ShoppingChallenge cart={cart} setCart={setCart} budget={budget} setBudget={setBudget} />;
             case 2: return <CheckoutStep cart={cart} budget={budget} />;
             case 3: return <SummaryStep />;
-            case 4: return <QuizStep onComplete={onComplete} />;
+            case 4: return <HatsarStep />;
+            case 5: return <QuizStep onComplete={onComplete} />;
             default: return <IntroductionStep />;
         }
     };

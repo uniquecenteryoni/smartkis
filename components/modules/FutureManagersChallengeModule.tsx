@@ -81,7 +81,7 @@ interface Group {
 
 const allCategoryIds: CategoryId[] = ['food', 'gaming', 'style', 'entertainment', 'gifts'];
 
-const FutureManagersChallengeModule: React.FC<FutureManagersChallengeModuleProps> = ({ onBack, title, onComplete }) => {
+export const FutureManagersChallengeContent: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
   const [groups, setGroups] = useState<Group[]>([
     { id: 1, name: 'צוות אלפא', salary: INITIAL_BUDGET, expenses: {}, balance: INITIAL_BUDGET },
     { id: 2, name: 'צוות גלקסיה', salary: INITIAL_BUDGET, expenses: {}, balance: INITIAL_BUDGET },
@@ -155,8 +155,7 @@ const FutureManagersChallengeModule: React.FC<FutureManagersChallengeModuleProps
   }, [hasCompletedAnyGroup, isCompleted, onComplete]);
 
   return (
-    <ModuleView title={title} onBack={onBack}>
-      <div className="min-h-screen bg-slate-100 p-4 md:p-8 font-sans text-slate-800" dir="rtl">
+    <div className="min-h-screen bg-slate-100 p-4 md:p-8 font-sans text-slate-800" dir="rtl">
         <div className="max-w-7xl mx-auto mb-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-white p-6 rounded-[2.5rem] shadow-sm border-b-4 border-indigo-200">
             <div className="flex items-center gap-4">
@@ -361,8 +360,13 @@ const FutureManagersChallengeModule: React.FC<FutureManagersChallengeModuleProps
           )}
         </div>
       </div>
-    </ModuleView>
   );
 };
+
+const FutureManagersChallengeModule: React.FC<FutureManagersChallengeModuleProps> = ({ onBack, title, onComplete }) => (
+  <ModuleView title={title} onBack={onBack}>
+    <FutureManagersChallengeContent onComplete={onComplete} />
+  </ModuleView>
+);
 
 export default FutureManagersChallengeModule;

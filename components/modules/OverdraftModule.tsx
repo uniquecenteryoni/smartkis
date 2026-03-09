@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import ModuleView from '../ModuleView';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TrophyIcon } from '../icons/Icons';
+import SnowballGame from './SnowballGame';
 
 // --- PROPS ---
 interface OverdraftModuleProps {
@@ -17,17 +18,20 @@ const CalculatorIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="
 const CheckIcon: React.FC = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>;
 const CrossIcon: React.FC = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>;
 
+const SnowIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12h18M12 3l3 3-3 3M12 21l3-3-3-3M5.6 5.6l2.1 2.1-2.1 2.1M18.4 18.4l-2.1-2.1 2.1-2.1M5.6 18.4l2.1-2.1-2.1-2.1M18.4 5.6l-2.1 2.1 2.1 2.1" /></svg>;
+
 const steps = [
     { title: "מהו מינוס?", icon: InfoIcon },
-    { title: "אתגר הדמות", icon: UserIcon },
-    { title: "כמה זה עולה?", icon: CalculatorIcon },
+    { title: "אפקט כדור השלג", icon: CalculatorIcon },
+    { title: "צאו מזה", icon: UserIcon },
+    { title: "משחק השלג", icon: SnowIcon },
     { title: "בוחן סיום", icon: TrophyIcon },
 ];
 
 // --- STEP 1: INTRODUCTION ---
 const IntroductionStep: React.FC = () => (
     <div className="bg-white/40 backdrop-blur-md border border-white/30 p-8 rounded-2xl animate-fade-in text-center">
-        <h3 className="text-5xl font-bold text-brand-magenta mb-4">מהו מינוס (אוברדראפט)?</h3>
+        <h3 className="text-5xl font-bold text-brand-magenta mb-4">מהו מינוס?</h3>
         <p className="text-3xl text-brand-dark-blue/90 mb-6">
             דמיינו שהארנק שלכם הוא קופסה. כשאתם מקבלים כסף, אתם מכניסים אותו לקופסה. כשאתם קונים משהו, אתם מוציאים.
             <br/>
@@ -58,33 +62,29 @@ interface Expense {
     name: string;
     cost: number;
     icon: string;
-    category: 'vital' | 'important' | 'luxury';
+    category: 'fixed' | 'variable';
+    optimizationOptions: { label: string; cost: number; preservesLifestyle: boolean }[];
 }
 
 const CharacterChallengeStep: React.FC = () => {
-    // FIX: Add missing 'category' property to each expense object
     const initialExpenses: Expense[] = [
-        { name: 'שכר דירה', cost: 2500, icon: '🏠', category: 'vital' },
-        { name: 'חשבונות', cost: 400, icon: '💡', category: 'vital' },
-        // Supermarket items
-        { name: 'מוצרי יסוד', cost: 500, icon: '🍞', category: 'vital' },
-        { name: 'ירקות ופירות', cost: 250, icon: '🥦', category: 'vital' },
-        { name: 'מוצרי ניקיון', cost: 150, icon: '🧹', category: 'important' },
-        { name: 'חטיפים ושתיה', cost: 200, icon: '🍫', category: 'luxury' },
-        { name: 'מעדנים ופינוקים', cost: 100, icon: '🧀', category: 'luxury' },
-        
-        { name: 'תחבורה ציבורית', cost: 250, icon: '🚌', category: 'important' },
-        { name: 'אינטרנט וסלולר', cost: 150, icon: '📱', category: 'important' },
-        { name: 'חדר כושר', cost: 200, icon: '🏋️', category: 'luxury' },
-        { name: 'מנויי סטרימינג', cost: 100, icon: '📺', category: 'luxury' },
-
-        // Food delivery items
-        { name: 'הזמנת פיצה', cost: 150, icon: '🍕', category: 'luxury' },
-        { name: 'וולט לצהריים', cost: 200, icon: '🍜', category: 'luxury' },
-        { name: 'סושי בסופ"ש', cost: 100, icon: '🍣', category: 'luxury' },
-
-        { name: 'שופינג אונליין', cost: 350, icon: '🛍️', category: 'luxury' },
-        { name: 'קפה ומאפה בחוץ', cost: 180, icon: '☕', category: 'luxury' },
+        { name: 'שכר דירה', cost: 2500, icon: '🏠', category: 'fixed', optimizationOptions: [{ label: 'ללא שינוי', cost: 2500, preservesLifestyle: true }, { label: 'מיקוח על חידוש חוזה', cost: 2350, preservesLifestyle: true }, { label: 'מעבר לדירה קטנה יותר', cost: 2100, preservesLifestyle: false }] },
+        { name: 'חשבונות', cost: 400, icon: '💡', category: 'fixed', optimizationOptions: [{ label: 'ללא שינוי', cost: 400, preservesLifestyle: true }, { label: 'הנחה בארנונה/זכאות עירונית', cost: 320, preservesLifestyle: true }, { label: 'תכנית חיסכון אנרגטית אגרסיבית', cost: 280, preservesLifestyle: false }] },
+        { name: 'ביטוח', cost: 250, icon: '🛡️', category: 'fixed', optimizationOptions: [{ label: 'ללא שינוי', cost: 250, preservesLifestyle: true }, { label: 'השוואת מחירים והוזלת ביטוח', cost: 180, preservesLifestyle: true }, { label: 'הקטנת כיסוי ביטוחי', cost: 130, preservesLifestyle: false }] },
+        { name: 'מוצרי יסוד', cost: 500, icon: '🍞', category: 'variable', optimizationOptions: [{ label: 'ללא שינוי', cost: 500, preservesLifestyle: true }, { label: 'קנייה מרוכזת ומבצעים', cost: 430, preservesLifestyle: true }, { label: 'מותג פרטי בלבד', cost: 360, preservesLifestyle: false }] },
+        { name: 'ירקות ופירות', cost: 250, icon: '🥦', category: 'variable', optimizationOptions: [{ label: 'ללא שינוי', cost: 250, preservesLifestyle: true }, { label: 'קנייה עונתית במבצע', cost: 210, preservesLifestyle: true }, { label: 'צמצום מגוון משמעותי', cost: 170, preservesLifestyle: false }] },
+        { name: 'מוצרי ניקיון', cost: 150, icon: '🧹', category: 'variable', optimizationOptions: [{ label: 'ללא שינוי', cost: 150, preservesLifestyle: true }, { label: 'קנייה במותגים מוזלים', cost: 110, preservesLifestyle: true }, { label: 'הפחתה תדירה ברכישה', cost: 85, preservesLifestyle: false }] },
+        { name: 'תחבורה ציבורית', cost: 250, icon: '🚌', category: 'variable', optimizationOptions: [{ label: 'ללא שינוי', cost: 250, preservesLifestyle: true }, { label: 'חופשי-חודשי מתאים', cost: 190, preservesLifestyle: true }, { label: 'צמצום נסיעות לא הכרחיות', cost: 140, preservesLifestyle: false }] },
+        { name: 'אינטרנט וסלולר', cost: 150, icon: '📱', category: 'fixed', optimizationOptions: [{ label: 'ללא שינוי', cost: 150, preservesLifestyle: true }, { label: 'מעבר לחבילה מוזלת זהה', cost: 100, preservesLifestyle: true }, { label: 'חבילה מוגבלת', cost: 70, preservesLifestyle: false }] },
+        { name: 'חטיפים ושתיה', cost: 200, icon: '🍫', category: 'variable', optimizationOptions: [{ label: 'ללא שינוי', cost: 200, preservesLifestyle: true }, { label: 'קנייה רק במבצע', cost: 120, preservesLifestyle: true }, { label: 'צמצום משמעותי', cost: 50, preservesLifestyle: false }] },
+        { name: 'מעדנים ופינוקים', cost: 100, icon: '🧀', category: 'variable', optimizationOptions: [{ label: 'ללא שינוי', cost: 100, preservesLifestyle: true }, { label: 'קנייה לפי מבצעים בלבד', cost: 65, preservesLifestyle: true }, { label: 'הפסקה זמנית', cost: 0, preservesLifestyle: false }] },
+        { name: 'חדר כושר', cost: 200, icon: '🏋️', category: 'fixed', optimizationOptions: [{ label: 'ללא שינוי', cost: 200, preservesLifestyle: true }, { label: 'מעבר למנוי מוזל', cost: 140, preservesLifestyle: true }, { label: 'הקפאת מנוי', cost: 0, preservesLifestyle: false }] },
+        { name: 'מנויי סטרימינג', cost: 100, icon: '📺', category: 'fixed', optimizationOptions: [{ label: 'ללא שינוי', cost: 100, preservesLifestyle: true }, { label: 'חבילת מנויים זולה יותר', cost: 60, preservesLifestyle: true }, { label: 'השארת מנוי אחד', cost: 30, preservesLifestyle: false }] },
+        { name: 'הזמנת פיצה', cost: 150, icon: '🍕', category: 'variable', optimizationOptions: [{ label: 'ללא שינוי', cost: 150, preservesLifestyle: true }, { label: 'קופונים/מבצעים', cost: 90, preservesLifestyle: true }, { label: 'צמצום לפעם בחודש', cost: 40, preservesLifestyle: false }] },
+        { name: 'וולט לצהריים', cost: 200, icon: '🍜', category: 'variable', optimizationOptions: [{ label: 'ללא שינוי', cost: 200, preservesLifestyle: true }, { label: 'בחירת מסעדות עם דמי משלוח נמוכים', cost: 130, preservesLifestyle: true }, { label: 'Meal prep רוב הימים', cost: 40, preservesLifestyle: false }] },
+        { name: 'סושי בסופ"ש', cost: 100, icon: '🍣', category: 'variable', optimizationOptions: [{ label: 'ללא שינוי', cost: 100, preservesLifestyle: true }, { label: 'קנייה בדיל סוף יום', cost: 65, preservesLifestyle: true }, { label: 'לסירוגין (פעם בחודשיים)', cost: 30, preservesLifestyle: false }] },
+        { name: 'שופינג אונליין', cost: 350, icon: '🛍️', category: 'variable', optimizationOptions: [{ label: 'ללא שינוי', cost: 350, preservesLifestyle: true }, { label: 'קנייה רק בסיילים וקאשבק', cost: 200, preservesLifestyle: true }, { label: 'תקציב קשיח נמוך', cost: 90, preservesLifestyle: false }] },
+        { name: 'קפה ומאפה בחוץ', cost: 180, icon: '☕', category: 'variable', optimizationOptions: [{ label: 'ללא שינוי', cost: 180, preservesLifestyle: true }, { label: 'כרטיסיית מועדון והטבות', cost: 110, preservesLifestyle: true }, { label: 'הכנה בבית רוב הימים', cost: 50, preservesLifestyle: false }] },
     ];
     
     const INCOME = 5000;
@@ -92,6 +92,9 @@ const CharacterChallengeStep: React.FC = () => {
     const initialBalance = INCOME - totalExpenses;
 
     const [removedExpenses, setRemovedExpenses] = useState<Expense[]>([]);
+    const [selectedOptimization, setSelectedOptimization] = useState<Record<string, number>>(
+        () => initialExpenses.reduce((acc, exp) => ({ ...acc, [exp.name]: 0 }), {})
+    );
     
     const handleToggleExpense = (expense: Expense) => {
         setRemovedExpenses(prev => 
@@ -101,40 +104,180 @@ const CharacterChallengeStep: React.FC = () => {
         );
     };
 
+    const handleOptimizationChange = (expenseName: string, index: number) => {
+        setSelectedOptimization(prev => ({ ...prev, [expenseName]: index }));
+    };
+
+    const getEffectiveCost = (expense: Expense) => {
+        const selectedIndex = selectedOptimization[expense.name] ?? 0;
+        return expense.optimizationOptions[selectedIndex]?.cost ?? expense.cost;
+    };
+
     const currentExpenses = initialExpenses.filter(e => !removedExpenses.some(re => re.name === e.name));
-    const currentTotal = currentExpenses.reduce((sum, e) => sum + e.cost, 0);
+    const currentTotal = currentExpenses.reduce((sum, e) => sum + getEffectiveCost(e), 0);
     const currentBalance = INCOME - currentTotal;
+    const optimizationSavings = currentExpenses.reduce((sum, e) => sum + (e.cost - getEffectiveCost(e)), 0);
+    const removalSavings = removedExpenses.reduce((sum, e) => sum + e.cost, 0);
+    const totalSavings = optimizationSavings + removalSavings;
+
+    const removedByCategory = {
+        fixed: removedExpenses.filter(e => e.category === 'fixed').length,
+        variable: removedExpenses.filter(e => e.category === 'variable').length,
+    };
+
+    const savingsByCategory = initialExpenses.reduce(
+        (acc, expense) => {
+            const isRemoved = removedExpenses.some(re => re.name === expense.name);
+            const effectiveCost = isRemoved ? 0 : getEffectiveCost(expense);
+            const savedAmount = expense.cost - effectiveCost;
+            acc[expense.category] += savedAmount;
+            return acc;
+        },
+        { fixed: 0, variable: 0 }
+    );
+
+    const optimizationCount = currentExpenses.filter(e => getEffectiveCost(e) < e.cost).length;
+
+    const optimizationInsights = currentExpenses.reduce(
+        (acc, expense) => {
+            const selectedIndex = selectedOptimization[expense.name] ?? 0;
+            const selectedOption = expense.optimizationOptions[selectedIndex] || expense.optimizationOptions[0];
+            if (selectedIndex === 0) return acc;
+
+            const saved = expense.cost - getEffectiveCost(expense);
+            if (selectedOption.preservesLifestyle) {
+                acc.noImpactCount += 1;
+                acc.noImpactSavings += saved;
+            } else {
+                acc.impactCount += 1;
+                acc.impactSavings += saved;
+            }
+            return acc;
+        },
+        { noImpactCount: 0, noImpactSavings: 0, impactCount: 0, impactSavings: 0 }
+    );
+
+    const feedbackMessages = useMemo(() => {
+        const messages: string[] = [];
+
+        if (totalSavings === 0) {
+            return ['עדיין לא בוצע קיצוץ. התחילו בהוצאות משתנות או בהתייעלות בכל סעיף כדי לצמצם את המינוס בלי לפגוע באורח החיים.'];
+        }
+
+        if (optimizationInsights.noImpactSavings > 0) {
+            messages.push('מעולה: קודם בחרתם התייעלות שמוזילה מחירים בלי לפגוע באורח ואיכות החיים (הנחות, מיקוח ומבצעים).');
+        } else {
+            messages.push('כדאי להתחיל מהתייעלות ללא פגיעה באורח החיים, כמו הנחות בארנונה, הוזלת ביטוח וקנייה במבצעים.');
+        }
+
+        if (optimizationInsights.noImpactSavings >= optimizationInsights.impactSavings) {
+            messages.push('התעדוף שלכם נכון: רוב החיסכון הגיע מצעדים חכמים של הוזלה ולא מצעדי קיצוץ חדים.');
+        } else {
+            messages.push('יש מקום לשפר: נסו להגדיל קודם חיסכון מהוזלות מחיר לפני צעדים שפוגעים יותר בהרגלים.');
+        }
+
+        if (savingsByCategory.variable >= savingsByCategory.fixed) {
+            messages.push('יפה: בנוסף, נתתם עדיפות טובה להוצאות משתנות לפני קבועות.');
+        } else {
+            messages.push('שימו לב: חלק גדול מהחיסכון הגיע מהוצאות קבועות; נסו קודם למצות הוזלות בצד המשתנה.');
+        }
+
+        if (optimizationCount >= 3) {
+            messages.push('מעולה: השתמשתם במספר אפשרויות התייעלות במקום רק למחוק סעיפים שלמים.');
+        }
+
+        if (removedExpenses.length > 0) {
+            messages.push('זכרו: מחיקה מלאה של סעיף היא צעד אחרון. עדיף קודם למצות הוזלה חכמה באותו סעיף.');
+        }
+
+        if (currentBalance >= 0) {
+            messages.push('הצלחתם לעבור למאזן חיובי — המשיכו לעקוב כדי לא לחזור לגרעון בחודש הבא.');
+        } else {
+            messages.push('עדיין יש גרעון. נסו לצמצם עוד הוצאות משתנות ורק אחר כך לבחון הוצאות קבועות.');
+        }
+
+        return messages;
+    }, [totalSavings, optimizationInsights.noImpactSavings, optimizationInsights.impactSavings, savingsByCategory.variable, savingsByCategory.fixed, optimizationCount, removedExpenses.length, currentBalance]);
+
+    const getCategoryLabel = (category: Expense['category']) => {
+        if (category === 'fixed') return { text: 'הוצאה קבועה', style: 'bg-blue-100 text-blue-800' };
+        return { text: 'הוצאה משתנה', style: 'bg-green-100 text-green-800' };
+    };
     
     return (
         <div className="bg-white/40 backdrop-blur-md border border-white/30 p-8 rounded-2xl animate-fade-in">
-             <h3 className="text-5xl font-bold text-brand-magenta mb-4 text-center">אתגר: להוציא את דני מהמינוס!</h3>
+             <h3 className="text-5xl font-bold text-brand-magenta mb-4 text-center">צאו מזה: להוציא את דני מהמינוס!</h3>
              <div className="flex flex-col md:flex-row items-center justify-center gap-8 mb-6 bg-white/50 p-6 rounded-2xl shadow-inner">
                 <div className="text-center">
                     <img src="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1" alt="דני" className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg mx-auto"/>
                     <h4 className="font-bold text-4xl mt-2">דני, בן 24</h4>
                 </div>
                 <div className="text-3xl">
-                     <p className="text-brand-dark-blue/90">דני מרוויח <strong>{INCOME.toLocaleString()} ₪</strong> בחודש, אבל מוציא <strong>{totalExpenses.toLocaleString()} ₪</strong>. הוא במינוס של <strong>{initialBalance.toLocaleString()} ₪</strong> כל חודש!</p>
-                     <p className="font-bold mt-2">המשימה שלכם: עזרו לדני להגיע למאזן חיובי על ידי ויתור על הוצאות.</p>
+                     <p className="text-brand-dark-blue/90">דני מרוויח <strong>{INCOME.toLocaleString()} ₪</strong> בחודש, אבל מוציא <strong>{totalExpenses.toLocaleString()} ₪</strong>. הוא מתחיל בגרעון של <strong>{Math.abs(initialBalance).toLocaleString()}- ₪</strong> כל חודש!</p>
+                     <p className="font-bold mt-2">המשימה שלכם: עברו על טבלת התקציב, ובחרו אילו הוצאות להסיר כדי להוציא אותו מהגרעון.</p>
                 </div>
              </div>
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                 <div>
-                    <h4 className="font-bold text-4xl mb-2 text-center">ההוצאות של דני</h4>
-                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                        {initialExpenses.map(exp => {
-                            const isRemoved = removedExpenses.some(re => re.name === exp.name);
-                            return (
-                                <button key={exp.name} onClick={() => handleToggleExpense(exp)} 
-                                    className={`p-4 rounded-2xl text-center transition-all duration-300 transform shadow-lg relative ${isRemoved ? 'bg-gray-300 opacity-50 scale-95' : 'bg-white/80 hover:scale-105'}`}>
-                                    <span className="text-6xl">{exp.icon}</span>
-                                    <p className="font-bold text-2xl">{exp.name}</p>
-                                    <p className="font-semibold text-xl">{exp.cost.toLocaleString()} ₪</p>
-                                    {isRemoved && <div className="absolute inset-0 flex items-center justify-center text-white text-7xl bg-black/50 rounded-2xl"><CrossIcon/></div>}
-                                </button>
-                            );
-                        })}
-                     </div>
+             <div className="grid grid-cols-1 gap-6">
+                 <div className="bg-white/70 p-4 rounded-2xl shadow-lg">
+                    <h4 className="font-bold text-4xl mb-3 text-center">טבלת התקציב של דני</h4>
+                    <p className="text-xl text-center mb-3 text-brand-dark-blue/80">רמז: העבירו עכבר על סעיף כדי לראות קו מחיקה וכפתור הסרה, או בחרו אפשרות התייעלות.</p>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-right text-xl border-collapse border border-gray-300">
+                            <thead>
+                                <tr className="text-brand-dark-blue/80 bg-gray-100/80">
+                                    <th className="px-2 py-2 border border-gray-300">סעיף</th>
+                                    <th className="px-2 py-2 border border-gray-300">סיווג</th>
+                                    <th className="px-2 py-2 border border-gray-300">סכום מקורי</th>
+                                    <th className="px-2 py-2 border border-gray-300">צמצום/התייעלות</th>
+                                    <th className="px-2 py-2 border border-gray-300">סכום מעודכן</th>
+                                    <th className="px-2 py-2 border border-gray-300 text-center">פעולה</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {initialExpenses.map(exp => {
+                                    const isRemoved = removedExpenses.some(re => re.name === exp.name);
+                                    const category = getCategoryLabel(exp.category);
+                                    const effectiveCost = getEffectiveCost(exp);
+                                    return (
+                                        <tr key={exp.name} className={`group transition-all ${isRemoved ? 'bg-gray-200/80' : 'bg-white/80 hover:bg-gray-100/80'}`}>
+                                            <td className="px-2 py-2 border border-gray-300">
+                                                <span className={`font-bold ${!isRemoved ? 'group-hover:line-through' : 'line-through text-gray-600'}`}>{exp.icon} {exp.name}</span>
+                                            </td>
+                                            <td className="px-2 py-2 border border-gray-300">
+                                                <span className={`px-2 py-1 rounded-full text-sm font-bold ${category.style}`}>{category.text}</span>
+                                            </td>
+                                            <td className="px-2 py-2 border border-gray-300 font-semibold">
+                                                <span className={`${!isRemoved ? 'group-hover:line-through' : 'line-through text-gray-600'}`}>{exp.cost.toLocaleString()} ₪</span>
+                                            </td>
+                                            <td className="px-2 py-2 border border-gray-300">
+                                                <select
+                                                    value={selectedOptimization[exp.name] ?? 0}
+                                                    onChange={(e) => handleOptimizationChange(exp.name, Number(e.target.value))}
+                                                    disabled={isRemoved}
+                                                    className="w-full bg-white border border-gray-300 rounded-lg p-1 text-base disabled:bg-gray-100"
+                                                >
+                                                    {exp.optimizationOptions.map((option, index) => (
+                                                        <option key={`${exp.name}-${option.label}`} value={index}>{option.label}</option>
+                                                    ))}
+                                                </select>
+                                            </td>
+                                            <td className="px-2 py-2 border border-gray-300 font-semibold">
+                                                <span className={`${!isRemoved ? 'group-hover:line-through' : 'line-through text-gray-600'}`}>{effectiveCost.toLocaleString()} ₪</span>
+                                            </td>
+                                            <td className="px-2 py-2 border border-gray-300 text-center">
+                                                <button
+                                                    onClick={() => handleToggleExpense(exp)}
+                                                    className={`text-sm font-bold px-3 py-1 rounded-lg transition-all ${isRemoved ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-red-500 text-white hover:bg-red-600 opacity-0 group-hover:opacity-100'}`}
+                                                >
+                                                    {isRemoved ? 'החזר' : 'הסר'}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                  </div>
                  <div className="bg-white/60 p-6 rounded-2xl flex flex-col justify-center items-center shadow-lg">
                     <h4 className="font-bold text-4xl mb-2">התקציב החדש</h4>
@@ -146,6 +289,19 @@ const CharacterChallengeStep: React.FC = () => {
                         <p className="font-bold text-4xl">מאזן חודשי:</p>
                         <p className={`text-8xl font-black ${currentBalance >= 0 ? 'text-green-700' : 'text-red-700'}`}>{currentBalance.toLocaleString()} ₪</p>
                     </div>
+                    <div className="mt-4 w-full bg-white/70 rounded-xl p-4 border border-white/60">
+                        <p className="font-bold text-3xl mb-2 text-center">משוב על הבחירות שלכם</p>
+                        <div className="text-xl mb-2">
+                            <p>הוסרו: <strong>{removedExpenses.length}</strong> סעיפים | קבועות: <strong>{removedByCategory.fixed}</strong> | משתנות: <strong>{removedByCategory.variable}</strong></p>
+                            <p>סה"כ חיסכון חודשי (מחיקה + התייעלות): <strong>{totalSavings.toLocaleString()} ₪</strong></p>
+                            <p>חיסכון ללא פגיעה באורח החיים: <strong>{optimizationInsights.noImpactSavings.toLocaleString()} ₪</strong> | חיסכון עם פגיעה אפשרית: <strong>{optimizationInsights.impactSavings.toLocaleString()} ₪</strong></p>
+                        </div>
+                        <ul className="list-disc pr-6 space-y-1 text-xl text-brand-dark-blue/90">
+                            {feedbackMessages.map((msg) => (
+                                <li key={msg}>{msg}</li>
+                            ))}
+                        </ul>
+                    </div>
                  </div>
              </div>
         </div>
@@ -153,7 +309,7 @@ const CharacterChallengeStep: React.FC = () => {
 };
 
 
-// --- STEP 3: SIMULATOR ---
+// --- STEP 2: SNOWBALL EFFECT SIMULATOR ---
 const OverdraftSimulator: React.FC = () => {
     const [balance, setBalance] = useState(-2000);
     const [interest, setInterest] = useState(12);
@@ -190,7 +346,7 @@ const OverdraftSimulator: React.FC = () => {
         <div className="animate-fade-in text-2xl">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-1 bg-white/40 p-6 rounded-2xl">
-                    <h3 className="text-4xl font-bold mb-4">סימולטור המינוס</h3>
+                    <h3 className="text-4xl font-bold mb-4">אפקט כדור השלג</h3>
                     <div className="space-y-4">
                         <div>
                             <label>סכום המינוס ההתחלתי (₪)</label>
@@ -216,6 +372,14 @@ const OverdraftSimulator: React.FC = () => {
                     </div>
                 </div>
                 <div className="lg:col-span-2 bg-white/40 p-6 rounded-2xl">
+                    <div className="mb-4 p-4 bg-yellow-100/80 rounded-xl border-r-4 border-yellow-500 text-right text-xl text-yellow-900">
+                        <p className="font-bold text-2xl mb-1">איך ריבית דריבית משפיעה על המינוס?</p>
+                        <p>
+                            כשאתם במינוס, הבנק גובה ריבית על החוב. אם לא סוגרים את החוב, הריבית שנוספה בחודש הקודם מצטרפת לקרן,
+                            ובחודש הבא משלמים ריבית גם עליה. כלומר, לא משלמים רק על המינוס המקורי — אלא גם על הריביות שהצטברו,
+                            ולכן ההחזר גדל עם הזמן כמו "כדור שלג".
+                        </p>
+                    </div>
                     <div className="text-center">
                         <p className="text-3xl">לאחר {months} חודשים, היתרה שלך תהיה:</p>
                         <p className={`text-6xl font-bold my-2 ${finalBalance < 0 ? 'text-brand-magenta' : 'text-green-600'}`}>{finalBalance.toLocaleString('he-IL', { style: 'currency', currency: 'ILS' })}</p>
@@ -251,7 +415,7 @@ const OverdraftSimulator: React.FC = () => {
 // --- STEP 4: QUIZ ---
 const QuizStep: React.FC<{onComplete: () => void}> = ({ onComplete }) => {
     const questions = [
-        { q: "מהי ההגדרה הנכונה ל'מינוס' (אוברדראפט)?", options: ["כסף שהבנק נותן במתנה", "הלוואה מהבנק בריבית גבוהה", "חיסכון עם ריבית טובה", "הפרש בין הכנסות להוצאות"], answer: "הלוואה מהבנק בריבית גבוהה" },
+        { q: "מהי ההגדרה הנכונה ל'מינוס'?", options: ["כסף שהבנק נותן במתנה", "הלוואה מהבנק בריבית גבוהה", "חיסכון עם ריבית טובה", "הפרש בין הכנסות להוצאות"], answer: "הלוואה מהבנק בריבית גבוהה" },
         { q: "מהי הדרך הטובה ביותר להימנע ממינוס?", options: ["לא להשתמש בכרטיס אשראי", "לעקוב אחר ההוצאות ולוודא שהן לא גבוהות מההכנסות", "לבקש העלאה מהבוס", "לקחת הלוואה"], answer: "לעקוב אחר ההוצאות ולוודא שהן לא גבוהות מההכנסות" },
         { q: "מה קורה לחוב במינוס אם לא עושים כלום?", options: ["הוא נמחק אחרי שנה", "הוא גדל בגלל הריבית", "הוא נשאר אותו הדבר", "הבנק מוותר עליו"], answer: "הוא גדל בגלל הריבית" },
         { q: "מה יכולה להיות אחת ההשלכות של הישארות במינוס לאורך זמן?", options: ["הבנק ייתן לך מתנות", "החוב שלך יקטן מעצמו", "הבנק עלול להגביל את מסגרת האשראי שלך", "תקבל ריבית חיובית על החוב"], answer: "הבנק עלול להגביל את מסגרת האשראי שלך" },
@@ -344,9 +508,10 @@ const OverdraftModule: React.FC<OverdraftModuleProps> = ({ onBack, title, onComp
     const renderStepContent = () => {
         switch (currentStep) {
             case 0: return <IntroductionStep />;
-            case 1: return <CharacterChallengeStep />;
-            case 2: return <OverdraftSimulator />;
-            case 3: return <QuizStep onComplete={onComplete} />;
+            case 1: return <OverdraftSimulator />;
+            case 2: return <CharacterChallengeStep />;
+            case 3: return <SnowballGame onBack={() => setCurrentStep(2)} />;
+            case 4: return <QuizStep onComplete={onComplete} />;
             default: return <IntroductionStep />;
         }
     };
