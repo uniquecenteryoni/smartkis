@@ -21,6 +21,7 @@ export interface Question {
   matchLeft?: string[];
   matchRight?: string[];
   correctText?: string;
+  numericRange?: [number, number]; // [min, max] — any value in range is accepted
 }
 
 export interface Category {
@@ -44,66 +45,66 @@ const defaultQuestionBanks: Record<Difficulty, Category[]> = {
       name: 'צרכנות נבונה',
       color: categoryPalette[0],
       questions: [
-        { value: 100, prompt: 'אמת/שקר: כדאי להשוות מחיר ל-100 גרם כדי לדעת מה זול.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
-        { value: 200, prompt: 'מהי רכישה מתוכננת?', options: ['קנייה לפי רשימה מראש', 'קנייה כי ראיתי שלט עכשיו', 'קנייה כי חבר קנה'], correct: 0, type: 'multiple', instruction: 'אמריקאי', correctText: 'קנייה לפי רשימה מראש.' },
-        { value: 300, prompt: 'התאמה: סוג מבצע ↔ מה מקבלים', options: [''], correct: 0, type: 'match', instruction: 'חברו כל מבצע למשמעות', matchLeft: ['1+1', '10% הנחה', 'משלוח חינם'], matchRight: ['מקבלים שניים במחיר אחד', 'משלמים פחות מהמחיר הרגיל', 'לא משלמים על שליחה'], correctText: '1-ב, 2-א, 3-ג.' },
-        { value: 400, prompt: 'חישוב: חטיף עולה 5 ש"ח. קונים שניים. כמה תשלמו?', options: [''], correct: 0, type: 'open', instruction: 'חישוב פשוט', correctText: '10 ש"ח.' },
-        { value: 500, prompt: 'פתוחה: תנו טיפ אחד לצרכנות נבונה בבית.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: להכין רשימה ולהשוות מחירים.' },
+        { value: 100, prompt: 'מהי רכישה מתוכננת?', options: ['קנייה לפי רשימה מראש', 'קנייה כי ראיתי שלט עכשיו', 'קנייה כי חבר קנה'], correct: 0, type: 'multiple', correctText: 'קנייה לפי רשימה מראש.' },
+        { value: 200, prompt: 'אמת/שקר: כדאי להשוות מחיר ל-100 גרם כדי לדעת מה זול.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', correctText: 'אמת.' },
+        { value: 300, prompt: 'התאמה: סוג מבצע ↔ מה מקבלים', options: [''], correct: 0, type: 'match', matchLeft: ['1+1', '10% הנחה', 'משלוח חינם'], matchRight: ['מקבלים שניים במחיר אחד', 'משלמים פחות מהמחיר הרגיל', 'לא משלמים על שליחה'], correctText: '1+1↔שניים במחיר אחד, 10%↔פחות, משלוח חינם↔לא משלמים על שליחה.' },
+        { value: 400, prompt: 'חישוב: חטיף עולה 9 ש"ח. יש מבצע 3 ב-2 (שלושה חטיפים במחיר שניים). כמה תשלמו על 3 חטיפים?', options: [''], correct: 0, type: 'open', numericRange: [18, 18], correctText: '18 ש"ח — משלמים על 2 חטיפים בלבד (2×9=18).' },
+        { value: 500, prompt: 'ציינו 3 טיפים לצרכנות נבונה בבית.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: להכין רשימה לפני קנייה, להשוות מחירים, לא לקנות ברעב.' },
       ],
     },
     {
       name: 'ניהול תקציב',
       color: categoryPalette[1],
       questions: [
-        { value: 100, prompt: 'אמת/שקר: תקציב עוזר לראות כמה כסף נכנס וכמה יוצא.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
-        { value: 200, prompt: 'מהי דוגמה להכנסה?', options: ['שכר עבודה', 'קניית בגדים', 'טיול'], correct: 0, type: 'multiple', instruction: 'אמריקאי', correctText: 'שכר עבודה.' },
-        { value: 300, prompt: 'התאמה: סוג הוצאה ↔ דוגמה', options: [''], correct: 0, type: 'match', instruction: 'התאימו', matchLeft: ['קבועה', 'משתנה', 'בלתי צפויה'], matchRight: ['תשלום חוג קבוע', 'גלידה עם חבר', 'תיקון פתאומי'], correctText: '1-ב, 2-ג, 3-א.' },
-        { value: 400, prompt: 'חישוב: יש לך 100 ש"ח וחסכת 20 ש"ח. כמה נשאר לך להוצאות?', options: [''], correct: 0, type: 'open', instruction: 'חיסור פשוט', correctText: '80 ש"ח.' },
-        { value: 500, prompt: 'פתוחה: למה כדאי לשים קצת כסף בצד כל חודש?', options: [''], correct: 0, type: 'open', correctText: 'כדי להיות מוכנים למקרי חירום או יעדים.' },
+        { value: 100, prompt: 'מהי דוגמה להכנסה?', options: ['שכר עבודה', 'קניית בגדים', 'טיול'], correct: 0, type: 'multiple', correctText: 'שכר עבודה.' },
+        { value: 200, prompt: 'אמת/שקר: תקציב עוזר לראות כמה כסף נכנס וכמה יוצא.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', correctText: 'אמת.' },
+        { value: 300, prompt: 'התאמה: סוג הוצאה ↔ דוגמה', options: [''], correct: 0, type: 'match', matchLeft: ['קבועה', 'משתנה', 'בלתי צפויה'], matchRight: ['תשלום חוג קבוע', 'גלידה עם חבר', 'תיקון פתאומי'], correctText: 'קבועה↔חוג, משתנה↔גלידה, בלתי צפויה↔תיקון.' },
+        { value: 400, prompt: 'חישוב: יש לך 100 ש"ח וחסכת 20 ש"ח. כמה נשאר לך להוצאות?', options: [''], correct: 0, type: 'open', numericRange: [80, 80], correctText: '80 ש"ח.' },
+        { value: 500, prompt: 'ציינו 3 סיבות למה כדאי לשים כסף בצד כל חודש.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: מוכנות לחירום, השגת יעדים עתידיים, הימנעות ממינוס.' },
       ],
     },
     {
       name: 'יזמות',
       color: categoryPalette[2],
       questions: [
-        { value: 100, prompt: 'אמת/שקר: יזם מחפש צורך ומציע פתרון.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
-        { value: 200, prompt: 'מה רעיון פשוט ליזם צעיר?', options: ['מכירת לימונדה', 'בניית רכבת', 'קניית חנות ענק'], correct: 0, type: 'multiple', instruction: 'אמריקאי', correctText: 'מכירת לימונדה.' },
-        { value: 300, prompt: 'התאמה: מושג ↔ הסבר', options: [''], correct: 0, type: 'match', instruction: 'חברו מושג להסבר', matchLeft: ['קהל יעד', 'רווח', 'חומרי גלם'], matchRight: ['האנשים שקונים ממך', 'מה שנשאר אחרי הוצאות', 'הדברים שמהם מייצרים'], correctText: '1-ב, 2-א, 3-ג.' },
-        { value: 400, prompt: 'חישוב: עלות חומר לעוגייה 2 ש"ח, מוכרים ב-5 ש"ח. כמה מרוויחים על 1 עוגייה?', options: [''], correct: 0, type: 'open', instruction: 'חיסור פשוט', correctText: '3 ש"ח.' },
-        { value: 500, prompt: 'פתוחה: מה היתרון ב"גרסה ראשונית" של מוצר?', options: [''], correct: 0, type: 'open', correctText: 'אפשר לבדוק מהר אצל לקוחות ולשפר.' },
+        { value: 100, prompt: 'מה רעיון פשוט ליזם צעיר?', options: ['מכירת לימונדה', 'בניית רכבת', 'קניית חנות ענק'], correct: 0, type: 'multiple', correctText: 'מכירת לימונדה.' },
+        { value: 200, prompt: 'אמת/שקר: יזם מחפש צורך ומציע פתרון.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', correctText: 'אמת.' },
+        { value: 300, prompt: 'התאמה: מושג ↔ הסבר', options: [''], correct: 0, type: 'match', matchLeft: ['קהל יעד', 'רווח', 'חומרי גלם'], matchRight: ['האנשים שקונים ממך', 'מה שנשאר אחרי הוצאות', 'הדברים שמהם מייצרים'], correctText: 'קהל יעד↔קונים, רווח↔מה שנשאר, חומרי גלם↔ממה מייצרים.' },
+        { value: 400, prompt: 'חישוב: עלות חומר לעוגייה 2 ש"ח, מוכרים ב-5 ש"ח. כמה מרוויחים על 1 עוגייה?', options: [''], correct: 0, type: 'open', numericRange: [3, 3], correctText: '3 ש"ח.' },
+        { value: 500, prompt: 'ציינו 3 יתרונות של "גרסה ראשונית" (MVP) למוצר חדש.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: בודקים את השוק מהר, חוסכים עלויות, מקבלים משוב אמיתי מלקוחות.' },
       ],
     },
     {
       name: 'תעסוקה',
       color: categoryPalette[3],
       questions: [
-        { value: 100, prompt: 'אמת/שקר: לבני נוער יש הגבלת שעות עבודה.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
-        { value: 200, prompt: 'מהי שיחה לפני קבלת עבודה?', options: ['ראיון עבודה', 'שיעור בבית ספר', 'חוג'], correct: 0, type: 'multiple', instruction: 'אמריקאי', correctText: 'ראיון עבודה.' },
-        { value: 300, prompt: 'התאמה: מושג שכר ↔ הסבר', options: [''], correct: 0, type: 'match', instruction: 'חברו', matchLeft: ['שכר ברוטו', 'שכר נטו', 'חוזה עבודה'], matchRight: ['לפני ניכויים', 'מה שנכנס לבנק', 'מסמך שמגדיר תנאים'], correctText: '1-ב, 2-א, 3-ג.' },
-        { value: 400, prompt: 'חישוב: 3 שעות עבודה ב-30 ש"ח לשעה. כמה שכר?', options: [''], correct: 0, type: 'open', instruction: 'כפל פשוט', correctText: '90 ש"ח.' },
-        { value: 500, prompt: 'פתוחה: מה חשוב לומר למעסיק לפני משמרת?', options: [''], correct: 0, type: 'open', correctText: 'למשל זמינות, מגבלות וזמנים.' },
+        { value: 100, prompt: 'אמת/שקר: לבני נוער יש הגבלת שעות עבודה.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', correctText: 'אמת.' },
+        { value: 200, prompt: 'מהי שיחה לפני קבלת עבודה?', options: ['ראיון עבודה', 'שיעור בבית ספר', 'חוג'], correct: 0, type: 'multiple', correctText: 'ראיון עבודה.' },
+        { value: 300, prompt: 'התאמה: מושג שכר ↔ הסבר', options: [''], correct: 0, type: 'match', matchLeft: ['שכר ברוטו', 'שכר נטו', 'חוזה עבודה'], matchRight: ['לפני ניכויים', 'מה שנכנס לבנק', 'מסמך שמגדיר תנאים'], correctText: 'ברוטו↔לפני ניכויים, נטו↔נכנס לבנק, חוזה↔מסמך תנאים.' },
+        { value: 400, prompt: 'חישוב: 3 שעות עבודה ב-30 ש"ח לשעה. כמה שכר?', options: [''], correct: 0, type: 'open', numericRange: [90, 90], correctText: '90 ש"ח.' },
+        { value: 500, prompt: 'ציינו 3 דברים חשובים לברר עם המעסיק לפני תחילת עבודה.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: שכר לשעה, שעות המשמרת, ממה מורכב תפקיד.' },
       ],
     },
     {
       name: 'כלכלה עולמית',
       color: categoryPalette[4],
       questions: [
-        { value: 100, prompt: 'אמת/שקר: שער חליפין הוא מחיר של מטבע מול מטבע אחר.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
-        { value: 200, prompt: 'מהו יבוא?', options: ['קנייה מחו"ל למדינה', 'מכירה לחו"ל', 'טיול'], correct: 0, type: 'multiple', instruction: 'אמריקאי', correctText: 'קנייה מחו"ל למדינה.' },
-        { value: 300, prompt: 'התאמה: מוסד ↔ תפקיד', options: [''], correct: 0, type: 'match', instruction: 'חברו', matchLeft: ['בנק מרכזי', 'בורסה', 'חנות מקומית'], matchRight: ['קובע ריבית וכסף', 'מסחר במניות', 'קונה ומוכר לקוחות'], correctText: '1-ב, 2-א, 3-ג.' },
-        { value: 400, prompt: 'חישוב: דולר = 4 ש"ח. מוצר עולה 10$. כמה בשקלים?', options: [''], correct: 0, type: 'open', instruction: 'כפל פשוט', correctText: '40 ש"ח.' },
-        { value: 500, prompt: 'פתוחה: למה מחירי נפט משפיעים על מחירי מוצרים?', options: [''], correct: 0, type: 'open', correctText: 'נפט משפיע על הובלה וייצור, ולכן על המחיר.' },
+        { value: 100, prompt: 'אמת/שקר: ישראל משתמשת בשקל, ארה"ב בדולר ואירופה ביורו.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', correctText: 'אמת — לכל מדינה (או איחוד) יש מטבע משלה.' },
+        { value: 200, prompt: 'מהו יבוא?', options: ['קנייה מחו"ל למדינה', 'מכירה לחו"ל', 'טיול'], correct: 0, type: 'multiple', correctText: 'קנייה מחו"ל למדינה.' },
+        { value: 300, prompt: 'התאמה: מוסד ↔ תפקיד', options: [''], correct: 0, type: 'match', matchLeft: ['בנק מרכזי', 'בורסה', 'חנות מקומית'], matchRight: ['קובע ריבית וכסף', 'מסחר במניות', 'קונה ומוכר לקוחות'], correctText: 'בנק מרכזי↔ריבית, בורסה↔מניות, חנות↔לקוחות.' },
+        { value: 400, prompt: 'חישוב: דולר = 4 ש"ח. מוצר עולה 10$. כמה בשקלים?', options: [''], correct: 0, type: 'open', numericRange: [40, 40], correctText: '40 ש"ח.' },
+        { value: 500, prompt: 'ציינו 3 דרכים שבהן מחיר הנפט הגבוה משפיע על המחירים שאנחנו משלמים.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: ייקור הובלת סחורות, ייקור ייצור, ייקור חשמל ודלק לצרכן.' },
       ],
     },
     {
       name: 'סיפורו של כסף',
       color: categoryPalette[5],
       questions: [
-        { value: 100, prompt: 'אמת/שקר: פעם שילמו עם צדפים ומלח.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
-        { value: 200, prompt: 'מה היתרון במטבעות מתכת?', options: ['קלים לסחיבה וערך מוסכם', 'טעימים יותר', 'זוהרים יותר'], correct: 0, type: 'multiple', instruction: 'אמריקאי', correctText: 'קלים לסחיבה וערך מוסכם.' },
-        { value: 300, prompt: 'התאמה: אמצעי תשלום ↔ תקופה', options: [''], correct: 0, type: 'match', instruction: 'חברו', matchLeft: ['צדפים', 'מטבעות מתכת', 'שטרות נייר'], matchRight: ['תקופה קדומה', 'עת עתיקה', 'סין כ-1000 שנה'], correctText: '1-ב, 2-א, 3-ג.' },
-        { value: 400, prompt: 'חישוב: 2 שטרות של 50 ש"ח ועוד 3 מטבעות של 10 ש"ח. כמה כסף יש?', options: [''], correct: 0, type: 'open', instruction: 'חיבור פשוט', correctText: '130 ש"ח.' },
-        { value: 500, prompt: 'פתוחה: מה נותן לכסף ערך היום?', options: [''], correct: 0, type: 'open', correctText: 'אמון הציבור והחוק שקובע שהוא אמצעי תשלום.' },
+        { value: 100, prompt: 'אמת/שקר: פעם שילמו עם צדפים ומלח.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', correctText: 'אמת.' },
+        { value: 200, prompt: 'מה היתרון במטבעות מתכת?', options: ['קלים לסחיבה וערך מוסכם', 'טעימים יותר', 'זוהרים יותר'], correct: 0, type: 'multiple', correctText: 'קלים לסחיבה וערך מוסכם.' },
+        { value: 300, prompt: 'התאמה: אמצעי תשלום ↔ מה הוא', options: [''], correct: 0, type: 'match', matchLeft: ['צדפים', 'מטבעות מתכת', 'שטרות נייר'], matchRight: ['שימשו כסף אצל שבטים קדומים', 'הומצאו ביוון ורומא לפני כ-2,500 שנה', 'הומצאו בסין לפני כ-1,000 שנה'], correctText: 'צדפים↔שבטים קדומים, מטבעות↔יוון/רומא, שטרות↔סין.' },
+        { value: 400, prompt: 'חישוב: 2 שטרות של 50 ש"ח ועוד 3 מטבעות של 10 ש"ח. כמה כסף יש?', options: [''], correct: 0, type: 'open', numericRange: [130, 130], correctText: '130 ש"ח.' },
+        { value: 500, prompt: 'ציינו 3 גורמים שנותנים לכסף ערך היום.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: אמון הציבור, חוק שמחייב קבלתו, גיבוי המדינה (בנק מרכזי).' },
       ],
     },
   ],
@@ -112,33 +113,33 @@ const defaultQuestionBanks: Record<Difficulty, Category[]> = {
       name: 'צרכנות נבונה',
       color: categoryPalette[0],
       questions: [
-        { value: 100, prompt: 'אמת/שקר: "יחידת מידה" (מחיר ל-100 גרם) עוזרת לדעת איזה מוצר זול יותר גם כשגדלי האריזות שונים.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
-        { value: 200, prompt: 'מהו "קנייה רגשית"?', options: ['קניית מתנה למישהו שאוהבים', 'קנייה לא מתוכננת שנובעת מדחף רגעי', 'קנייה של מוצר יד שנייה'], correct: 1, type: 'multiple', instruction: 'אמריקאי', correctText: "ב' (קנייה מדחף רגעי)." },
+        { value: 100, prompt: 'מהו "קנייה רגשית"?', options: ['קניית מתנה למישהו שאוהבים', 'קנייה לא מתוכננת שנובעת מדחף רגעי', 'קנייה של מוצר יד שנייה'], correct: 1, type: 'multiple', correctText: "ב' (קנייה מדחף רגעי)." },
+        { value: 200, prompt: 'אמת/שקר: "יחידת מידה" (מחיר ל-100 גרם) עוזרת לדעת איזה מוצר זול יותר גם כשגדלי האריזות שונים.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', correctText: 'אמת.' },
         { value: 300, prompt: 'התאמה: סוג מבצע ↔ משמעות', options: [''], correct: 0, type: 'match', instruction: 'התאימו בין סוג המבצע למשמעות', matchLeft: ['1+1', 'הנחה של 20%', 'כמות כפולה באותו מחיר'], matchRight: ['קיבלת שני מוצרים במחיר אחד', 'שילמת פחות על אותו מוצר', 'המחיר ל-100 גרם ירד ב-50%'], correctText: '1-ב (1+1=כפול), 2-א (20%=פחות כסף), 3-ג (כמות כפולה=50% פחות לגרם).' },
         { value: 400, prompt: 'חישוב: בקבוק קולה עולה 8 ש"ח. השני ב-50% הנחה. כמה יעלו 2 בקבוקים?', options: [''], correct: 0, type: 'open', instruction: 'חישוב בעל פה', correctText: '12 ש"ח.' },
-        { value: 500, prompt: 'שאלה פתוחה: למה חברות משתמשות במשפיעני רשת וכיצד זה משפיע על שיקול הדעת שלנו כצרכנים?', options: [''], correct: 0, type: 'open', correctText: 'המלצת המשפיען נתפסת כאישית ופחות כפרסומת, מה שמוריד הגנות צרכניות.' },
+        { value: 500, prompt: 'ציינו 3 סיבות שחברות מעדיפות שיווק דרך משפיעני רשת ואיך זה משפיע עלינו כצרכנים.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: נתפס כאישי ולא כפרסומת, מגיע לקהל ממוקד, מוריד את ההגנות הצרכניות שלנו.' },
       ],
     },
     {
       name: 'ניהול תקציב',
       color: categoryPalette[1],
       questions: [
-        { value: 100, prompt: 'אמת/שקר: תקציב מאוזן הוא מצב שבו ההוצאות גדולות מההכנסות.', options: ['אמת', 'שקר'], correct: 1, type: 'multiple', instruction: 'אמת/שקר', correctText: 'שקר. (זהו גירעון).' },
-        { value: 200, prompt: 'מהו "חיסכון"?', options: ['כסף שנשאר בארנק בסוף היום', 'סכום כסף שאנו שומרים בצד למטרה עתידית', 'כסף שמקבלים כמתנה ליום הולדת'], correct: 1, type: 'multiple', instruction: 'אמריקאי', correctText: "ב' (סכום למטרה עתידית)." },
+        { value: 100, prompt: 'מהו "חיסכון"?', options: ['כסף שנשאר בארנק בסוף היום', 'סכום כסף שאנו שומרים בצד למטרה עתידית', 'כסף שמקבלים כמתנה ליום הולדת'], correct: 1, type: 'multiple', correctText: "ב' (סכום למטרה עתידית)." },
+        { value: 200, prompt: 'אמת/שקר: תקציב מאוזן הוא מצב שבו ההוצאות גדולות מההכנסות.', options: ['אמת', 'שקר'], correct: 1, type: 'multiple', correctText: 'שקר. (זהו גירעון).' },
         { value: 300, prompt: 'התאמה: סוג הוצאה ↔ דוגמה', options: [''], correct: 0, type: 'match', instruction: 'התאימו סוג הוצאה לדוגמה', matchLeft: ['הוצאה קבועה', 'הוצאה משתנה', 'הוצאה בלתי צפויה'], matchRight: ['תשלום ועד בית חודשי', 'קניית פיצה עם חברים', 'תיקון פנצ׳ר באופניים'], correctText: '1-ב (ועד בית), 2-ג (פיצה), 3-א (פנצ׳ר).' },
         { value: 400, prompt: 'חישוב: אלון מקבל 200 ש"ח דמי כיס וחוסך 25% בכל חודש. כמה יהיה לו אחרי חצי שנה?', options: [''], correct: 0, type: 'open', instruction: 'חישוב חודשי × 6', correctText: '300 ש"ח. (50 ש"ח לחודש למשך חצי שנה).' },
-        { value: 500, prompt: 'שאלה פתוחה: מה ההבדל בין צורך לרצון? תן דוגמה למקרה שרצון הופך לצורך.', options: [''], correct: 0, type: 'open', correctText: 'צורך הוא הישרדותי; רצון הוא שדרוג. רצון הופך לצורך כשהוא חיוני לתפקוד חברתי/לימודי.' },
+        { value: 500, prompt: 'ציינו 3 הבדלים בין צורך לרצון ותנו דוגמה לכל אחד.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: צורך=הכרחי לחיים (אוכל), רצון=שדרוג (סמארטפון חדש); צורך=קבוע, רצון=משתנה; צורך=אחיד, רצון=אישי.' },
       ],
     },
     {
       name: 'יזמות',
       color: categoryPalette[2],
       questions: [
-        { value: 100, prompt: 'אמת/שקר: יזם מזהה בעיה או צורך ויוצר פתרון חדש.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
-        { value: 200, prompt: 'מה זה "סקר שוק"?', options: ['ללכת לשוק ולבדוק מחירי ירקות', 'בדיקה אם הלקוחות הפוטנציאליים מעוניינים במוצר שלי', 'פרסום המוצר ברשתות החברתיות'], correct: 1, type: 'multiple', instruction: 'אמריקאי', correctText: "ב' (בדיקת עניין הלקוחות)." },
+        { value: 100, prompt: 'מה זה "סקר שוק"?', options: ['ללכת לשוק ולבדוק מחירי ירקות', 'בדיקה אם הלקוחות הפוטנציאליים מעוניינים במוצר שלי', 'פרסום המוצר ברשתות החברתיות'], correct: 1, type: 'multiple', correctText: "ב' (בדיקת עניין הלקוחות)." },
+        { value: 200, prompt: 'אמת/שקר: יזם מזהה בעיה או צורך ויוצר פתרון חדש.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', correctText: 'אמת.' },
         { value: 300, prompt: 'התאמה: מושג יזמי ↔ הגדרה', options: [''], correct: 0, type: 'match', instruction: 'התאימו את המושג להגדרה', matchLeft: ['קהל יעד', 'מתחרים', 'מוצר מינימלי (MVP)'], matchRight: ['האנשים שהכי סביר שיקנו ממני', 'עסקים אחרים שמוכרים מוצר דומה', 'הגרסה הראשונית והפשוטה ביותר של הרעיון'], correctText: '1-ב (קהל יעד), 2-א (מתחרים), 3-ג (MVP).' },
         { value: 400, prompt: 'חישוב: עלות חומרים לצמיד היא 5 ש"ח ומחיר מכירה 15 ש"ח. כמה צמידים צריך למכור כדי להגיע לרווח של 300 ש"ח?', options: [''], correct: 0, type: 'open', instruction: 'חישוב רווח ליחידה × כמות', correctText: '30 צמידים. (רווח של 10 ש"ח על כל צמיד).' },
-        { value: 500, prompt: 'שאלה פתוחה: מהו "סיכון מחושב" ביזמות ולמה חשוב לקחת אותו?', options: [''], correct: 0, type: 'open', correctText: 'הערכת הפסד מקסימלי מול סיכוי להצלחה כדי לא להמר בצורה עיוורת.' },
+        { value: 500, prompt: 'ציינו 3 שלבים לקחת "סיכון מחושב" ביזמות.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: הגדרת ההפסד המקסימלי האפשרי, ניסוי קטן לפני השקעה גדולה, קביעת מדדי הצלחה מראש.' },
       ],
     },
     {
@@ -146,32 +147,32 @@ const defaultQuestionBanks: Record<Difficulty, Category[]> = {
       color: categoryPalette[3],
       questions: [
         { value: 100, prompt: 'אמת/שקר: מותר לבני נוער לעבוד בכל שעה ביום, כולל לילה, אם מקבלים שכר מינימום.', options: ['אמת', 'שקר'], correct: 1, type: 'multiple', instruction: 'אמת/שקר', correctText: 'שקר. (יש מגבלות חוקיות).' },
-        { value: 200, prompt: 'מהו "שכר מינימום"?', options: ['השכר הכי נמוך שהמעסיק חייב לשלם לפי החוק', 'השכר שמתחילים איתו בחודש הראשון', 'שכר שמקבלים על עבודות פשוטות בלבד'], correct: 0, type: 'multiple', instruction: 'אמריקאי', correctText: "א' (השכר הכי נמוך בחוק)." },
+        { value: 200, prompt: 'מהו "שכר מינימום"?', options: ['השכר הכי נמוך שהמעסיק לא יכול לתת לי מתחתיו', 'השכר שמתחילים איתו בחודש הראשון', 'שכר שמקבלים על עבודות פשוטות בלבד'], correct: 0, type: 'multiple', correctText: "א' (הסכום שמתחתיו אסור למעסיק לשלם)." },
         { value: 300, prompt: 'התאמה: מושג שכר ↔ הגדרה', options: [''], correct: 0, type: 'match', instruction: 'התאימו בין המושג להגדרה', matchLeft: ['ברוטו', 'נטו', 'ניכויי חובה'], matchRight: ['השכר לפני שירדו ממנו תשלומים', 'הסכום שנכנס לחשבון הבנק', 'תשלומים שיורדים מהשכר (כמו מיסים)'], correctText: '1-ג (ברוטו=לפני), 2-א (נטו=בנק), 3-ב (ניכויים=מיסים).' },
         { value: 400, prompt: 'חישוב: שכר מינימום לנער הוא 30 ש"ח לשעה, ובשבת 150%. כמה ירוויח נער שעבד 4 שעות ביום חול ו-2 שעות בשבת?', options: [''], correct: 0, type: 'open', instruction: 'חישוב שכר רגיל ושבת', correctText: '210 ש"ח. (120 ש"ח חול + 90 ש"ח שבת).' },
-        { value: 500, prompt: 'שאלה פתוחה: שלושה פרמטרים חשובים שמעסיק מחפש (מלבד ידע מקצועי)?', options: [''], correct: 0, type: 'open', correctText: 'אחריות, דייקנות (עמידה בזמנים) ויחסי אנוש (עבודת צוות).' },
+        { value: 500, prompt: 'מנו 4 תכונות שמעסיק מחפש בעובד (מלבד ידע מקצועי) והסבירו למה כל אחת חשובה.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: אחריות, דייקנות, יחסי אנוש, יוזמה — כל אחת תורמת לאמינות וסביבת עבודה טובה.' },
       ],
     },
     {
       name: 'כלכלה עולמית',
       color: categoryPalette[4],
       questions: [
-        { value: 100, prompt: 'אמת/שקר: "שער חליפין" הוא המחיר של מטבע אחד לעומת מטבע אחר.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
+        { value: 100, prompt: 'אמת/שקר: כשנוסעים לחו"ל, צריך להמיר שקלים למטבע של המדינה שנוסעים אליה.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', correctText: 'אמת — כל מדינה משתמשת במטבע שלה.' },
         { value: 200, prompt: 'מהי "אינפלציה"?', options: ['עליית מחירים כללית שגורמת לכסף לקנות פחות', 'מצב שבו יש יותר מדי כסף בבנק', 'ירידה חדה בערך המניות בבורסה'], correct: 0, type: 'multiple', instruction: 'אמריקאי', correctText: "א' (עליית מחירים כללית)." },
         { value: 300, prompt: 'התאמה: מוסד כלכלי ↔ תפקיד', options: [''], correct: 0, type: 'match', instruction: 'התאימו את המוסד לתפקידו', matchLeft: ['בנק מרכזי', 'בורסה', 'בנק מסחרי'], matchRight: ['הגוף שאחראי על הדפסת הכסף והריבית במדינה', 'מקום שבו קונים ומוכרים מניות', 'מקום שבו אנשים פרטיים שומרים את כספם'], correctText: '1-ב (בנק מרכזי=ריבית), 2-א (בורסה=מניות), 3-ג (בנק מסחרי=חשבון פרטי).' },
         { value: 400, prompt: 'חישוב: שער דולר 3.5 ש"ח. מוצר עולה 40$ ומשלוח 10$. כמה זה יעלה בשקלים?', options: [''], correct: 0, type: 'open', instruction: 'המרה מדולר לשקל', correctText: '175 ש"ח. (50 דולר כפול 3.5).' },
-        { value: 500, prompt: 'שאלה פתוחה: איך אירוע עולמי (חסימת תעלת סואץ/מלחמה רחוקה) יכול לייקר חלב בישראל?', options: [''], correct: 0, type: 'open', correctText: 'שיבוש בשינוע מייקר חומרי גלם (דלק/מספוא), מה שמעלה את מחיר המוצר הסופי.' },
+        { value: 500, prompt: 'ציינו 3 אירועים עולמיים שיכולים לגרום לייקור מחירי המזון בישראל והסבירו כל אחד.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: מלחמה שמפריעה לשינוע, חסימת נתיב ים (כמו תעלת סואץ), בצורת שמשפיעה על יבול עולמי.' },
       ],
     },
     {
       name: 'סיפורו של כסף',
       color: categoryPalette[5],
       questions: [
-        { value: 100, prompt: 'אמת/שקר: לפני המצאת המטבעות השתמשו בסחר חליפין (למשל תרנגולת תמורת שק חיטה).', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
-        { value: 200, prompt: 'מדוע עברו להשתמש במטבעות מתכת במקום סחר חליפין?', options: ['כי מטבעות היו יפים יותר לקישוט', 'כי קשה לסחוב סחורה ולסכם ערך אחיד לכל מוצר', 'כי מלכים רצו אוסף זהב בארמון'], correct: 1, type: 'multiple', instruction: 'אמריקאי', correctText: "ב' (קושי בסחיבת סחורה והסכמה על ערך)." },
-        { value: 300, prompt: 'התאמה: אמצעי תשלום ↔ תקופה', options: [''], correct: 0, type: 'match', instruction: 'התאימו מושג לתקופה', matchLeft: ['צדפים ומלח', 'שטרות נייר', 'מטבעות זהב וכסף'], matchRight: ['שבטים קדומים וראשית הציוויליזציה', 'סין לפני כ-1,000 שנה ואירופה מאוחר יותר', 'העת העתיקה (לפני כ-2,500 שנה)'], correctText: '1-ב (צדפים=קדום), 2-ג (שטרות=סין), 3-א (מטבעות זהב=עת עתיקה).' },
-        { value: 400, prompt: 'חישוב: שטר כסף בסין היה שווה ל-1,000 מטבעות נחושת. אם יש 3,500 מטבעות, כמה שטרות יקבלו ומה העודף?', options: [''], correct: 0, type: 'open', instruction: 'חלוקה ליחידות של 1,000', correctText: '3 שטרות ועודף של 500 מטבעות.' },
-        { value: 500, prompt: 'שאלה פתוחה: מהו "כסף פיאט" וכיצד הוא שונה מכסף מגובה זהב?', options: [''], correct: 0, type: 'open', correctText: 'כסף ללא ערך עצמי שאינו מגובה בזהב, אלא נשען על אמון הציבור והחוק.' },
+        { value: 100, prompt: 'אמת/שקר: לפני המצאת המטבעות השתמשו בסחר חליפין (למשל תרנגולת תמורת שק חיטה).', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', correctText: 'אמת.' },
+        { value: 200, prompt: 'מדוע עברו להשתמש במטבעות מתכת במקום סחר חליפין?', options: ['כי מטבעות היו יפים יותר לקישוט', 'כי קשה לסחוב סחורה ולסכם ערך אחיד לכל מוצר', 'כי מלכים רצו אוסף זהב בארמון'], correct: 1, type: 'multiple', correctText: "ב' (קושי בסחיבת סחורה והסכמה על ערך)." },
+        { value: 300, prompt: 'התאמה: אמצעי תשלום ↔ מה הוא', options: [''], correct: 0, type: 'match', matchLeft: ['צדפים ומלח', 'שטרות נייר', 'מטבעות זהב וכסף'], matchRight: ['אמצעי החלפה הפרהיסטורי של שבטים קדומים', 'המצאה סינית מלפני כ-1,000 שנה', 'שימשו ביוון ורומא מלפני 2,500 שנה'], correctText: 'צדפים↔שבטים פרהיסטוריים, שטרות↔סין לפני 1,000 שנה, מטבעות זהב↔יוון/רומא לפני 2,500 שנה.' },
+        { value: 400, prompt: 'חישוב: שטר כסף בסין היה שווה ל-1,000 מטבעות נחושת. אם יש 3,000 מטבעות, כמה שטרות יקבלו?', options: [''], correct: 0, type: 'open', numericRange: [3, 3], correctText: '3 שטרות.' },
+        { value: 500, prompt: 'ציינו 3 הבדלים בין כסף פיאט לכסף מגובה זהב.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: פיאט=ללא ערך עצמי/מבוסס אמון; זהב=ערך עצמי אמיתי; פיאט=הדפסתו קלה, זהב=כמות מוגבלת.' },
       ],
     },
   ],
@@ -180,33 +181,33 @@ const defaultQuestionBanks: Record<Difficulty, Category[]> = {
       name: 'צרכנות נבונה',
       color: categoryPalette[0],
       questions: [
-        { value: 100, prompt: 'אמת/שקר: פיצול קנייה ל"מבצעי בזק" נועד לגרום לנו לשלם יותר בלי לשים לב.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
-        { value: 200, prompt: 'מהי "עלות כוללת לבעלות"?', options: ['מחיר קנייה בלבד', 'מחיר + תחזוקה/שימוש לאורך זמן', 'רק משלוח'], correct: 1, type: 'multiple', instruction: 'אמריקאי', correctText: 'מחיר + תחזוקה/שימוש לאורך זמן.' },
+        { value: 100, prompt: 'מהי "עלות כוללת לבעלות"?', options: ['מחיר קנייה בלבד', 'מחיר + תחזוקה/שימוש לאורך זמן', 'רק משלוח'], correct: 1, type: 'multiple', correctText: 'מחיר + תחזוקה/שימוש לאורך זמן.' },
+        { value: 200, prompt: 'אמת/שקר: פיצול קנייה ל"מבצעי בזק" נועד לגרום לנו לשלם יותר בלי לשים לב.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', correctText: 'אמת.' },
         { value: 300, prompt: 'התאמה: סוג הטיית קנייה ↔ דוגמה', options: [''], correct: 0, type: 'match', instruction: 'חברו הטיה לדוגמה', matchLeft: ['עוגן', 'מחסור מזויף', 'חבילת ערך'], matchRight: ['מציגים מחיר מקורי גבוה כדי שהמבצע ייראה ענק', 'כיתוב "כמעט נגמר" בלי נתון אמיתי', 'מוסיפים מוצר קטן כדי לייקר את העיקרי'], correctText: '1-ב, 2-א, 3-ג.' },
         { value: 400, prompt: 'חישוב: 3 חטיפים ב-25 ש"ח או כל חטיף ב-9 ש"ח. אם קונים 3, מה המחיר הממוצע ליחידה בכל אופציה?', options: [''], correct: 0, type: 'open', instruction: 'חשב ממוצע ליחידה', correctText: 'מבצע: ≈8.33 ש"ח; רגיל: 9 ש"ח.' },
-        { value: 500, prompt: 'פתוחה: איך היית בודק אם ביקורת אונליין אמינה לפני קנייה?', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: לבדוק מקורות שונים, תמונות משתמשים ותאריך ביקורות.' },
+        { value: 500, prompt: 'ציינו 4 קריטריונים לבדיקת אמינות ביקורת אונליין לפני קנייה.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: מקורות מגוונים, תמונות אמיתיות של משתמשים, תאריך הביקורת, ביקורות שליליות גם ביניהן.' },
       ],
     },
     {
       name: 'ניהול תקציב',
       color: categoryPalette[1],
       questions: [
-        { value: 100, prompt: 'אמת/שקר: אם חסר כסף בסוף חודש, זו אינדיקציה לתזרים שלילי.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
-        { value: 200, prompt: 'מהו "חוק 50/30/20"?', options: ['50 חובה, 30 רצונות, 20 חיסכון', '50 חיסכון, 30 חובה, 20 רצונות', '50 רצונות, 30 חיסכון, 20 חובה'], correct: 0, type: 'multiple', instruction: 'אמריקאי', correctText: '50 חובה, 30 רצונות, 20 חיסכון.' },
+        { value: 100, prompt: 'מהו "חוק 50/30/20"?', options: ['50 חובה, 30 רצונות, 20 חיסכון', '50 חיסכון, 30 חובה, 20 רצונות', '50 רצונות, 30 חיסכון, 20 חובה'], correct: 0, type: 'multiple', correctText: '50 חובה, 30 רצונות, 20 חיסכון.' },
+        { value: 200, prompt: 'אמת/שקר: אם חסר כסף בסוף חודש, זו אינדיקציה לתזרים שלילי.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', correctText: 'אמת.' },
         { value: 300, prompt: 'התאמה: מדד ↔ הסבר', options: [''], correct: 0, type: 'match', instruction: 'חברו מדד להסבר', matchLeft: ['יתרה', 'תזרים מזומנים', 'חיסכון חירום'], matchRight: ['מה שנשאר אחרי הכנסות-הוצאות', 'כסף נכנס מול יוצא בתקופה', 'כסף זמין לבלתי צפוי (3-6 חודשי הוצאות)'], correctText: '1-ב, 2-א, 3-ג.' },
         { value: 400, prompt: 'חישוב: תקציב חודשי 2,400 ש"ח. הוצאות חובה 1,200, רצונות 700. כמה נשאר לחיסכון ואם רוצים להגיע ל-20% חיסכון, כמה צריך לקצץ?', options: [''], correct: 0, type: 'open', instruction: 'חשב חיסכון והקיצוץ', correctText: 'נשארים 500 ש"ח (≈21%). כדי להגיע מדויק ל-20% צריך מינימום 480; אין קיצוץ נדרש, אפשר להוסיף 20 לחיסכון.' },
-        { value: 500, prompt: 'פתוחה: איך היית בונה קרן חירום אם ההכנסה משתנה מחודש לחודש?', options: [''], correct: 0, type: 'open', correctText: 'למשל ממוצע הכנסה, יעד מינימום, העברה אוטומטית כשיש עודף.' },
+        { value: 500, prompt: 'ציינו 3 עקרונות לבניית קרן חירום כשיש הכנסה משתנה מחודש לחודש.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: העברה אוטומטית של % מכל הכנסה, יעד מינימום ברור, שמירת הכסף בחשבון נפרד ונזיל.' },
       ],
     },
     {
       name: 'יזמות',
       color: categoryPalette[2],
       questions: [
-        { value: 100, prompt: 'אמת/שקר: מוצר מינימלי (MVP) נועד לבדוק שוק במהירות עם פחות השקעה.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
-        { value: 200, prompt: 'מהי בעיית "חוסר התאמה לשוק" (Product-Market Fit)?', options: ['המוצר לא פוגש צורך אמיתי של לקוחות', 'המחיר גבוה מדי', 'אין צוות מספיק גדול'], correct: 0, type: 'multiple', instruction: 'אמריקאי', correctText: 'המוצר לא פוגש צורך אמיתי.' },
+        { value: 100, prompt: 'מהי בעיית "חוסר התאמה לשוק" (Product-Market Fit)?', options: ['המוצר לא פוגש צורך אמיתי של לקוחות', 'המחיר גבוה מדי', 'אין צוות מספיק גדול'], correct: 0, type: 'multiple', correctText: 'המוצר לא פוגש צורך אמיתי.' },
+        { value: 200, prompt: 'אמת/שקר: מוצר מינימלי (MVP) נועד לבדוק שוק במהירות עם פחות השקעה.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', correctText: 'אמת.' },
         { value: 300, prompt: 'התאמה: ערוץ שיווק ↔ שימוש', options: [''], correct: 0, type: 'match', instruction: 'חברו ערוץ למטרה', matchLeft: ['שיווק משפיענים', 'שיווק מפה לאוזן', 'מודעות ממומנות'], matchRight: ['תשלום ליוצרי תוכן שימליצו', 'לקוחות מספרים לחברים', 'קונים חשיפה בפלטפורמות'], correctText: '1-ב, 2-א, 3-ג.' },
         { value: 400, prompt: 'חישוב: עלות ייצור יחידה 12 ש"ח, מחיר מכירה 30 ש"ח. תקציב שיווק חודשי 180 ש"ח. כמה יחידות צריך למכור לכסות ייצור+שיווק ולהגיע לרווח 240 ש"ח?', options: [''], correct: 0, type: 'open', instruction: 'חשב רווח ליחידה ותרחיש', correctText: 'רווח ליחידה 18 ש"ח. צריך (180+240)/18 ≈ 23.3 → 24 יחידות לפחות.' },
-        { value: 500, prompt: 'פתוחה: איך מגדירים סיכון מחושב לפני השקת מוצר חדש?', options: [''], correct: 0, type: 'open', correctText: 'מגדירים הפסד מקסימלי, ניסוי קטן, מדדי הצלחה ותחנת עצירה.' },
+        { value: 500, prompt: 'מנו 4 שלבים להגדרת סיכון מחושב לפני השקת מוצר חדש בשוק.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: 1) הגדרת הפסד מקסימלי, 2) ניסוי קטן, 3) קביעת מדדי הצלחה, 4) הגדרת תחנת עצירה ברורה.' },
       ],
     },
     {
@@ -217,18 +218,18 @@ const defaultQuestionBanks: Record<Difficulty, Category[]> = {
         { value: 200, prompt: 'מה חשוב לבדוק לפני חתימה על חוזה?', options: ['שכר, שעות, זכויות', 'צבע הקירות', 'לוגו החברה'], correct: 0, type: 'multiple', instruction: 'אמריקאי', correctText: 'שכר, שעות, זכויות.' },
         { value: 300, prompt: 'התאמה: זכות ↔ משמעות', options: [''], correct: 0, type: 'match', instruction: 'חברו זכות להגדרה', matchLeft: ['שכר מינימום', 'הפסקה', 'תלוש שכר'], matchRight: ['סכום מינימלי לפי חוק', 'זמן מנוחה מוגדר', 'מסמך מפורט על השכר והניכויים'], correctText: '1-ב, 2-א, 3-ג.' },
         { value: 400, prompt: 'חישוב: 6 שעות ב-32 ש"ח, ו-3 שעות במוצ"ש ב-125%. כמה שכר ברוטו?', options: [''], correct: 0, type: 'open', instruction: 'חשב רגיל ומוצ"ש', correctText: '6×32=192; מוצ"ש 3×40=120; יחד 312 ש"ח.' },
-        { value: 500, prompt: 'פתוחה: איך תתכונן לראיון עבודה ראשון?', options: [''], correct: 0, type: 'open', correctText: 'להכיר את התפקיד, לתרגל הצגה עצמית, להכין שאלות ולהגיע בזמן.' },
+        { value: 500, prompt: 'ציינו 4 שלבי הכנה לראיון עבודה ראשון ומה לעשות בכל שלב.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: 1) ללמוד על המעסיק, 2) לתרגל הצגה עצמית, 3) להכין שאלות, 4) להגיע מוקדם ולבוש מתאים.' },
       ],
     },
     {
       name: 'כלכלה עולמית',
       color: categoryPalette[4],
       questions: [
-        { value: 100, prompt: 'אמת/שקר: פיחות מטבע הופך ייבוא ליקר יותר.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
+        { value: 100, prompt: 'אמת/שקר: כשהשקל מתחזק מול הדולר, ייבוא מוצרים מחו"ל נהיה זול יותר לישראל.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', correctText: 'אמת — שקל חזק קונה יותר דולרים, כך מחיר המוצר המיובא יורד.' },
         { value: 200, prompt: 'מה קורה באינפלציה גבוהה?', options: ['ערך הכסף נשחק והמחירים עולים', 'ערך הכסף עולה', 'אין שינוי'], correct: 0, type: 'multiple', instruction: 'אמריקאי', correctText: 'ערך הכסף נשחק והמחירים עולים.' },
         { value: 300, prompt: 'התאמה: מושג ↔ תיאור', options: [''], correct: 0, type: 'match', instruction: 'חברו', matchLeft: ['תמ"ג לנפש', 'מאזן סחר', 'ריבית בסיס'], matchRight: ['הכנסה ממוצעת לאדם', 'יבוא מול יצוא', 'עלות הכסף שקובע הבנק המרכזי'], correctText: '1-ב, 2-ג, 3-א.' },
         { value: 400, prompt: 'חישוב: יורו = 3.9 ש"ח. מוצר 30€ ומשלוח 12€. כמה זה יחד בשקלים?', options: [''], correct: 0, type: 'open', instruction: 'כפל וחיבור', correctText: '42€ × 3.9 ≈ 163.8 ש"ח.' },
-        { value: 500, prompt: 'פתוחה: איך עליית ריבית בעולם משפיעה על הלוואות בישראל?', options: [''], correct: 0, type: 'open', correctText: 'מייקרת עלויות מימון לבנקים, שיכולות לגלגל זאת לריבית על הלוואות.' },
+        { value: 500, prompt: 'ציינו 3 דרכים שבהן עליית ריבית בעולם עשויה להשפיע על הכלכלה הישראלית.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: ייקור הלוואות, מיעוט השקעות זרות, ייסוף השקל אם הריבית בארץ עולה בעקבות זאת.' },
       ],
     },
     {
@@ -239,11 +240,26 @@ const defaultQuestionBanks: Record<Difficulty, Category[]> = {
         { value: 200, prompt: 'מה הבדל מרכזי בין כסף סחיר (זהב) לכסף פיאט?', options: ['לכסף פיאט אין ערך עצמי והוא מבוסס אמון', 'פיאט כבד יותר', 'זהב אי אפשר לחלק'], correct: 0, type: 'multiple', instruction: 'אמריקאי', correctText: 'לכסף פיאט אין ערך עצמי והוא מבוסס אמון.' },
         { value: 300, prompt: 'התאמה: שלב בהתפתחות כסף ↔ תיאור', options: [''], correct: 0, type: 'match', instruction: 'חברו', matchLeft: ['סחר חליפין', 'תקן זהב', 'כסף דיגיטלי'], matchRight: ['החלפת סחורות ישירות', 'ערך מגובה בזהב', 'יתרות בבנקים/אפליקציות'], correctText: '1-ב, 2-א, 3-ג.' },
         { value: 400, prompt: 'חישוב: אם 1 שטר יואן מייצג 1,000 מטבעות נחושת, כמה מטבעות שווים 7 שטרות?', options: [''], correct: 0, type: 'open', instruction: 'כפל', correctText: '7,000 מטבעות.' },
-        { value: 500, prompt: 'פתוחה: מה הסיכון והיתרון בכסף דיגיטלי לעומת מזומן?', options: [''], correct: 0, type: 'open', correctText: 'יתרון: נוחות ומעקב; סיכון: תלות בטכנולוגיה ופרטיות.' },
+        { value: 500, prompt: 'ציינו 3 יתרונות ו-2 חסרונות של כסף דיגיטלי לעומת מזומן.', options: [''], correct: 0, type: 'open', correctText: 'יתרונות: נוחות, מעקב מהיר, גלובלי. חסרונות: תלות בטכנולוגיה, פגיעות בפרטיות.' },
       ],
     },
   ],
 };
+
+function playTickSound() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = 'sine';
+    o.frequency.value = 1100;
+    g.gain.setValueAtTime(0.08, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.07);
+    o.start(ctx.currentTime);
+    o.stop(ctx.currentTime + 0.07);
+  } catch {}
+}
 
 function playJeopardySound(type: 'select' | 'correct' | 'wrong' | 'win') {
   try {
@@ -304,6 +320,8 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
   const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
   const [typedAnswer, setTypedAnswer] = useState('');
   const [resultFlash, setResultFlash] = useState<'correct' | 'incorrect' | null>(null);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [showAddTeamMidGame, setShowAddTeamMidGame] = useState(false);
 
   const banks = useMemo(() => questionBanks || defaultQuestionBanks, [questionBanks]);
   const categories = useMemo(() => banks[difficulty] || [], [banks, difficulty]);
@@ -336,6 +354,7 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
     setMatchMapping([]);
     setDraggingIdx(null);
     setTypedAnswer('');
+    setTimeLeft(null);
   };
 
   const resetGame = () => {
@@ -353,17 +372,26 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
     setMatchMapping([]);
     setDraggingIdx(null);
     setTypedAnswer('');
+    setTimeLeft(null);
+    setShowAddTeamMidGame(false);
   };
 
   const openQuestion = (catIdx: number, qIdx: number) => {
     if (answered.has(keyFor(catIdx, qIdx))) return;
     setActive({ cat: catIdx, idx: qIdx });
     setFeedback('');
+    const q = categories[catIdx]?.questions[qIdx];
+    if (q && q.value !== 500) {
+      setTimeLeft(60);
+    } else {
+      setTimeLeft(null);
+    }
     playJeopardySound('select');
   };
 
   const submitAnswer = (optIdx?: number, isCorrectManual?: boolean) => {
     if (!activeQuestion || active === null) return;
+    setTimeLeft(null);
     const teamName = scoreBoard[currentTeamIdx]?.name ?? 'קבוצה';
     const isCorrect = typeof isCorrectManual === 'boolean' ? isCorrectManual : optIdx === activeQuestion.correct;
     const correctText = activeQuestion.correctText || activeQuestion.options[activeQuestion.correct] || '';
@@ -424,6 +452,21 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
   }, [activeQuestion]);
 
   useEffect(() => {
+    if (timeLeft === null) return;
+    if (timeLeft === 0) {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      submitAnswer(undefined, false);
+      return;
+    }
+    if (timeLeft <= 10) {
+      playTickSound();
+    }
+    const id = setTimeout(() => setTimeLeft(t => t !== null ? t - 1 : null), 1000);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft]);
+
+  useEffect(() => {
     if (!completionNotified && totalQuestions > 0 && answeredCount === totalQuestions) {
       setCompletionNotified(true);
       setStep('results');
@@ -454,9 +497,15 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
   };
 
   const handleTypedSubmit = () => {
-    if (!activeQuestion || activeQuestion.value !== 400) return;
+    if (!activeQuestion) return;
+    const given = parseFloat(typedAnswer.replace(',', '.'));
+    if (activeQuestion.numericRange) {
+      const [min, max] = activeQuestion.numericRange;
+      const isCorrect = !Number.isNaN(given) && given >= min && given <= max;
+      submitAnswer(undefined, isCorrect);
+      return;
+    }
     const expected = parseNumeric(activeQuestion.correctText || activeQuestion.options[activeQuestion.correct]);
-    const given = parseFloat(typedAnswer);
     const isCorrect = !Number.isNaN(expected) && !Number.isNaN(given) && Math.abs(given - expected) < 1e-6;
     submitAnswer(undefined, isCorrect);
   };
@@ -649,6 +698,26 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
                   </div>
                 ))}
               </div>
+              {showAddTeamMidGame ? (
+                <form onSubmit={(e) => { e.preventDefault(); addTeam(); setShowAddTeamMidGame(false); }} className="flex gap-2 pt-1">
+                  <input
+                    value={newTeamName}
+                    onChange={(e) => setNewTeamName(e.target.value)}
+                    placeholder="שם קבוצה חדש"
+                    className="flex-1 rounded-lg px-3 py-2 text-sm font-bold text-white focus:outline-none"
+                    style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,215,0,0.4)' }}
+                    autoFocus
+                  />
+                  <button type="submit" className="px-3 py-2 rounded-lg text-black text-sm font-black" style={{ background: 'linear-gradient(135deg,#ffd700,#ff9500)' }}>הוסף</button>
+                  <button type="button" onClick={() => setShowAddTeamMidGame(false)} className="px-3 py-2 rounded-lg text-white text-sm font-bold" style={{ background: 'rgba(255,255,255,0.1)' }}>ביטול</button>
+                </form>
+              ) : (
+                <button
+                  onClick={() => setShowAddTeamMidGame(true)}
+                  className="w-full py-2 rounded-xl text-sm font-bold text-white transition-all"
+                  style={{ background: 'rgba(255,215,0,0.06)', border: '1px dashed rgba(255,215,0,0.35)' }}
+                >➕ הוסף קבוצה</button>
+              )}
             </div>
             {/* Controls */}
             <div className="rounded-2xl p-5 space-y-3" style={{ background: 'linear-gradient(135deg,#1e1b4b,#2d2a5e)', border: '1px solid rgba(255,215,0,0.2)' }}>
@@ -775,6 +844,25 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
               boxShadow: '0 0 80px rgba(124,58,237,0.4), 0 0 40px rgba(255,215,0,0.15)',
             }}
           >
+            {/* Timer */}
+            {timeLeft !== null && (
+              <div className="w-full">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-purple-200 text-sm font-bold">⏱ זמן</span>
+                  <span className={`text-xl font-black ${timeLeft <= 10 ? 'text-red-400 animate-pulse' : 'text-yellow-300'}`}>{timeLeft}s</span>
+                </div>
+                <div className="w-full rounded-full h-2.5" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                  <div
+                    className="h-2.5 rounded-full transition-all duration-1000"
+                    style={{
+                      width: `${(timeLeft / 60) * 100}%`,
+                      background: timeLeft <= 10 ? 'linear-gradient(90deg,#ef4444,#dc2626)' : 'linear-gradient(90deg,#ffd700,#ff9500)',
+                      boxShadow: timeLeft <= 10 ? '0 0 8px rgba(239,68,68,0.6)' : '0 0 8px rgba(255,215,0,0.4)'
+                    }}
+                  />
+                </div>
+              </div>
+            )}
             {/* Header */}
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-3">
@@ -796,10 +884,6 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
             >
               <p className="text-2xl font-bold text-white leading-relaxed" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{activeQuestion.prompt}</p>
             </div>
-            {activeQuestion.instruction && (
-              <p className="text-yellow-300 text-sm font-semibold">💡 {activeQuestion.instruction}</p>
-            )}
-
             {/* Match type */}
             {activeQuestion.type === 'match' && activeQuestion.matchLeft && activeQuestion.matchRight && activeQuestion.value === 300 ? (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-right">
@@ -832,12 +916,12 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
                     return (
                       <button
                         key={item + idx}
-                        draggable={!isAssigned}
+                        draggable={true}
                         onDragStart={(e) => { e.dataTransfer.setData('text/plain', String(idx)); setDraggingIdx(idx); }}
                         onDragEnd={() => setDraggingIdx(null)}
                         className="w-full text-right rounded-xl px-3 py-2.5 transition-all font-semibold"
                         style={isAssigned
-                          ? { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.25)', cursor: 'not-allowed', border: '1px solid rgba(255,255,255,0.08)' }
+                          ? { background: 'rgba(16,185,129,0.15)', color: 'rgba(110,231,183,0.7)', cursor: 'grab', border: '1px solid rgba(16,185,129,0.3)' }
                           : { background: 'rgba(255,215,0,0.12)', color: '#fff', border: '1px solid rgba(255,215,0,0.3)', cursor: 'grab' }}
                       >
                         {item}

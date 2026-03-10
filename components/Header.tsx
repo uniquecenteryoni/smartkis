@@ -13,7 +13,7 @@ const Header: React.FC<HeaderProps> = ({ onLogoClick }) => {
         style={{ cursor: onLogoClick ? 'pointer' : 'default' }}
       >
         <img
-          src="/logo2.svg"
+          src={`${import.meta.env.BASE_URL}logo2.svg`}
           alt="חכם בכיס"
           className="h-28 sm:h-40 lg:h-48 w-auto drop-shadow-lg group-hover:drop-shadow-xl transition-all duration-300"
         />

@@ -12,7 +12,7 @@ const palette: string[] = [
 export const jeopardyChachamBanks: Record<Difficulty, Category[]> = {
   'קל': [
     {
-      name: 'בניית תקציב',
+      name: 'ניהול תקציב',
       color: palette[0],
       questions: [
         { value: 100, prompt: 'אמת/שקר: תקציב הוא רשימה שמציגה את כל ההכנסות וההוצאות.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
@@ -23,7 +23,7 @@ export const jeopardyChachamBanks: Record<Difficulty, Category[]> = {
       ],
     },
     {
-      name: 'הוצאות חצ"ר',
+      name: 'מודל החצ"ר',
       color: palette[1],
       questions: [
         { value: 100, prompt: 'אמת/שקר: "חייב" הוא הוצאה שחייבים כדי לתפקד, ו"רוצה" הוא הוצאה שלא הכרחית.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
@@ -56,7 +56,7 @@ export const jeopardyChachamBanks: Record<Difficulty, Category[]> = {
       ],
     },
     {
-      name: 'פענוח תלוש',
+      name: 'פענוח תלוש שכר',
       color: palette[4],
       questions: [
         { value: 100, prompt: 'אמת/שקר: נטו הוא מה שנכנס לחשבון אחרי ניכויים.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
@@ -80,36 +80,36 @@ export const jeopardyChachamBanks: Record<Difficulty, Category[]> = {
   ],
   'בינוני': [
     {
-      name: 'בניית תקציב',
+      name: 'ניהול תקציב',
       color: palette[0],
       questions: [
         { value: 100, prompt: 'אמת/שקר: אם ההוצאות עולות על ההכנסות, מדובר בגירעון.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
-        { value: 200, prompt: 'מהי חלוקה טובה למעקב חודשי?', options: ['הכנסות, הוצאות חובה, חיסכון, רצונות', 'רק הוצאות', 'רק הכנסות'], correct: 0, type: 'multiple', instruction: 'אמריקאי', correctText: 'הכנסות, חובה, חיסכון ורצונות.' },
+        { value: 200, prompt: 'מהן ההוצאות/הכנסות שרצוי לעקוב אחריהן בחודש?', options: ['הכנסות, הוצאות חובה', 'הוצאות חובה', 'הוצאות חובה, הכנסות, הוצאות משתנות'], correct: 2, type: 'multiple', instruction: 'אמריקאי', correctText: 'הוצאות חובה, הכנסות והוצאות משתנות.' },
         { value: 300, prompt: 'התאימו: סוג הוצאה ↔ דוגמה', options: [''], correct: 0, type: 'match', instruction: 'התאימו סוג לדוגמה', matchLeft: ['קבועה', 'משתנה', 'חד-פעמית'], matchRight: ['שכר דירה', 'בילוי בסוף שבוע', 'תיקון מחשב'], correctText: '1-ב, 2-ג, 3-א.' },
-        { value: 400, prompt: 'חישוב: הכנסה 2,400 ש"ח. חובה 1,200, חיסכון 300, רצונות 600. כמה נשאר/חסר?', options: [''], correct: 0, type: 'open', instruction: 'סכום קטגוריות', correctText: 'נשארים 300 ש"ח לא מנוצלים.' },
-        { value: 500, prompt: 'פתוחה: אם התקציב בחריגה, איזה סעיף כדאי לבדוק קודם ולמה?', options: [''], correct: 0, type: 'open', correctText: 'לרוב רצונות/משתנה כי קל לצמצם שם.' },
+        { value: 400, prompt: 'אני מרוויח 15,000 ש"ח נטו בחודש, מהו התקציב הרצוי שלי למגורים? (שכר דירה/תשלום משכנתא)', options: [''], correct: 0, type: 'open', instruction: 'ענו בסכום בש"ח בין 0-4,500 (עד 30% מהשכר)', numericRange: [0, 4500], correctText: 'התקציב המומלץ למגורים הוא עד 30% מההכנסה, כלומר עד 4,500 ש"ח.' },
+        { value: 500, prompt: 'מה הטעות שהרבה עושים כשהם במינוס וגורמת להם לחזור למינוס?', options: [''], correct: 0, type: 'open', correctText: 'צמצום על פני התייעלות — חיתוך הוצאות שמשפיעות על אורח חיים לפני התייעלות באלו שלא.' },
       ],
     },
     {
-      name: 'הוצאות חצ"ר',
+      name: 'מודל החצ"ר',
       color: palette[1],
       questions: [
-        { value: 100, prompt: 'אמת/שקר: העברת הוצאה מ"רוצה" ל"צריך" מגדילה את תקציב החובה.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
-        { value: 200, prompt: 'מה דוגמה טובה ל"צריך"?', options: ['ספר לימוד חובה', 'חופשת סקי', 'גיימפאס חדש'], correct: 0, type: 'multiple', instruction: 'אמריקאי', correctText: 'ספר לימוד חובה.' },
-        { value: 300, prompt: 'התאימו: קטגוריה ↔ פעולה בזמן קיצוץ', options: [''], correct: 0, type: 'match', instruction: 'חברו קטגוריה לפעולה', matchLeft: ['חייב', 'צריך', 'רוצה'], matchRight: ['לבדוק איך להוזיל ספק', 'לשקול דחייה או מציאה זולה יותר', 'לבטל/להפחית תחילה'], correctText: '1-ב, 2-א, 3-ג.' },
-        { value: 400, prompt: 'חישוב: בסעיף "רוצה" יש 500 ש"ח. הוצאה מתוכננת 620 ש"ח. כמה לקצץ או לדחות?', options: [''], correct: 0, type: 'open', instruction: 'פער תקציבי', correctText: 'להקטין ב-120 ש"ח או לדחות חלק מהרכישה.' },
-        { value: 500, prompt: 'פתוחה: איך מודל חצ"ר עוזר בהצבת סדרי עדיפויות כשיש הכנסה בלתי צפויה?', options: [''], correct: 0, type: 'open', correctText: 'מחליטים קודם אם לחזק חייב/צריך לפני הרחבת רוצה.' },
+        { value: 100, prompt: 'אמת/שקר: מודל החצ"ר נועד לסייע לנו להבין אילו מניות לקנות בזמן אמת?', options: ['אמת', 'שקר'], correct: 1, type: 'multiple', instruction: 'אמת/שקר', correctText: 'שקר. מודל החצ"ר עוזר לסווג הוצאות לפי חייב, צריך, רוצה.' },
+        { value: 200, prompt: 'מהי דוגמה טובה להוצאת "חייב"?', options: ['קניית טלפון חדש במקום הקודם שנשבר', 'קניית אייפון חדש במקום הישן', 'קניית רכב אספנות'], correct: 0, type: 'multiple', instruction: 'אמריקאי', correctText: 'קניית טלפון שנשבר — הכרחי לתפקוד יומיומי.' },
+        { value: 300, prompt: 'התאימו: קטגוריית חצ"ר ↔ דוגמה', options: [''], correct: 0, type: 'match', instruction: 'חברו קטגוריה לדוגמה המתאימה', matchLeft: ['חייב', 'צריך', 'רוצה'], matchRight: ['שכר דירה / ביטוח', 'נעלי ספורט לחוג', 'כרטיס לקונצרט'], correctText: '1-א, 2-ב, 3-ג.' },
+        { value: 400, prompt: 'הכנסה חודשית 3,000 ש"ח. הוצאות חייב: 1,200 ש"ח, הוצאות צריך: 600 ש"ח. כמה ש"ח נשאר לסעיפי "רוצה" וחיסכון יחד?', options: [''], correct: 0, type: 'open', instruction: 'חישוב לפי מודל צח"ר', numericRange: [1100, 1300], correctText: '1,200 ש"ח (3,000 פחות 1,200 פחות 600).' },
+        { value: 500, prompt: 'קיבלתם 1,400 ש"ח, אתם במינוס 400 ש"ח, ויש הופעה בקרוב שעולה 1,400 ש"ח. מה תעשו?', options: [''], correct: 0, type: 'open', correctText: 'לפני שמוותרים על ההופעה, מנסים להתייעל כלכלית בסעיפים אחרים שלא משפיעים עלינו — לצמצם ברצונות ולנסות לכסות את המינוס תוך חיסכון על הוצאות אחרות.' },
       ],
     },
     {
       name: 'הסכנה במינוס',
       color: palette[2],
       questions: [
-        { value: 100, prompt: 'אמת/שקר: ריבית במינוס יכולה להשתנות לפי רמת החריגה.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
-        { value: 200, prompt: 'מהי "עמלת חריגה"?', options: ['תשלום חד-פעמי בעת חריגה', 'בונוס מהבנק', 'מס הכנסה'], correct: 0, type: 'multiple', instruction: 'אמריקאי', correctText: 'תשלום חד-פעמי בעת חריגה.' },
-        { value: 300, prompt: 'התאימו: מצב ↔ פעולה נכונה', options: [''], correct: 0, type: 'match', instruction: 'חברו מצב לפעולה', matchLeft: ['קבוע במינוס', 'חריגה נדירה', 'מסגרת כמעט מלאה'], matchRight: ['לבנות תוכנית צמצום הוצאות וחיסכון', 'להחזיר תוך ימים ולבדוק למה קרה', 'לעקוב יומית ולהקטין חיובים עתידיים'], correctText: '1-ב, 2-ג, 3-א.' },
-        { value: 400, prompt: 'חישוב: מינוס 1,200 ש"ח, ריבית 7% לחודש. כמה ריבית תחושבו החודש?', options: [''], correct: 0, type: 'open', instruction: 'אחוזים', correctText: '84 ש"ח.' },
-        { value: 500, prompt: 'פתוחה: ציינו שני סימנים מוקדמים לכך שמדרדרים למינוס.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: דחיית חיובים, שימוש תכוף באשראי, ירידה בחיסכון.' },
+        { value: 100, prompt: 'אמת/שקר: "מינוס הוא הלוואה מהבנק בתנאים גרועים."', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', correctText: 'אמת — הבנק מלווה לכם כסף בריבית גבוהה יחסית, בלי שביקשתם במפורש.' },
+        { value: 200, prompt: 'מה גורם למינוס לגדול באופן הכי משמעותי עם הזמן?', options: ['קניית מכשירים לא נחוצים', 'עמלות', 'ריבית דה ריבית'], correct: 2, type: 'multiple', correctText: 'ריבית דה ריבית — הריבית מצטברת על יתרת המינוס הגדלה ויוצרת אפקט כדור שלג.' },
+        { value: 300, prompt: 'התאימו: מושג ↔ הסבר', options: [''], correct: 0, type: 'match', matchLeft: ['מינוס', 'ריבית', 'מסגרת אשראי'], matchRight: ['חשבון שנמצא מתחת לאפס', 'העלות שהבנק גובה על הכסף שהשאיל', 'הגבול המקסימלי שהבנק אישר לחריגה'], correctText: 'מינוס↔חשבון מתחת לאפס, ריבית↔עלות הכסף, מסגרת↔הגבול המאושר.' },
+        { value: 400, prompt: 'אתם בגרעון חודשי קבוע של 100 ש"ח והריבית השנתית היא 10%. כמה עלה לכם המינוס השנה? (חשבו על יתרת הסוף)', options: [''], correct: 0, type: 'open', numericRange: [100, 140], correctText: 'בסוף השנה יש לכם מינוס של 1,200 ש"ח. ריבית של 10% עליו = 120 ש"ח.' },
+        { value: 500, prompt: 'פתוחה: מינוס לעיתים יכול לעבוד לטובתנו — כיצד?', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: שימוש קצר-מועד למצב חירום ממשי, כשיודעים שתשלמו תוך ימים ספורים ועלות הריבית נמוכה מהנזק שיגרם בלעדיו. אך זה שימוש יוצא דופן — לא הרגל.' },
       ],
     },
     {
@@ -118,37 +118,37 @@ export const jeopardyChachamBanks: Record<Difficulty, Category[]> = {
       questions: [
         { value: 100, prompt: 'אמת/שקר: שעות נוספות לבני נוער מוגבלות בחוק.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
         { value: 200, prompt: 'מה חובה לכלול בתלוש?', options: ['מספר שעות, שכר לשעה וניכויים', 'רק סכום נטו', 'שם המעסיק בלבד'], correct: 0, type: 'multiple', instruction: 'אמריקאי', correctText: 'מספר שעות, שכר לשעה וניכויים.' },
-        { value: 300, prompt: 'התאימו: זכות ↔ מה לבדוק', options: [''], correct: 0, type: 'match', instruction: 'חברו זכות לבדיקה', matchLeft: ['שכר מינימום', 'ימי מחלה/חופשה', 'הודעה לעובד'], matchRight: ['גובה השכר לשעה בגילכם', 'ציון יתרות בתלוש', 'מסמך שמפרט תנאי העסקה'], correctText: '1-ב, 2-א, 3-ג.' },
-        { value: 400, prompt: 'חישוב: עבדתם 18 שעות בשבוע, שכר 33 ש"ח לשעה. מה הברוטו השבועי?', options: [''], correct: 0, type: 'open', instruction: 'כפל', correctText: '594 ש"ח.' },
-        { value: 500, prompt: 'פתוחה: מה עושים אם לא קיבלתם תלוש או שהתלוש לא ברור?', options: [''], correct: 0, type: 'open', correctText: 'לפנות למעסיק בכתב, לתעד, ולשקול ייעוץ/פניה למוקד זכויות עובדים.' },
+        { value: 300, prompt: 'התאימו: זכות ↔ מה לבדוק', options: [''], correct: 0, type: 'match', matchLeft: ['שכר מינימום', 'ימי מחלה/חופשה', 'מסמך שמפרט תנאי העסקה'], matchRight: ['גובה השכר לשעה בגילכם', 'ציון יתרות בתלוש', 'הודעה לעובד'], correctText: 'שכר מינימום↔גובה השכר לשעה, ימי מחלה/חופשה↔ציון יתרות, מסמך תנאי העסקה↔הודעה לעובד.' },
+        { value: 400, prompt: 'חישוב: עבדתם 10 שעות ביום אחד. שכר בסיס 36 ש"ח לשעה. 8 השעות הראשונות — שכר רגיל; שעות 9–10 — תוספת שעות נוספות של 25%. כמה הרווחתם?', options: [''], correct: 0, type: 'open', numericRange: [370, 385], correctText: '8×36 = 288 ש"ח + 2×36×1.25 = 90 ש"ח. סה"כ 378 ש"ח.' },
+        { value: 500, prompt: 'פתוחה: ציינו 3 סיבות לכך שבני נוער הם קבוצה שיותר פגיעה לניצול בשוק התעסוקה.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: חוסר ניסיון וידע בזכויות, תלות כלכלית, קושי לעמוד מול מבוגרים/סמכות, פחד לאבד את העבודה, לחץ חברתי.' },
       ],
     },
     {
-      name: 'פענוח תלוש',
+      name: 'פענוח תלוש שכר',
       color: palette[4],
       questions: [
         { value: 100, prompt: 'אמת/שקר: שעות נוספות צריכות להופיע בשורה נפרדת בתלוש.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
         { value: 200, prompt: 'מה המשמעות של שורת "ניכויי חובה"?', options: ['מסים וביטוח לאומי', 'הטבות מהמעסיק', 'בונוסים'], correct: 0, type: 'multiple', instruction: 'אמריקאי', correctText: 'מסים וביטוח לאומי.' },
         { value: 300, prompt: 'התאימו: רכיב ↔ דוגמה', options: [''], correct: 0, type: 'match', instruction: 'חברו רכיב לדוגמה', matchLeft: ['הפרשות מעסיק', 'שעות רגילות', 'ברוטו'], matchRight: ['תשלום לפנסיה/חיסכון', 'סה"כ שעות בסיס', 'סכום לפני ניכויים'], correctText: '1-ב, 2-ג, 3-א.' },
-        { value: 400, prompt: 'חישוב: ברוטו 2,000 ש"ח. ניכויי חובה 180 ש"ח, הטבת מס -20 ש"ח (מורידה את הניכוי). מה הנטו?', options: [''], correct: 0, type: 'open', instruction: 'חיסור', correctText: '1,840 ש"ח.' },
-        { value: 500, prompt: 'פתוחה: ציינו שני דברים שחייבים להיות כתובים בתלוש כחוק.', options: [''], correct: 0, type: 'open', correctText: 'למשל: פרטי עובד ומעסיק, תקופת עבודה, שכר לשעה/חודש, שעות, ניכויים.' },
+        { value: 400, prompt: 'חישוב: ברוטו 2,000 ש"ח. ניכויי חובה 180 ש"ח, הטבת מס -20 ש"ח (מורידה את הניכוי). מה הנטו?', options: [''], correct: 0, type: 'open', numericRange: [1839, 1841], correctText: '1,840 ש"ח (2000 − 180 + 20 = 1,840).' },
+        { value: 500, prompt: 'פתוחה: ציינו 4 סיבות לחשיבות של קבלת תלוש שכר.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: הוכחת שכר ושעות, זיהוי טעויות/ניצול, תיעוד לצורך הלוואה/דיור, מעקב אחר הפרשות לפנסיה.' },
       ],
     },
     {
       name: 'חיסכון והשקעה',
       color: palette[5],
       questions: [
-        { value: 100, prompt: 'אמת/שקר: חיסכון לטווח קצר לרוב עדיף להשאיר בנזילות גבוהה.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
-        { value: 200, prompt: 'מהי כרית ביטחון טובה?', options: ['3-6 חודשי הוצאות חיוניות', 'חודש אחד של הוצאות', '12 חודשי הכנסה'], correct: 0, type: 'multiple', instruction: 'אמריקאי', correctText: '3-6 חודשי הוצאות חיוניות.' },
-        { value: 300, prompt: 'התאימו: מושג ↔ הסבר', options: [''], correct: 0, type: 'match', instruction: 'חברו מושג להסבר', matchLeft: ['סיכון', 'תשואה', 'פיזור'], matchRight: ['מידת אי-הוודאות', 'הרווח הצפוי מההשקעה', 'חלוקת כסף בין אפיקים שונים'], correctText: '1-ב, 2-ג, 3-א.' },
-        { value: 400, prompt: 'חישוב: חיסכון חודשי 150 ש"ח, ריבית שנתית 4% (פשוטה לצורך השאלה). כמה תוספת ריבית לאחר שנה?', options: [''], correct: 0, type: 'open', instruction: 'הערכה פשוטה', correctText: 'כ-72 ש"ח (150×12=1,800; 4%≈72).' },
-        { value: 500, prompt: 'פתוחה: מתי כדאי להשקיע במקום לחסוך בפיקדון?', options: [''], correct: 0, type: 'open', correctText: 'כשמדובר בטווח ארוך, אחרי שיש כרית חירום ואתם מבינים את הסיכון.' },
+        { value: 100, prompt: 'אמת/שקר: כסף שמונח בבית לא גדל עם הזמן.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', correctText: 'אמת — כסף שלא בחיסכון/השקעה לא מניב ריבית ואפילו מאבד ערך מאינפלציה.' },
+        { value: 200, prompt: 'מהי משמעות המונח "נזילות"?', options: ['היכולת למשוך את הכסף מתי שרוצים', 'הסיכון שיש בהשקעה', 'הריבית שמקבלים בבנק'], correct: 0, type: 'multiple', correctText: 'נזילות = היכולת להפוך את הנכס לכסף מזומן במהירות ובקלות.' },
+        { value: 300, prompt: 'התאימו: מושג ↔ הסבר', options: [''], correct: 0, type: 'match', matchLeft: ['סיכון', 'תשואה', 'פיזור'], matchRight: ['מידת אי-הוודאות', 'הרווח הצפוי מההשקעה', 'חלוקת כסף בין אפיקים שונים'], correctText: 'סיכון↔אי-וודאות, תשואה↔הרווח הצפוי, פיזור↔חלוקת כסף.' },
+        { value: 400, prompt: 'חישוב: חיסכון חודשי 150 ש"ח, ריבית שנתית 4% (פשוטה לצורך השאלה). כמה תוספת ריבית לאחר שנה?', options: [''], correct: 0, type: 'open', numericRange: [70, 74], correctText: 'כ-72 ש"ח (150×12=1,800; 4%≈72).' },
+        { value: 500, prompt: 'ציינו 3 סיבות שמהוות את המוטיבציה העיקרית של אנשים להשקיע את כספם בישראל.', options: [''], correct: 0, type: 'open', correctText: 'לדוגמה: הגנה על הכסף מאינפלציה, הגדלת ההון לטווח ארוך (פנסיה/יעדים), ניצול כוח ריבית דריבית.' },
       ],
     },
   ],
   'מאתגר': [
     {
-      name: 'בניית תקציב',
+      name: 'ניהול תקציב',
       color: palette[0],
       questions: [
         { value: 100, prompt: 'אמת/שקר: מעקב חודשי בלבד מספיק כדי למנוע גלישה להוצאות יתר.', options: ['אמת', 'שקר'], correct: 1, type: 'multiple', instruction: 'אמת/שקר', correctText: 'שקר. נדרש גם מעקב תדיר/שבועי.' },
@@ -159,7 +159,7 @@ export const jeopardyChachamBanks: Record<Difficulty, Category[]> = {
       ],
     },
     {
-      name: 'הוצאות חצ"ר',
+      name: 'מודל החצ"ר',
       color: palette[1],
       questions: [
         { value: 100, prompt: 'אמת/שקר: סעיף "צריך" יכול להפוך ל"חייב" כשאין חלופות זולות או דחייה.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },
@@ -192,7 +192,7 @@ export const jeopardyChachamBanks: Record<Difficulty, Category[]> = {
       ],
     },
     {
-      name: 'פענוח תלוש',
+      name: 'פענוח תלוש שכר',
       color: palette[4],
       questions: [
         { value: 100, prompt: 'אמת/שקר: הפרשות המעסיק לפנסיה מופיעות בתלוש כחלק מהעלות הכוללת.', options: ['אמת', 'שקר'], correct: 0, type: 'multiple', instruction: 'אמת/שקר', correctText: 'אמת.' },

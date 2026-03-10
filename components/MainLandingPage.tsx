@@ -28,14 +28,10 @@ const UserTypeCard: React.FC<UserTypeCardProps> = ({ title, description, icon: I
 
     return (
         <div onClick={isComingSoon ? undefined : onClick} className={cardClasses}>
-            {/* Colored top accent bar */}
-            {!isComingSoon && (
-              <div className={`absolute top-0 left-0 right-0 h-1.5 rounded-t-4xl bg-gradient-to-r ${accentFrom} ${accentTo}`} />
-            )}
             {isComingSoon && <div className="absolute top-4 right-4 bg-gray-500 text-white text-xs font-bold px-3 py-1 rounded-full z-10">בקרוב</div>}
 
             {/* Icon circle */}
-            <div className={`p-5 rounded-2xl mb-5 shadow-lg ${isComingSoon ? 'bg-gray-300' : iconBg} ${isComingSoon ? '' : iconShadow} transition-transform duration-300 group-hover:scale-110 animate-float`}>
+            <div className={`p-5 rounded-full mb-5 shadow-md ${isComingSoon ? 'bg-gray-300' : iconBg} ${isComingSoon ? '' : iconShadow} transition-transform duration-300 group-hover:scale-110 animate-float opacity-80`}>
                 <Icon className="w-14 h-14 text-white" />
             </div>
 
@@ -65,8 +61,8 @@ const MainLandingPage: React.FC<MainLandingPageProps> = ({ onSelectStudents, onS
                 isComingSoon={false}
                 accentFrom="from-brand-teal"
                 accentTo="to-brand-light-blue"
-                iconBg="bg-gradient-to-br from-brand-teal to-brand-light-blue"
-                iconShadow="shadow-brand-teal/40"
+                iconBg="bg-gradient-to-br from-brand-teal/60 to-brand-light-blue/60"
+                iconShadow="shadow-brand-teal/20"
                 emoji="🎓"
             />
             <UserTypeCard
@@ -77,8 +73,8 @@ const MainLandingPage: React.FC<MainLandingPageProps> = ({ onSelectStudents, onS
                 isComingSoon={false}
                 accentFrom="from-brand-violet"
                 accentTo="to-brand-light-blue"
-                iconBg="bg-gradient-to-br from-brand-violet to-blue-500"
-                iconShadow="shadow-brand-violet/40"
+                iconBg="bg-gradient-to-br from-brand-violet/60 to-blue-400/60"
+                iconShadow="shadow-brand-violet/20"
                 emoji="🏆"
             />
             <UserTypeCard
@@ -89,8 +85,8 @@ const MainLandingPage: React.FC<MainLandingPageProps> = ({ onSelectStudents, onS
                 isComingSoon={false}
                 accentFrom="from-brand-magenta"
                 accentTo="to-pink-400"
-                iconBg="bg-gradient-to-br from-brand-magenta to-pink-400"
-                iconShadow="shadow-brand-magenta/40"
+                iconBg="bg-gradient-to-br from-brand-magenta/60 to-pink-300/60"
+                iconShadow="shadow-brand-magenta/20"
                 emoji="❤️"
             />
         </main>
