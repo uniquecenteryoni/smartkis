@@ -524,7 +524,7 @@ const C1_OT150_RATE   = C1_HOURLY * 1.5;                                   // 60
 const C1_OT150        = C1_OT150_H * C1_OT150_RATE;                       // 360
 const C1_GROSS        = C1_BASE + C1_OT125 + C1_OT150 + C1_TRAVEL;        // 7300
 const C1_TAX=209.50, C1_BI=243.25, C1_HEALTH=215.45;
-const C1_PENSION      = parseFloat(((C1_BASE+C1_OT125+C1_OT150)*0.06).toFixed(2)); // 417
+const C1_PENSION      = parseFloat((C1_BASE*0.06).toFixed(2));                      // 374.40 — פנסיה על שכר יסוד בלבד (שע"נ משתנות אינן בבסיס לפנסיה)
 const C1_TOTAL_DED    = parseFloat((C1_TAX+C1_BI+C1_HEALTH+C1_PENSION).toFixed(2));
 const C1_NET          = parseFloat((C1_GROSS-C1_TOTAL_DED).toFixed(2));
 
@@ -732,7 +732,7 @@ const FillInStep: React.FC = () => {
       { name: 'מס הכנסה',    amt: given(C1_TAX),     tooltip: termExplanations['מס הכנסה'] },
       { name: 'ביטוח לאומי', amt: given(C1_BI),      tooltip: termExplanations['ביטוח לאומי'] },
       { name: 'דמי בריאות',  amt: given(C1_HEALTH),  tooltip: termExplanations['דמי בריאות'] },
-      { name: 'פנסיה (6%)',  amt: given(C1_PENSION), tooltip: termExplanations['פנסיה'] },
+      { name: 'פנסיה (6% מהיסוד)',  amt: given(C1_PENSION), tooltip: 'חיסכון חובה לגיל פרישה. הפרשה לפנסיה מחושבת על שכר היסוד בלבד (ולרכיבים קבועים כגון שעות נוספות גלובליות), ולא על שעות נוספות משתנות.' },
     ];
     storyContent = (
       <>
@@ -743,6 +743,9 @@ const FillInStep: React.FC = () => {
           <strong className="text-orange-600">7 שעות נוספות ב-125%</strong> +{' '}
           <strong className="text-red-600">6 שעות נוספות ב-150%</strong>,
           ומקבלת <strong>350 ₪ החזר נסיעות</strong>. הניכויים נתונים — חשבו את שאר השדות!
+        </p>
+        <p className="text-base text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 mt-2">
+          💡 <strong>שימו לב:</strong> הפרשה לפנסיה מחושבת על <strong>שכר היסוד בלבד</strong> (6240 ₪), לא על שעות נוספות משתנות — אלו אינן חלק מבסיס השכר הפנסיוני.
         </p>
         <div className="mt-3 flex flex-wrap gap-2 text-lg">
           <span className="bg-white border border-teal-200 rounded-lg px-3 py-1 font-semibold">💰 40 ₪/שעה</span>
@@ -761,7 +764,7 @@ const FillInStep: React.FC = () => {
       mandatoryRows: mandRows, voluntaryRows: [{ name: 'קרן השתלמות', amt: <span className="text-gray-400 italic">—</span> }],
       totalDedCell: given(C1_TOTAL_DED), netCell: inp('net'),
       marginalTax: '10%', creditPoints: '2.25',
-      employerPension: fmt((C1_BASE+C1_OT125+C1_OT150)*0.075),
+      employerPension: fmt(C1_BASE*0.075),
       employerStudyFund: fmt((C1_BASE+C1_OT125+C1_OT150)*0.075),
     };
     solutionRows = (

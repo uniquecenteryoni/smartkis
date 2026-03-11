@@ -322,6 +322,11 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
   const [resultFlash, setResultFlash] = useState<'correct' | 'incorrect' | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [showAddTeamMidGame, setShowAddTeamMidGame] = useState(false);
+  const [showTeamManager, setShowTeamManager] = useState(false);
+  const [editingTeamIdx, setEditingTeamIdx] = useState<number | null>(null);
+  const [editingTeamName, setEditingTeamName] = useState('');
+  const [explanation, setExplanation] = useState<{ text: string; isCorrect: boolean } | null>(null);
+  const [shuffledMatchRightOrder, setShuffledMatchRightOrder] = useState<number[]>([]);
 
   const banks = useMemo(() => questionBanks || defaultQuestionBanks, [questionBanks]);
   const categories = useMemo(() => banks[difficulty] || [], [banks, difficulty]);
@@ -355,6 +360,8 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
     setDraggingIdx(null);
     setTypedAnswer('');
     setTimeLeft(null);
+    setExplanation(null);
+    setShuffledMatchRightOrder([]);
   };
 
   const resetGame = () => {
@@ -374,6 +381,11 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
     setTypedAnswer('');
     setTimeLeft(null);
     setShowAddTeamMidGame(false);
+    setShowTeamManager(false);
+    setEditingTeamIdx(null);
+    setEditingTeamName('');
+    setExplanation(null);
+    setShuffledMatchRightOrder([]);
   };
 
   const openQuestion = (catIdx: number, qIdx: number) => {
@@ -381,7 +393,7 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
     setActive({ cat: catIdx, idx: qIdx });
     setFeedback('');
     const q = categories[catIdx]?.questions[qIdx];
-    if (q && q.value !== 500) {
+    if (q && q.value === 100) {
       setTimeLeft(60);
     } else {
       setTimeLeft(null);
@@ -413,10 +425,16 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
         : `${teamName}, לא מדויק. לא נצברו נקודות`
     );
 
-    if (isCorrect) {
-      showToast(correctText ? `תשובה נכונה! ${correctText}` : 'תשובה נכונה!', 'success');
+    if (activeQuestion.value === 100) {
+      // 100pt questions: quick toast only
+      if (isCorrect) {
+        showToast(correctText ? `תשובה נכונה! ${correctText}` : 'תשובה נכונה!', 'success');
+      } else {
+        showToast(`טעות. התשובה הנכונה: ${correctText || '—'}`, 'error');
+      }
     } else {
-      showToast(`טעות. התשובה הנכונה: ${correctText || '—'}`, 'error');
+      // 200-500pt: centered explanation with הבנתי
+      setExplanation({ text: correctText, isCorrect });
     }
 
     playJeopardySound(isCorrect ? 'correct' : 'wrong');
@@ -434,6 +452,20 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
     setNewTeamName('');
   };
 
+  const renameTeam = () => {
+    if (editingTeamIdx === null) return;
+    const trimmed = editingTeamName.trim();
+    if (!trimmed) return;
+    setScoreBoard(prev => prev.map((t, i) => i === editingTeamIdx ? { ...t, name: trimmed } : t));
+    setEditingTeamIdx(null);
+    setEditingTeamName('');
+  };
+
+  const removeTeam = (idx: number) => {
+    setScoreBoard(prev => prev.filter((_, i) => i !== idx));
+    setCurrentTeamIdx(prev => (prev > 0 && prev >= idx) ? prev - 1 : prev);
+  };
+
   const handleAddTeamSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     addTeam();
@@ -444,10 +476,22 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
       setMatchMapping(activeQuestion.matchLeft.map(() => -1));
       setDraggingIdx(null);
       setTypedAnswer('');
+      // Shuffle right-side display order (Fisher-Yates)
+      const n = activeQuestion.matchRight?.length ?? 0;
+      const indices = Array.from({ length: n }, (_, i) => i);
+      for (let i = n - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [indices[i], indices[j]] = [indices[j], indices[i]];
+      }
+      // Ensure shuffle is non-trivial (at least one item out of place)
+      const isTrivial = indices.every((v, i) => v === i);
+      if (isTrivial && n > 1) { const tmp = indices[0]; indices[0] = indices[1]; indices[1] = tmp; }
+      setShuffledMatchRightOrder(indices);
     } else {
       setMatchMapping([]);
       setDraggingIdx(null);
       setTypedAnswer('');
+      setShuffledMatchRightOrder([]);
     }
   }, [activeQuestion]);
 
@@ -724,7 +768,7 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
               <p className="text-lg font-black text-yellow-300">⚙️ פעולות</p>
               <div className="flex flex-wrap gap-2">
                 <button onClick={() => setStep('difficulty')} className="px-4 py-2 rounded-xl text-white text-sm font-bold" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>שינוי רמה</button>
-                <button onClick={() => setStep('teams')} className="px-4 py-2 rounded-xl text-white text-sm font-bold" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>ניהול קבוצות</button>
+                <button onClick={() => setShowTeamManager(true)} className="px-4 py-2 rounded-xl text-white text-sm font-bold" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>ניהול קבוצות</button>
                 <button onClick={finishGame} className="px-4 py-2 rounded-xl text-black text-sm font-black" style={{ background: 'linear-gradient(135deg,#ffd700,#ff9500)' }}>🏆 פודיום</button>
                 <button onClick={onBack} className="px-4 py-2 rounded-xl text-white text-sm font-bold" style={{ background: 'rgba(214,51,99,0.7)', border: '1px solid rgba(214,51,99,0.5)' }}>חזרה</button>
               </div>
@@ -911,13 +955,17 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
                 </div>
                 <div className="space-y-2">
                   <p className="font-bold text-purple-200 text-sm">הגדרות לגרירה</p>
-                  {activeQuestion.matchRight.map((item, idx) => {
-                    const isAssigned = matchMapping.includes(idx);
+                  {(shuffledMatchRightOrder.length > 0
+                    ? shuffledMatchRightOrder
+                    : activeQuestion.matchRight.map((_, i) => i)
+                  ).map((origIdx, displayIdx) => {
+                    const item = activeQuestion.matchRight![origIdx];
+                    const isAssigned = matchMapping.includes(origIdx);
                     return (
                       <button
-                        key={item + idx}
+                        key={item + origIdx}
                         draggable={true}
-                        onDragStart={(e) => { e.dataTransfer.setData('text/plain', String(idx)); setDraggingIdx(idx); }}
+                        onDragStart={(e) => { e.dataTransfer.setData('text/plain', String(origIdx)); setDraggingIdx(origIdx); }}
                         onDragEnd={() => setDraggingIdx(null)}
                         className="w-full text-right rounded-xl px-3 py-2.5 transition-all font-semibold"
                         style={isAssigned
@@ -1022,6 +1070,73 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
             : { background: 'linear-gradient(135deg,#ef4444,#b91c1c)', color: '#fff', border: '2px solid #f87171', boxShadow: '0 0 24px rgba(239,68,68,0.5)' }}
         >
           {toast.message}
+        </div>
+      )}
+
+      {/* Team Manager Modal */}
+      {showTeamManager && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4" style={{ background: 'rgba(10,8,32,0.88)', backdropFilter: 'blur(10px)' }}>
+          <div className="rounded-3xl p-7 w-full shadow-2xl space-y-5" style={{ maxWidth: '500px', background: 'linear-gradient(145deg,#1e1b4b 0%,#312e81 50%,#5b21b6 100%)', border: '2px solid rgba(255,215,0,0.4)', boxShadow: '0 0 80px rgba(124,58,237,0.4)' }}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-2xl font-black text-yellow-300">👥 ניהול קבוצות</h3>
+              <button onClick={() => { setShowTeamManager(false); setEditingTeamIdx(null); setEditingTeamName(''); }} className="px-3 py-1.5 rounded-xl text-white font-bold" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>✕ סגירה</button>
+            </div>
+            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+              {scoreBoard.map((team, idx) => (
+                <div key={team.name + idx} className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.07)', border: idx === currentTeamIdx ? '2px solid rgba(255,215,0,0.5)' : '1px solid rgba(255,255,255,0.12)' }}>
+                  {editingTeamIdx === idx ? (
+                    <form onSubmit={(e) => { e.preventDefault(); renameTeam(); }} className="flex gap-2">
+                      <input value={editingTeamName} onChange={(e) => setEditingTeamName(e.target.value)} className="flex-1 rounded-lg px-3 py-2 text-white font-bold focus:outline-none" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,215,0,0.4)' }} autoFocus />
+                      <button type="submit" className="px-3 py-2 rounded-lg text-black text-sm font-black" style={{ background: 'linear-gradient(135deg,#ffd700,#ff9500)' }}>שמור</button>
+                      <button type="button" onClick={() => { setEditingTeamIdx(null); setEditingTeamName(''); }} className="px-3 py-2 rounded-lg text-white text-sm font-bold" style={{ background: 'rgba(255,255,255,0.1)' }}>ביטול</button>
+                    </form>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-white flex-1">{team.name}{idx === currentTeamIdx ? ' 🎤' : ''}</span>
+                      <span className="text-yellow-300 font-black text-sm">{team.score} נק'</span>
+                      <button onClick={() => { setEditingTeamIdx(idx); setEditingTeamName(team.name); }} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ background: 'rgba(255,215,0,0.12)', border: '1px solid rgba(255,215,0,0.3)', color: '#ffd700' }}>✏️ שם</button>
+                      <button onClick={() => removeTeam(idx)} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5' }}>🗑️ הסר</button>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {scoreBoard.length === 0 && (
+                <p className="text-center text-purple-300 py-4">אין קבוצות</p>
+              )}
+            </div>
+            <form onSubmit={(e) => { e.preventDefault(); addTeam(); }} className="flex gap-2 pt-1 border-t" style={{ borderColor: 'rgba(255,255,255,0.12)' }}>
+              <input value={newTeamName} onChange={(e) => setNewTeamName(e.target.value)} placeholder="שם קבוצה חדש" className="flex-1 rounded-lg px-3 py-2.5 text-sm font-bold text-white focus:outline-none" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,215,0,0.4)' }} />
+              <button type="submit" className="px-4 py-2.5 rounded-lg text-black text-sm font-black" style={{ background: 'linear-gradient(135deg,#ffd700,#ff9500)' }}>➕ הוסף</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Explanation Overlay */}
+      {explanation && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center px-4" style={{ background: 'rgba(10,8,32,0.85)', backdropFilter: 'blur(8px)' }}>
+          <div
+            className="rounded-3xl p-8 w-full shadow-2xl text-center space-y-5 animate-fade-in"
+            style={{
+              maxWidth: '580px',
+              background: explanation.isCorrect ? 'linear-gradient(145deg,#064e3b,#065f46)' : 'linear-gradient(145deg,#450a0a,#7f1d1d)',
+              border: `2px solid ${explanation.isCorrect ? '#34d399' : '#f87171'}`,
+              boxShadow: explanation.isCorrect ? '0 0 60px rgba(16,185,129,0.4)' : '0 0 60px rgba(239,68,68,0.4)',
+            }}
+          >
+            <p className="text-7xl">{explanation.isCorrect ? '✅' : '❌'}</p>
+            <p className="text-3xl font-black text-white">{explanation.isCorrect ? 'כל הכבוד!' : 'לא מדויק'}</p>
+            {explanation.text && (
+              <div className="rounded-2xl p-5 text-right" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                <p className="text-lg text-white leading-relaxed font-medium">{explanation.text}</p>
+              </div>
+            )}
+            <button
+              onClick={() => setExplanation(null)}
+              className="px-10 py-3.5 rounded-2xl font-black text-black text-xl transition-all hover:scale-105"
+              style={{ background: 'linear-gradient(135deg,#ffd700,#ff9500)', boxShadow: '0 0 28px rgba(255,215,0,0.6)' }}
+            >הבנתי!</button>
+          </div>
         </div>
       )}
     </div>
