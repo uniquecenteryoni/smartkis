@@ -103,13 +103,13 @@ const playGoal = () => {
 const CW = 800, CH = 600;
 const BALL_R = 13;
 const BALL_SPEED = 7.2;              // 9 × 0.8 (−20%)
-const GK_MOVE = 0.022;
+const GK_MOVE = 0.0286;             // 0.022 × 1.3 (+30%)
 const BOUNCE_BOOST = 1.06;  // slight speed bump on GK bounce
 const MAX_BALL_SPEED = 28;
 
-// Goal = 56.25% × 0.70 = 39.375% of edge (prev −25%, now extra −30%)
-const GOAL_H = CW * 0.39375;         // ≈ 315px  (top/bottom)
-const GOAL_V = CH * 0.39375;         // ≈ 236px  (left/right)
+// Goal = 39.375% × 0.90 = 35.44% of edge (extra −10%)
+const GOAL_H = CW * 0.354375;        // ≈ 283.5px  (top/bottom)
+const GOAL_V = CH * 0.354375;        // ≈ 212.6px  (left/right)
 const GOAL_H_START = (CW - GOAL_H) / 2;
 const GOAL_V_START = (CH - GOAL_V) / 2;
 
@@ -194,7 +194,7 @@ export const BullseyePlayerView: React.FC = () => {
       conn.on('close', () => { setStatus('error'); setErrMsg('החיבור נסגר'); });
     });
     peer.on('error', e => { setStatus('error'); setErrMsg(String(e)); });
-    return () => { peer.destroy(); };
+    return () => { peer.destroy(); stopMove(); };
   }, []); // eslint-disable-line
 
   const send = useCallback((msg: Msg) => { if (connRef.current?.open) connRef.current.send(msg); }, []);
@@ -204,11 +204,12 @@ export const BullseyePlayerView: React.FC = () => {
     send({ type: 'JOIN', playerId, name }); setStatus('joined');
   };
 
+  const stopMove = () => { if (moveHoldRef.current) { clearInterval(moveHoldRef.current); moveHoldRef.current = null; } };
   const startMove = (d: number) => {
+    stopMove(); // always clear previous interval before starting a new one
     send({ type: 'MOVE', playerId, delta: d });
     moveHoldRef.current = setInterval(() => send({ type: 'MOVE', playerId, delta: d }), 80);
   };
-  const stopMove = () => { if (moveHoldRef.current) { clearInterval(moveHoldRef.current); moveHoldRef.current = null; } };
 
   const sendAnswer = (idx: number) => {
     if (answerSent) return;
