@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AliasPlayerView } from './components/modules/AliasGame';
+import { BullseyePlayerView } from './components/modules/BullseyeGame';
 import Header from './components/Header';
 import ModuleCard from './components/ModuleCard';
 import { Module } from './types';
@@ -334,6 +335,7 @@ type AppState = 'user_selection' | 'student_login' | 'instructor_login' | 'paren
 
 const App: React.FC = () => {
   const [isAliasPlayer, setIsAliasPlayer] = useState(() => window.location.hash === '#alias-player');
+  const [isBullseyePlayer, setIsBullseyePlayer] = useState(() => window.location.hash.startsWith('#bullseye-player-'));
   const [appState, setAppState] = useState<AppState>('user_selection');
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [visitedModules, setVisitedModules] = useState<Set<string>>(new Set());
@@ -342,7 +344,10 @@ const App: React.FC = () => {
   const [navHistory, setNavHistory] = useState<Array<{appState: AppState; selectedProgram: string | null; selectedModule: Module | null}>>([]);
 
   useEffect(() => {
-    const onHash = () => setIsAliasPlayer(window.location.hash === '#alias-player');
+    const onHash = () => {
+      setIsAliasPlayer(window.location.hash === '#alias-player');
+      setIsBullseyePlayer(window.location.hash.startsWith('#bullseye-player-'));
+    };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
@@ -627,6 +632,7 @@ const App: React.FC = () => {
   };
   
   return (
+    isBullseyePlayer ? <BullseyePlayerView /> :
     isAliasPlayer ? <AliasPlayerView /> :
     <div className="app-shell floating-coins">
       <div className="financial-backdrop"></div>

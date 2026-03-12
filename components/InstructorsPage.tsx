@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import AliasGame from './modules/AliasGame';
 import JeopardyModule from './modules/JeopardyModule';
+import BullseyeGame from './modules/BullseyeGame';
 import MillionDropGame from './modules/MillionDropGame';
 import BudgetArcadeGame from './modules/BudgetArcadeGame';
 import WorkerRightsParcelGame from './modules/WorkerRightsParcelGame';
@@ -1127,10 +1128,14 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 <p className="text-2xl font-bold text-brand-dark-blue">ג׳פרדי פיננסי</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">{getSummary('ג׳פרדי פיננסי')}</p>
               </button>
-              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-8 text-center text-brand-dark-blue/50 min-h-[14rem] flex flex-col items-center justify-center">
-                <p className="text-2xl font-bold">פעילות נוספת</p>
-                <p className="text-lg mt-2">תוכן יתווסף בהמשך עבור מודול זה.</p>
-              </div>
+              <button
+                onClick={() => setActiveActivity('בול פגיעה')}
+                className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">⚽</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">בול פגיעה</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק כדורגל מרובה משתתפים עם שאלות פיננסיות</p>
+              </button>
               <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-8 text-center text-brand-dark-blue/50 min-h-[14rem] flex flex-col items-center justify-center">
                 <p className="text-2xl font-bold">פעילות נוספת</p>
                 <p className="text-lg mt-2">תוכן יתווסף בהמשך עבור מודול זה.</p>
@@ -1145,14 +1150,22 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 <p className="text-2xl font-bold text-brand-dark-blue">ג׳פרדי פיננסי</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">{getSummary('ג׳פרדי פיננסי')}</p>
               </button>
+              <button
+                onClick={() => setActiveActivity('בול פגיעה')}
+                className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">⚽</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">בול פגיעה</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק כדורגל מרובה משתתפים עם שאלות פיננסיות</p>
+              </button>
               <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-8 text-center text-brand-dark-blue/50 min-h-[14rem] flex flex-col items-center justify-center">
                 <p className="text-2xl font-bold">פעילות אינטגרטיבית</p>
                 <p className="text-lg mt-2">תוכן יתווסף בהמשך עבור מודול זה.</p>
               </div>
-              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-8 text-center text-brand-dark-blue/50 min-h-[14rem] flex flex-col items-center justify-center">
-                <p className="text-2xl font-bold">סיומת תכנית</p>
-                <p className="text-lg mt-2">תוכן יתווסף בהמשך עבור מודול זה.</p>
-              </div>
+            </div>
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'בול פגיעה' && (activeProgram === "'מה בכיס'" || activeProgram === "'חכם בכיס'") ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-4 sm:p-6">
+              <BullseyeGame onBack={() => setActiveActivity('רב תחומי')} />
             </div>
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'ג׳פרדי פיננסי' && activeProgram === "'מה בכיס'" ? (
             <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-4 sm:p-6">
