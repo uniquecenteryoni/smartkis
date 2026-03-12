@@ -60,7 +60,7 @@ interface Msg {
 // ─── Constants ─────────────────────────────────────────────────────────────
 const CW = 800, CH = 600;
 const BALL_R = 13;
-const GK_RADIUS = 75;     // semicircle radius
+const GK_RADIUS = 130;    // semicircle radius (2× original goal span of 130)
 const BALL_SPEED = 9;
 const GK_MOVE = 0.028;
 const MAX_KICK_SPEED = 22;
@@ -401,8 +401,9 @@ const BullseyeGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           gsRef.current.players[msg.playerId].name = msg.name;
           broadcast(); syncDisplay();
         }
-        // Only accept MOVE during 'playing'
-        if (msg.type === 'MOVE' && msg.playerId != null && msg.delta != null && gsRef.current.phase === 'playing') {
+        // Accept MOVE during 'playing' AND 'question' (so player can aim the kick)
+        if (msg.type === 'MOVE' && msg.playerId != null && msg.delta != null &&
+            (gsRef.current.phase === 'playing' || gsRef.current.phase === 'question')) {
           movesRef.current.push({ playerId: msg.playerId, delta: msg.delta });
         }
         if (msg.type === 'ANSWER' && msg.playerId != null && msg.answerIdx != null) {
@@ -417,19 +418,32 @@ const BullseyeGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     return () => { peer.destroy(); cancelAnimationFrame(rafRef.current); if (qtRef.current) clearInterval(qtRef.current); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Physics ───────────────────────────────────────────────────────────
-  const physicsStep = useCallback(() => {
+  // ── Apply GK movement and update stuck ball position ────────────────
+  const applyMoves = useCallback(() => {
     const gs = gsRef.current;
-
-    // GK movement
     const moves = movesRef.current.splice(0);
     moves.forEach(({ playerId, delta }) => {
       const p = gs.players[playerId];
       if (!p?.active || p.lives <= 0) return;
       p.gkPos = Math.max(0.05, Math.min(0.95, p.gkPos + delta * GK_MOVE));
+      // If ball is stuck to this player, update ball position to follow GK
+      if (gs.ball.stuck && gs.ball.stuckPlayerId === playerId) {
+        const { cx, cy } = gkCenter(p.side, p.gkPos);
+        const angle = gs.ball.stuckAngle;
+        gs.ball = { ...gs.ball, x: cx + Math.cos(angle) * (GK_RADIUS + BALL_R), y: cy + Math.sin(angle) * (GK_RADIUS + BALL_R) };
+      }
     });
+  }, []);
 
-    let { x, y, vx, vy } = gs.ball;
+  // ── Physics ───────────────────────────────────────────────────────────
+  const physicsStep = useCallback(() => {
+    const gs = gsRef.current;
+
+    // GK movement + stuck-ball update
+    applyMoves();
+
+    const { x: bsx, y: bsy, vx: bsvx, vy: bsvy } = gs.ball;
+    let x = bsx, y = bsy, vx = bsvx, vy = bsvy;
     x += vx; y += vy;
 
     // Semicircle collision detection for each alive player
@@ -462,7 +476,7 @@ const BullseyeGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     if (y + BALL_R >= CH) { y = CH - BALL_R; vy = -Math.abs(vy); }
 
     gs.ball = { ...gs.ball, x, y, vx, vy };
-  }, [broadcast, syncDisplay]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [broadcast, syncDisplay, applyMoves]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Draw ──────────────────────────────────────────────────────────────
   const draw = useCallback(() => {
@@ -568,11 +582,19 @@ const BullseyeGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
   // ── Game loop ─────────────────────────────────────────────────────────
   const gameLoop = useCallback(() => {
-    if (gsRef.current.phase !== 'playing') return;
-    physicsStep(); draw();
-    if (Math.random() < 0.17) broadcast();
+    const phase = gsRef.current.phase;
+    if (phase === 'playing') {
+      physicsStep(); draw();
+      if (Math.random() < 0.17) broadcast();
+    } else if (phase === 'question') {
+      // Still process GK moves + redraw so player can aim the stuck ball
+      applyMoves(); draw();
+      if (Math.random() < 0.17) broadcast();
+    } else {
+      return; // lobby / gameover: stop loop
+    }
     rafRef.current = requestAnimationFrame(gameLoop);
-  }, [physicsStep, draw, broadcast]);
+  }, [physicsStep, draw, broadcast, applyMoves]);
 
   const startGame = useCallback(() => {
     gsRef.current.phase = 'playing';
@@ -625,8 +647,8 @@ const BullseyeGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     gs.questionPlayerId = null;
 
     broadcast(); syncDisplay();
-    rafRef.current = requestAnimationFrame(gameLoop);
-  }, [applyAnswerResult, checkGameOver, broadcast, syncDisplay, gameLoop]);
+    // gameLoop is already running (it continues during question phase)
+  }, [applyAnswerResult, checkGameOver, broadcast, syncDisplay]);
 
   // ── Question timer ─────────────────────────────────────────────────────
   const startQuestionTimer = useCallback(() => {
@@ -654,13 +676,13 @@ const BullseyeGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           gs.question = null;
           gs.questionPlayerId = null;
           broadcast(); syncDisplay();
-          rafRef.current = requestAnimationFrame(gameLoop);
+          // gameLoop is already running
         }
       } else {
         broadcast(); syncDisplay();
       }
     }, 1000);
-  }, [applyAnswerResult, checkGameOver, broadcast, syncDisplay, gameLoop]);
+  }, [applyAnswerResult, checkGameOver, broadcast, syncDisplay]);
 
   useEffect(() => { draw(); }, [draw]);
 
