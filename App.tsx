@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AliasPlayerView } from './components/modules/AliasGame';
 import { BullseyePlayerView } from './components/modules/BullseyeGame';
+import { PicassoPlayerView } from './components/modules/PicassoGame';
 import Header from './components/Header';
 import ModuleCard from './components/ModuleCard';
 import { Module } from './types';
@@ -336,6 +337,7 @@ type AppState = 'user_selection' | 'student_login' | 'instructor_login' | 'paren
 const App: React.FC = () => {
   const [isAliasPlayer, setIsAliasPlayer] = useState(() => window.location.hash === '#alias-player');
   const [isBullseyePlayer, setIsBullseyePlayer] = useState(() => window.location.hash.startsWith('#bullseye-player-'));
+  const [isPicassoPlayer, setIsPicassoPlayer] = useState(() => window.location.hash.startsWith('#picasso-player-'));
   const [appState, setAppState] = useState<AppState>('user_selection');
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [visitedModules, setVisitedModules] = useState<Set<string>>(new Set());
@@ -347,6 +349,7 @@ const App: React.FC = () => {
     const onHash = () => {
       setIsAliasPlayer(window.location.hash === '#alias-player');
       setIsBullseyePlayer(window.location.hash.startsWith('#bullseye-player-'));
+      setIsPicassoPlayer(window.location.hash.startsWith('#picasso-player-'));
     };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
@@ -632,6 +635,7 @@ const App: React.FC = () => {
   };
   
   return (
+    isPicassoPlayer ? <PicassoPlayerView /> :
     isBullseyePlayer ? <BullseyePlayerView /> :
     isAliasPlayer ? <AliasPlayerView /> :
     <div className="app-shell floating-coins">

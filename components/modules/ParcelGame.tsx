@@ -587,3 +587,45 @@ export const businessItems: ParcelItem[] = [
   { id: 't4', kind: 'task', title: 'פיץ\' לשקיעה', prompt: 'הציגו את הרעיון העסקי שלכם ב-90 שניות לפני "משקיע". הכיתה מחליטה: להשקיע או לא?', difficulty: 'אתגרי', points: 50 },
   { id: 't5', kind: 'task', title: 'תזרים ראשון', prompt: 'עסק חדש: הכנסות צפויות 10,000 ש"ח לחודש, הוצאות קבועות 6,000 ש"ח. מה נטו? מה קורה בחודש הראשון שאין לקוחות?', difficulty: 'אתגרי', points: 40 },
 ];
+
+// ─── רב תחומי mixed banks ──────────────────────────────────────────────────
+
+export const mahBakisMixedItems: ParcelItem[] = [
+  { id: 'mb_q1', kind: 'question', title: 'סיפורו של כסף', prompt: 'מהם שלושת התפקידים הקלאסיים של כסף: אמצעי חליפין, יחידת חשבון, מאגר ערך — הסבירו כל אחד.', difficulty: 'קל', points: 15 },
+  { id: 'mb_q2', kind: 'question', title: 'הכסף ואני', prompt: 'מהו ההבדל בין "צורך" ל"רצון"? תנו דוגמה לכל אחד מחייכם.', difficulty: 'קל', points: 10 },
+  { id: 'mb_q3', kind: 'question', title: 'כמה זה עולה לי?', prompt: 'מהי "עלות כוללת" (TCO) של מוצר? מדוע היא גבוהה ממחיר הקנייה?', difficulty: 'בינוני', points: 20 },
+  { id: 'mb_q4', kind: 'question', title: 'מונופולים בישראל', prompt: 'מהו מונופול? כיצד הוא משפיע על המחיר ועל הצרכן?', difficulty: 'קל', points: 10 },
+  { id: 'mb_q5', kind: 'question', title: 'צרכנות נבונה', prompt: 'ציינו שלושה טיפים לצרכן חכם לפני רכישה גדולה.', difficulty: 'קל', points: 15 },
+  { id: 'mb_q6', kind: 'question', title: 'מערכות יחסים וכסף', prompt: 'מהי דרך בריאה לדון על כסף עם בן/בת זוג או חבר קרוב? מה חשוב לסכם מראש?', difficulty: 'בינוני', points: 20 },
+  { id: 'mb_q7', kind: 'question', title: 'איך להרוויח כסף?', prompt: 'ציינו שלוש דרכים שנוער יכול להרוויח כסף ראשון בצורה בטוחה וחוקית.', difficulty: 'קל', points: 10 },
+  { id: 'mb_q8', kind: 'question', title: 'ניהול זמן (זמן=כסף)', prompt: 'מהו חוק 80/20? כיצד הוא מסייע בניהול זמן ובהגדלת הכנסה?', difficulty: 'בינוני', points: 20 },
+  { id: 'mb_q9', kind: 'question', title: 'עמידה מול קהל', prompt: 'מהם שלושת האלמנטים של הצגה מוצלחת — פתיחה, גוף, סגירה? מה תפקיד כל אחד?', difficulty: 'קל', points: 10 },
+  { id: 'mb_q10', kind: 'question', title: 'איך בונים עסק?', prompt: 'מהו MVP (מוצר בסיסי ומינימלי) ומדוע הוא חכם לבדיקת רעיון עסקי?', difficulty: 'בינוני', points: 25 },
+  { id: 'mb_q11', kind: 'question', title: 'כלכלת מידע', prompt: 'כיצד פרסומות משתמשות ב"מחיר עוגן" כדי לגרום לנו לחשוב שמבצע הוא טוב?', difficulty: 'בינוני', points: 20 },
+  { id: 'mb_q12', kind: 'question', title: 'כסף דיגיטלי', prompt: 'מה ההבדל בין כרטיס חיוב מיידי לכרטיס אשראי? מה הסיכון בכל אחד?', difficulty: 'בינוני', points: 20 },
+  { id: 'mb_t1', kind: 'task', title: 'ממציאים עסק', prompt: 'תוך 2 דקות: בחרו שירות שנוער יכול לתת, קבעו מחיר, ואמרו לאיזה קהל יעד הוא מיועד.', difficulty: 'בינוני', points: 30 },
+  { id: 'mb_t2', kind: 'task', title: 'צורך או רצון?', prompt: 'רשמו 10 רכישות אחרונות שביצעתם. מיינו: כמה היו צרכים? כמה רצונות? מה המסקנה?', difficulty: 'קל', points: 15 },
+  { id: 'mb_t3', kind: 'task', title: 'שכנוע הקהל', prompt: 'בחרו מוצר ופרסמו אותו ב-30 שניות. הכיתה מדרגת: האם קניתם? ולמה?', difficulty: 'בינוני', points: 25 },
+  { id: 'mb_t4', kind: 'task', title: 'תכנון גיג', prompt: 'תכננו גיג: מה השירות, כמה שעות, כמה לגבות, וכיצד מוצאים לקוח ראשון.', difficulty: 'אתגרי', points: 40 },
+  { id: 'mb_t5', kind: 'task', title: 'מונופול בחיים', prompt: 'מצאו דוגמה לחברה ישראלית בעלת כוח שוק גדול. מה ההשפעה שלה על הצרכן ועל המחיר?', difficulty: 'אתגרי', points: 40 },
+];
+
+export const chachamBakisMixedItems: ParcelItem[] = [
+  { id: 'cb_q1', kind: 'question', title: 'ניהול תקציב', prompt: 'מהו כלל 50-30-20? הסבירו מה כל קטגוריה מכסה ותנו דוגמה מחיי יומיום.', difficulty: 'קל', points: 15 },
+  { id: 'cb_q2', kind: 'question', title: 'הוצאות', prompt: 'מהי "עלות הזדמנות"? כיצד כל שקל שמוציאים מוותר על שימוש אחר?', difficulty: 'בינוני', points: 20 },
+  { id: 'cb_q3', kind: 'question', title: 'הסכנה שבמינוס', prompt: 'מדוע מינוס בבנק נחשב "אשראי יקר"? מה ריבית דריבית עושה לחוב?', difficulty: 'קל', points: 10 },
+  { id: 'cb_q4', kind: 'question', title: 'זכויות עובדים', prompt: 'ציינו שלוש זכויות בסיסיות שכל עובד שכיר זכאי להן בחוק הישראלי.', difficulty: 'קל', points: 15 },
+  { id: 'cb_q5', kind: 'question', title: 'תלוש שכר', prompt: 'מהו ההבדל בין ברוטו לנטו? ציינו שני ניכויים שמופיעים בכל תלוש שכר.', difficulty: 'קל', points: 10 },
+  { id: 'cb_q6', kind: 'question', title: 'שכירים ועצמאיים', prompt: 'ציינו שלושה הבדלים בין עובד שכיר לעצמאי מבחינת חובות ויתרונות.', difficulty: 'בינוני', points: 20 },
+  { id: 'cb_q7', kind: 'question', title: 'חיסכון והשקעות', prompt: 'מהי ריבית דריבית ומדוע כדאי להתחיל לחסוך מוקדם ככל האפשר?', difficulty: 'בינוני', points: 25 },
+  { id: 'cb_q8', kind: 'question', title: 'הסכנה שבמינוס', prompt: 'ציינו שתי דרכים מעשיות לצאת ממינוס מבלי לקחת הלוואה חדשה.', difficulty: 'בינוני', points: 20 },
+  { id: 'cb_q9', kind: 'question', title: 'זכויות עובדים', prompt: 'מה לעשות אם מעסיק לא שילם שכר בזמן? ציינו שלושה צעדים חוקיים.', difficulty: 'בינוני', points: 25 },
+  { id: 'cb_q10', kind: 'question', title: 'חיסכון והשקעות', prompt: 'מהי "קרן חירום"? כמה חודשי הוצאות מומלץ שתכסה ואיפה לשמור אותה?', difficulty: 'קל', points: 10 },
+  { id: 'cb_q11', kind: 'question', title: 'פנסיה', prompt: 'מדוע חשוב לבדוק שמעסיק מפריש לפנסיה? מה ההשלכה של אי-הפרשה?', difficulty: 'בינוני', points: 20 },
+  { id: 'cb_q12', kind: 'question', title: 'שכירים ועצמאיים', prompt: 'מהן "הוצאות מוכרות לצרכי מס" לעצמאי? תנו שתי דוגמאות.', difficulty: 'בינוני', points: 20 },
+  { id: 'cb_t1', kind: 'task', title: 'תקציב אישי', prompt: 'מדמים הכנסה של 4,000 ש"ח: חלקו את הכסף לפי כלל 50-30-20. אילו הוצאות נכנסות לכל קטגוריה?', difficulty: 'בינוני', points: 30 },
+  { id: 'cb_t2', kind: 'task', title: 'עלות מינוס', prompt: 'מינוס של 3,000 ש"ח בריבית שנתית 12%. חשבו: כמה ריבית משלמים בחודש? כמה בשנה?', difficulty: 'בינוני', points: 25 },
+  { id: 'cb_t3', kind: 'task', title: 'קריאת תלוש', prompt: 'ברוטו 8,000 ש"ח. ניכויים: מס 15%, ביטוח לאומי 5.5%, פנסיה 6%. חשבו נטו שלב אחר שלב.', difficulty: 'אתגרי', points: 45 },
+  { id: 'cb_t4', kind: 'task', title: 'שכיר מול עצמאי', prompt: 'הכנסה ברוטו 10,000 ש"ח: מחשבים מה נשאר לשכיר לעומת עצמאי (אחרי מס, ביטוח, הוצאות). מי מרוויח יותר?', difficulty: 'אתגרי', points: 50 },
+  { id: 'cb_t5', kind: 'task', title: 'כוח החיסכון', prompt: 'חוסכים 300 ש"ח בחודש בריבית 5% לשנה — כמה יצטבר אחרי 10 שנים? חשבו ובדקו את כוח הריבית דריבית.', difficulty: 'בינוני', points: 30 },
+];

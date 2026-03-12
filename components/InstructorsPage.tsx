@@ -3,9 +3,10 @@ import AliasGame from './modules/AliasGame';
 import JeopardyModule from './modules/JeopardyModule';
 import BullseyeGame from './modules/BullseyeGame';
 import MillionDropGame from './modules/MillionDropGame';
+import PicassoGame from './modules/PicassoGame';
 import BudgetArcadeGame from './modules/BudgetArcadeGame';
 import WorkerRightsParcelGame from './modules/WorkerRightsParcelGame';
-import ParcelGame, { expensesItems, overdraftItems, paystubItems, employmentItems, savingsInvestItems, storyItems, personalItems, costsItems, monopolyItems, consumerItems, relationshipsItems, earnItems, timeItems, publicSpeakingItems, businessItems } from './modules/ParcelGame';
+import ParcelGame, { expensesItems, overdraftItems, paystubItems, employmentItems, savingsInvestItems, storyItems, personalItems, costsItems, monopolyItems, consumerItems, relationshipsItems, earnItems, timeItems, publicSpeakingItems, businessItems, mahBakisMixedItems, chachamBakisMixedItems } from './modules/ParcelGame';
 import { HatsarStep } from './modules/HowMuchCostModule';
 import { FutureManagersChallengeContent } from './modules/FutureManagersChallengeModule';
 import { jeopardyChachamBanks } from './modules/jeopardyChachamBanks';
@@ -1125,6 +1126,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveActivity('ג׳פרדי פיננסי')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🎯</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">ג׳פרדי פיננסי</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">{getSummary('ג׳פרדי פיננסי')}</p>
               </button>
@@ -1136,10 +1138,30 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 <p className="text-2xl font-bold text-brand-dark-blue">בול פגיעה</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק כדורגל מרובה משתתפים עם שאלות פיננסיות</p>
               </button>
-              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-8 text-center text-brand-dark-blue/50 min-h-[14rem] flex flex-col items-center justify-center">
-                <p className="text-2xl font-bold">פעילות נוספת</p>
-                <p className="text-lg mt-2">תוכן יתווסף בהמשך עבור מודול זה.</p>
-              </div>
+              <button
+                onClick={() => setActiveActivity('אל תפילו את המיליון - מה בכיס')}
+                className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">💰</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק רב-תחומי עם שאלות על כל נושאי תוכנית מה בכיס</p>
+              </button>
+              <button
+                onClick={() => setActiveActivity('חבילה עוברת - מה בכיס')}
+                className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">📦</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק חבילה עוברת עם שאלות מכל נושאי תוכנית מה בכיס</p>
+              </button>
+              <button
+                onClick={() => setActiveActivity('פיקאסו פיננסי')}
+                className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">🎨</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">פיקאסו פיננסי</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק פיקשיונרי פיננסי בזמן אמת — צייר, נחש, קבל ניקוד!</p>
+              </button>
             </div>
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'רב תחומי' && activeProgram === "'חכם בכיס'" ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1147,6 +1169,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveActivity('ג׳פרדי פיננסי')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🎯</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">ג׳פרדי פיננסי</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">{getSummary('ג׳פרדי פיננסי')}</p>
               </button>
@@ -1158,11 +1181,33 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 <p className="text-2xl font-bold text-brand-dark-blue">בול פגיעה</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק כדורגל מרובה משתתפים עם שאלות פיננסיות</p>
               </button>
-              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-8 text-center text-brand-dark-blue/50 min-h-[14rem] flex flex-col items-center justify-center">
-                <p className="text-2xl font-bold">פעילות אינטגרטיבית</p>
-                <p className="text-lg mt-2">תוכן יתווסף בהמשך עבור מודול זה.</p>
-              </div>
+              <button
+                onClick={() => setActiveActivity('אל תפילו את המיליון - חכם בכיס')}
+                className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">💰</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק רב-תחומי עם שאלות על כל נושאי תוכנית חכם בכיס</p>
+              </button>
+              <button
+                onClick={() => setActiveActivity('חבילה עוברת - חכם בכיס')}
+                className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">📦</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק חבילה עוברת עם שאלות מכל נושאי תוכנית חכם בכיס</p>
+              </button>
+              <button
+                onClick={() => setActiveActivity('פיקאסו פיננסי')}
+                className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">🎨</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">פיקאסו פיננסי</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק פיקשיונרי פיננסי בזמן אמת — צייר, נחש, קבל ניקוד!</p>
+              </button>
             </div>
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'פיקאסו פיננסי' ? (
+            <PicassoGame onBack={() => setActiveActivity('רב תחומי')} />
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'בול פגיעה' && (activeProgram === "'מה בכיס'" || activeProgram === "'חכם בכיס'") ? (
             <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-4 sm:p-6">
               <BullseyeGame onBack={() => setActiveActivity('רב תחומי')} />
@@ -1183,6 +1228,44 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onComplete={() => {}}
                 questionBanks={jeopardyChachamBanks}
               />
+            </div>
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === "חבילה עוברת - מה בכיס" ? (
+            <ParcelGame items={mahBakisMixedItems} moduleTitle="רב תחומי — מה בכיס" moduleSubtitle="כל סיבוב נעצר בזמן אקראי" musicUrl="/havila.mp3" />
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === "חבילה עוברת - חכם בכיס" ? (
+            <ParcelGame items={chachamBakisMixedItems} moduleTitle="רב תחומי — חכם בכיס" moduleSubtitle="כל סיבוב נעצר בזמן אקראי" musicUrl="/havila.mp3" />
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === "אל תפילו את המיליון - מה בכיס" ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">פעילות רב-תחומית</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון — מה בכיס</h3>
+                  <p className="text-brand-dark-blue/60">שאלות על כל נושאי תוכנית מה בכיס: כסף, תקציב, צרכנות, יחסים, הרוויח ועוד.</p>
+                </div>
+                <button
+                  onClick={() => setActiveActivity('רב תחומי')}
+                  className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                >
+                  חזרה לרב תחומי
+                </button>
+              </div>
+              <MillionDropGame onBack={() => setActiveActivity('רב תחומי')} topic="mahBakis" />
+            </div>
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === "אל תפילו את המיליון - חכם בכיס" ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">פעילות רב-תחומית</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון — חכם בכיס</h3>
+                  <p className="text-brand-dark-blue/60">שאלות על כל נושאי תוכנית חכם בכיס: תקציב, הוצאות, מינוס, זכויות עובדים, תלוש ועוד.</p>
+                </div>
+                <button
+                  onClick={() => setActiveActivity('רב תחומי')}
+                  className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                >
+                  חזרה לרב תחומי
+                </button>
+              </div>
+              <MillionDropGame onBack={() => setActiveActivity('רב תחומי')} topic="chachamBakis" />
             </div>
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'איך מנהלים הוצאות?' && activeProgram === "'חכם בכיס'" && !activeSubActivity ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
