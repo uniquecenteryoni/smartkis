@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
 
-// ─── Questions ──────────────────────────────────────────────────────────────
+// ─── Questions ───────────────────────────────────────────────────────────────
 interface SQ { prompt: string; options: string[]; correct: number; }
 const QUESTIONS: SQ[] = [
   { prompt: 'מהו שכר מינימום?', options: ['השכר הכי נמוך שמותר לשלם לעובד', 'ממוצע השכר במשק', 'שכר מנהלים', 'תשלום לביטוח לאומי'], correct: 0 },
@@ -33,7 +33,7 @@ const QUESTIONS: SQ[] = [
 ];
 const pickQ = (): SQ => QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 type Side = 'top' | 'bottom' | 'left' | 'right';
 type Phase = 'lobby' | 'playing' | 'question' | 'gameover';
 
@@ -41,41 +41,42 @@ interface PlayerState {
   id: number; side: Side; color: string; darkColor: string; emoji: string;
   name: string; lives: number; score: number; gkPos: number; active: boolean;
 }
-interface BallState {
-  x: number; y: number; vx: number; vy: number;
-  stuck: boolean; stuckPlayerId: number | null; stuckAngle: number;
-}
+interface BallState { x: number; y: number; vx: number; vy: number; }
 interface GameState {
-  phase: Phase; players: PlayerState[]; ball: BallState;
-  questionPlayerId: number | null; question: SQ | null; questionTimeLeft: number;
-  questionAnswered: boolean; answerWasCorrect: boolean | null;
-  winnerName: string | null; lastMsg: string;
+  phase: Phase;
+  players: PlayerState[];
+  ball: BallState;
+  questionPlayerId: number | null;
+  question: SQ | null;
+  questionTimeLeft: number;
+  questionAnswered: boolean;
+  answerWasCorrect: boolean | null;
+  winnerName: string | null;
+  lastMsg: string;
 }
 interface Msg {
-  type: 'JOIN' | 'MOVE' | 'ANSWER' | 'KICK' | 'STATE';
+  type: 'JOIN' | 'MOVE' | 'ANSWER' | 'STATE';
   playerId?: number; name?: string; delta?: number;
-  answerIdx?: number; holdMs?: number; state?: GameState;
+  answerIdx?: number; state?: GameState;
 }
 
-// ─── Constants ───────────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
 const CW = 800, CH = 600;
 const BALL_R = 13;
 const BALL_SPEED = 9;
 const GK_MOVE = 0.022;
-const MAX_KICK_SPEED = 22;
-const MIN_KICK_SPEED = 7;
-const MAX_HOLD_MS = 2000;
+const BOUNCE_BOOST = 1.06;  // slight speed bump on GK bounce
+const MAX_BALL_SPEED = 30;
 
-// Goal = 75% of each edge length, centred
-const GOAL_H = CW * 0.75;  // 600px — goals on top & bottom edges
-const GOAL_V = CH * 0.75;  // 450px — goals on left & right edges
-// GK semicircle flat diameter = 30% of goal span → radius = 15% of goal span
-const GKR_H = GOAL_H * 0.15;  // 90px radius for top/bottom
-const GKR_V = GOAL_V * 0.15;  // 67.5px radius for left/right
+// Goal = original 75% × 0.75 = 56.25% of edge (−25%)
+const GOAL_H = CW * 0.5625;          // ≈ 450px  (top/bottom)
+const GOAL_V = CH * 0.5625;          // ≈ 337.5px (left/right)
+const GOAL_H_START = (CW - GOAL_H) / 2;  // ≈ 175px
+const GOAL_V_START = (CH - GOAL_V) / 2;  // ≈ 131.25px
 
-// Goal start positions (left / top edge of goal)
-const GOAL_H_START = (CW - GOAL_H) / 2;  // 100px
-const GOAL_V_START = (CH - GOAL_V) / 2;   // 75px
+// GK radius = 15% of goal × 0.5 (−50%)
+const GKR_H = GOAL_H * 0.15 * 0.5;  // ≈ 33.75px
+const GKR_V = GOAL_V * 0.15 * 0.5;  // ≈ 25.3px
 
 const PLAYER_DEFS: Pick<PlayerState, 'id' | 'side' | 'color' | 'darkColor' | 'emoji'>[] = [
   { id: 0, side: 'top',    color: '#3b82f6', darkColor: '#1d4ed8', emoji: '🔵' },
@@ -86,11 +87,8 @@ const PLAYER_DEFS: Pick<PlayerState, 'id' | 'side' | 'color' | 'darkColor' | 'em
 const SIDE_LABEL: Record<Side, string> = { top: 'צפון ↑', bottom: 'דרום ↓', left: 'מערב ←', right: 'מזרח →' };
 
 // ─── Geometry helpers ─────────────────────────────────────────────────────────
-// Returns the radius of the GK semicircle for a given side
 const gkR = (side: Side) => (side === 'top' || side === 'bottom') ? GKR_H : GKR_V;
 
-// Returns the centre of the GK semicircle (on the wall edge).
-// gkPos 0..1 maps along the goal span.
 const gkCenter = (side: Side, pos: number): { cx: number; cy: number } => {
   if (side === 'top')    return { cx: GOAL_H_START + pos * GOAL_H, cy: 0 };
   if (side === 'bottom') return { cx: GOAL_H_START + pos * GOAL_H, cy: CH };
@@ -98,18 +96,18 @@ const gkCenter = (side: Side, pos: number): { cx: number; cy: number } => {
   return { cx: CW, cy: GOAL_V_START + pos * GOAL_V };
 };
 
-// Returns the arc angle range for each side so the dome opens INTO the field
 const gkArcAngles = (side: Side): [number, number] => {
-  if (side === 'top')    return [0,          Math.PI];          // dome opens downward
-  if (side === 'bottom') return [Math.PI,    2 * Math.PI];      // dome opens upward
-  if (side === 'left')   return [-Math.PI/2, Math.PI/2];        // dome opens rightward
-  return [Math.PI/2,  3 * Math.PI/2];                          // dome opens leftward (right wall)
+  if (side === 'top')    return [0,           Math.PI];
+  if (side === 'bottom') return [Math.PI,     2 * Math.PI];
+  if (side === 'left')   return [-Math.PI/2,  Math.PI/2];
+  return [Math.PI/2,   3 * Math.PI/2];
 };
 
 const freshBall = (): BallState => {
-  const a = Math.random() * Math.PI * 2;
-  return { x: CW/2, y: CH/2, vx: Math.cos(a)*BALL_SPEED, vy: Math.sin(a)*BALL_SPEED,
-    stuck: false, stuckPlayerId: null, stuckAngle: 0 };
+  let a: number;
+  do { a = Math.random() * Math.PI * 2; }
+  while (Math.abs(Math.cos(a)) > 0.93 || Math.abs(Math.sin(a)) > 0.93);
+  return { x: CW/2, y: CH/2, vx: Math.cos(a)*BALL_SPEED, vy: Math.sin(a)*BALL_SPEED };
 };
 
 const makeInitialState = (): GameState => ({
@@ -121,8 +119,9 @@ const makeInitialState = (): GameState => ({
   winnerName: null, lastMsg: '',
 });
 
-// ─── BullseyePlayerView — phone screen ───────────────────────────────────────
-// Hash: #bullseye-player-{playerId}-{hostPeerId}
+// ═══════════════════════════════════════════════════════════════════════════════
+// PLAYER VIEW — Phone screen
+// ═══════════════════════════════════════════════════════════════════════════════
 export const BullseyePlayerView: React.FC = () => {
   const hm = window.location.hash.match(/#bullseye-player-(\d)-(.+)/);
   const playerId   = hm ? parseInt(hm[1]) : 0;
@@ -133,14 +132,11 @@ export const BullseyePlayerView: React.FC = () => {
   const [inputName, setInputName]   = useState('');
   const [gs, setGs]                 = useState<GameState|null>(null);
   const [answerSent, setAnswerSent] = useState(false);
-  const [kickPower, setKickPower]   = useState(0);
   const [errMsg, setErrMsg]         = useState('');
 
-  const connRef        = useRef<DataConnection|null>(null);
-  const peerRef        = useRef<Peer|null>(null);
-  const moveHoldRef    = useRef<ReturnType<typeof setInterval>|null>(null);
-  const kickStartRef   = useRef<number|null>(null);
-  const kickTimerRef   = useRef<ReturnType<typeof setInterval>|null>(null);
+  const connRef     = useRef<DataConnection|null>(null);
+  const peerRef     = useRef<Peer|null>(null);
+  const moveHoldRef = useRef<ReturnType<typeof setInterval>|null>(null);
 
   useEffect(() => {
     if (!hostPeerId) { setStatus('error'); setErrMsg('קישור לא תקין – סרקו מחדש'); return; }
@@ -175,36 +171,15 @@ export const BullseyePlayerView: React.FC = () => {
   };
   const stopMove = () => { if (moveHoldRef.current) { clearInterval(moveHoldRef.current); moveHoldRef.current = null; } };
 
-  const onKickDown = () => {
-    kickStartRef.current = Date.now();
-    kickTimerRef.current = setInterval(() => {
-      if (kickStartRef.current != null)
-        setKickPower(Math.min(1, (Date.now() - kickStartRef.current) / MAX_HOLD_MS));
-    }, 40);
-  };
-  const onKickUp = () => {
-    if (kickTimerRef.current) { clearInterval(kickTimerRef.current); kickTimerRef.current = null; }
-    if (kickStartRef.current != null) {
-      const holdMs = Date.now() - kickStartRef.current;
-      send({ type: 'KICK', playerId, holdMs });
-      kickStartRef.current = null; setKickPower(0);
-    }
-  };
-
   const sendAnswer = (idx: number) => {
     if (answerSent) return;
     send({ type: 'ANSWER', playerId, answerIdx: idx }); setAnswerSent(true);
   };
 
   const me = gs?.players[playerId];
-  // Ball is on MY goal → I need to kick
-  const ballIsOnMe = gs?.ball.stuck && gs.ball.stuckPlayerId === playerId;
-  // Show question only while unanswered and ball is on me
-  const showQuestion = ballIsOnMe && !answerSent && gs?.question != null && gs.phase === 'question';
-  // Show kick button while ball is stuck on me (regardless of answer)
-  const showKick = ballIsOnMe && gs?.phase === 'question';
+  const isMyQuestion = gs?.phase === 'question' && gs.questionPlayerId === playerId;
 
-  // ── Screens ─────────────────────────────────────────────────────────────
+  // ── Connecting screen ──────────────────────────────────────────────────
   if (status === 'connecting') return (
     <div style={{ background:`linear-gradient(135deg,${def.color},${def.darkColor})`, minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:20, padding:24 }}>
       <p style={{ fontSize:64, margin:0 }}>{def.emoji}</p>
@@ -234,6 +209,7 @@ export const BullseyePlayerView: React.FC = () => {
     </div>
   );
 
+  // ── In-game screen ─────────────────────────────────────────────────────
   return (
     <div dir="rtl" style={{ background:'#0f172a', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', padding:16, gap:12, userSelect:'none' }}>
 
@@ -246,7 +222,7 @@ export const BullseyePlayerView: React.FC = () => {
             <p style={{ margin:0, color:'#94a3b8', fontSize:12 }}>{SIDE_LABEL[def.side]}</p>
           </div>
           <div style={{ textAlign:'left' }}>
-            <p style={{ margin:0, color:'#ffd700', fontSize:18, fontWeight:900 }}>{me?.score ?? 0} pts</p>
+            <p style={{ margin:0, color:'#ffd700', fontSize:18, fontWeight:900 }}>{me?.score ?? 0} ₪</p>
             <div style={{ display:'flex', gap:2, justifyContent:'flex-end' }}>
               {Array.from({ length: Math.max(0, me?.lives ?? 3) }).map((_,i) => <span key={i} style={{ fontSize:14 }}>❤️</span>)}
               {(me?.lives ?? 3) === 0 && <span style={{ fontSize:14 }}>💀</span>}
@@ -262,17 +238,16 @@ export const BullseyePlayerView: React.FC = () => {
         </p>
       )}
 
-      {/* Move controls (always shown while playing OR while ball is stuck on me so I can aim) */}
-      {(gs?.phase === 'playing' || showKick) && (
+      {/* ← → Arrows — shown only during playing (no arrows during question) */}
+      {gs?.phase === 'playing' && (
         <div style={{ width:'100%', maxWidth:420 }}>
-          <p style={{ color:'#94a3b8', fontSize:13, margin:'0 0 8px', textAlign:'center' }}>
-            {showKick ? '⬅️ כיוון הבעיטה ➡️ — הזז את השוער לפני הבעיטה' : 'הזזת שוער — לחץ והחזק'}
-          </p>
+          <p style={{ color:'#64748b', fontSize:13, margin:'0 0 10px', textAlign:'center' }}>הזזת השוער — לחץ והחזק</p>
           <div style={{ display:'flex', gap:12 }}>
-            {['←','→'].map((arrow, i) => (
+            {(['←', '→'] as const).map((arrow, i) => (
               <button key={i}
-                onPointerDown={() => startMove(i===0 ? -1 : 1)} onPointerUp={stopMove} onPointerLeave={stopMove} onPointerCancel={stopMove}
-                style={{ flex:1, height:100, background:`linear-gradient(135deg,${def.color},${def.darkColor})`, color:'#fff', fontSize:52, fontWeight:900, borderRadius:22, border:'3px solid rgba(255,255,255,0.3)', cursor:'pointer', touchAction:'none' }}>
+                onPointerDown={() => startMove(i === 0 ? -1 : 1)}
+                onPointerUp={stopMove} onPointerLeave={stopMove} onPointerCancel={stopMove}
+                style={{ flex:1, height:130, background:`linear-gradient(135deg,${def.color},${def.darkColor})`, color:'#fff', fontSize:60, fontWeight:900, borderRadius:24, border:'3px solid rgba(255,255,255,0.3)', cursor:'pointer', touchAction:'none' }}>
                 {arrow}
               </button>
             ))}
@@ -280,77 +255,64 @@ export const BullseyePlayerView: React.FC = () => {
         </div>
       )}
 
-      {/* Question (shown only while ball on me AND not yet answered) */}
-      {showQuestion && gs?.question && (
+      {/* My question — goal scored against me */}
+      {isMyQuestion && gs?.question && (
         <div style={{ width:'100%', maxWidth:420, background:'linear-gradient(145deg,#1e1b4b,#312e81)', borderRadius:20, padding:18, border:`2px solid #ffd700` }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
             <span style={{ color:'#ffd700', fontSize:20, fontWeight:900 }}>⏱ {gs.questionTimeLeft}s</span>
-            <span style={{ color:'#a78bfa', fontSize:13 }}>ענה ואז בעט!</span>
+            <span style={{ color:'#f87171', fontSize:14, fontWeight:700 }}>🥅 כדור נכנס לשער שלך!</span>
           </div>
           <p style={{ color:'#fff', fontSize:16, fontWeight:700, textAlign:'center', marginBottom:14, lineHeight:1.5 }}>{gs.question.prompt}</p>
-          <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
-            {gs.question.options.map((opt, idx) => (
-              <button key={idx} onClick={() => sendAnswer(idx)}
-                style={{ background:'rgba(255,255,255,0.1)', color:'#fff', fontSize:15, fontWeight:700, padding:'12px 14px', borderRadius:12, border:'1px solid rgba(255,215,0,0.3)', cursor:'pointer', textAlign:'right' }}>
-                {opt}
-              </button>
-            ))}
-          </div>
+          {!answerSent ? (
+            <div style={{ display:'flex', flexDirection:'column', gap:9 }}>
+              {gs.question.options.map((opt, idx) => (
+                <button key={idx} onClick={() => sendAnswer(idx)}
+                  style={{ background:'rgba(255,255,255,0.1)', color:'#fff', fontSize:15, fontWeight:700, padding:'13px 14px', borderRadius:12, border:'1px solid rgba(255,215,0,0.35)', cursor:'pointer', textAlign:'right' }}>
+                  {opt}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div style={{ textAlign:'center', padding:'12px 0' }}>
+              <p style={{ color: gs.answerWasCorrect ? '#4ade80' : '#ef4444', fontSize:24, fontWeight:900, margin:0 }}>
+                {gs.answerWasCorrect ? '✅ נכון! +100 ₪' : '❌ טעות! -לב'}
+              </p>
+              <p style={{ color:'#64748b', fontSize:13, marginTop:6 }}>ממתין לסיבוב הבא...</p>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Result feedback after answering */}
-      {ballIsOnMe && answerSent && gs?.phase === 'question' && (
-        <div style={{ width:'100%', maxWidth:420, borderRadius:16, padding:14, textAlign:'center',
-          background: gs.answerWasCorrect ? 'rgba(74,222,128,0.15)' : 'rgba(239,68,68,0.15)',
-          border: `2px solid ${gs.answerWasCorrect ? '#4ade80' : '#ef4444'}` }}>
-          <p style={{ margin:0, fontSize:24, fontWeight:900, color: gs.answerWasCorrect ? '#4ade80' : '#ef4444' }}>
-            {gs.answerWasCorrect ? '✅ נכון! +100 נקודות' : '❌ לא נכון! -לב'}
-          </p>
-          <p style={{ margin:'6px 0 0', color:'#94a3b8', fontSize:14 }}>עכשיו בעט את הכדור!</p>
-        </div>
-      )}
-
-      {/* Kick button (shown when ball is stuck on me, regardless of answer) */}
-      {showKick && (
-        <div style={{ width:'100%', maxWidth:420, background:'rgba(255,255,255,0.04)', borderRadius:18, padding:14, border:'1px solid rgba(255,255,255,0.12)' }}>
-          <div style={{ height:10, borderRadius:8, background:'rgba(255,255,255,0.12)', marginBottom:12, overflow:'hidden' }}>
-            <div style={{ height:'100%', borderRadius:8, width:`${kickPower*100}%`, background: kickPower>0.7?'#ef4444':kickPower>0.4?'#f59e0b':'#22c55e', transition:'background 0.2s' }} />
-          </div>
-          <p style={{ color:'#64748b', fontSize:12, textAlign:'center', margin:'0 0 8px' }}>לחץ והחזק → שחרר לבעיטה</p>
-          <button
-            onPointerDown={onKickDown} onPointerUp={onKickUp} onPointerLeave={onKickUp} onPointerCancel={onKickUp}
-            style={{ width:'100%', height:76, background: kickPower>0?`linear-gradient(135deg,${def.color},${def.darkColor})`:'rgba(255,255,255,0.1)', color:'#fff', fontSize:28, fontWeight:900, borderRadius:18, border:`3px solid ${kickPower>0?'#fff':'rgba(255,255,255,0.2)'}`, cursor:'pointer', touchAction:'none' }}>
-            🦵 בעיטה
-          </button>
-        </div>
-      )}
-
-      {/* Spectating */}
-      {gs?.phase === 'question' && !ballIsOnMe && gs.question && (() => {
+      {/* Spectating someone else's question */}
+      {gs?.phase === 'question' && !isMyQuestion && gs.question && (() => {
         const qp = gs.players[gs.questionPlayerId ?? 0];
         return (
           <div style={{ width:'100%', maxWidth:420, background:'rgba(255,255,255,0.05)', borderRadius:16, padding:18, textAlign:'center' }}>
-            <p style={{ color:'#fbbf24', fontSize:16, fontWeight:700, margin:'0 0 6px' }}>{qp?.emoji} {qp?.name} עונה ובועט...</p>
-            <p style={{ color:'#94a3b8', fontSize:14, margin:0 }}>{gs.question.prompt}</p>
+            <p style={{ color:'#fbbf24', fontSize:16, fontWeight:700, margin:'0 0 8px' }}>
+              🥅 כדור נכנס לשער של {qp?.emoji} {qp?.name}!
+            </p>
+            <p style={{ color:'#a78bfa', fontSize:15, fontWeight:700, margin:'0 0 6px' }}>{gs.question.prompt}</p>
+            <p style={{ color:'#64748b', fontSize:13, margin:0 }}>⏱ {gs.questionTimeLeft}s</p>
           </div>
         );
       })()}
 
-      {/* Game over */}
+      {/* Gameover */}
       {gs?.phase === 'gameover' && (
         <div style={{ textAlign:'center', marginTop:12 }}>
           <p style={{ fontSize:56 }}>🏆</p>
           <p style={{ color:'#ffd700', fontSize:26, fontWeight:900 }}>המשחק הסתיים!</p>
           <p style={{ color:'#fff', fontSize:18 }}>מנצח: {gs.winnerName}</p>
-          <p style={{ color:'#ffd700', fontSize:20, fontWeight:900, marginTop:6 }}>הניקוד שלך: {me?.score ?? 0} pts</p>
+          <p style={{ color:'#ffd700', fontSize:20, fontWeight:900, marginTop:6 }}>הניקוד שלך: {me?.score ?? 0} ₪</p>
         </div>
       )}
     </div>
   );
 };
 
-// ─── BullseyeGame — Host ──────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// HOST VIEW — Laptop screen
+// ═══════════════════════════════════════════════════════════════════════════════
 const BullseyeGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gsRef     = useRef<GameState>(makeInitialState());
@@ -366,7 +328,7 @@ const BullseyeGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [displayGs, setDisplayGs]   = useState<GameState>(gsRef.current);
 
   const broadcast = useCallback(() => {
-    const msg: Msg = { type:'STATE', state: gsRef.current };
+    const msg: Msg = { type: 'STATE', state: gsRef.current };
     connsRef.current.forEach(c => { if (c.open) c.send(msg); });
   }, []);
 
@@ -375,21 +337,12 @@ const BullseyeGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     setPhase(gsRef.current.phase);
   }, []);
 
-  // GK movement — also shifts stuck ball position
   const applyMoves = useCallback(() => {
     const gs = gsRef.current;
-    const moves = movesRef.current.splice(0);
-    moves.forEach(({ playerId, delta }) => {
+    movesRef.current.splice(0).forEach(({ playerId, delta }) => {
       const p = gs.players[playerId];
       if (!p?.active || p.lives <= 0) return;
       p.gkPos = Math.max(0.02, Math.min(0.98, p.gkPos + delta * GK_MOVE));
-      // Keep stuck ball glued to wherever the dome surface is now
-      if (gs.ball.stuck && gs.ball.stuckPlayerId === playerId) {
-        const { cx, cy } = gkCenter(p.side, p.gkPos);
-        const r = gkR(p.side);
-        const ang = gs.ball.stuckAngle;
-        gs.ball = { ...gs.ball, x: cx + Math.cos(ang)*(r+BALL_R), y: cy + Math.sin(ang)*(r+BALL_R) };
-      }
     });
   }, []);
 
@@ -397,290 +350,282 @@ const BullseyeGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     const gs = gsRef.current;
     const alive = gs.players.filter(p => p.active && p.lives > 0);
     if (alive.length <= 1) {
+      cancelAnimationFrame(rafRef.current);
       gs.phase = 'gameover';
       gs.winnerName = alive[0]?.name ?? 'אין מנצח';
-      gs.ball = { ...gs.ball, stuck: false, stuckPlayerId: null, vx: 0, vy: 0 };
       broadcast(); syncDisplay(); return true;
     }
     return false;
   }, [broadcast, syncDisplay]);
 
-  const applyAnswerResult = useCallback((playerId: number, correct: boolean) => {
+  // Forward declaration shim — will be assigned below
+  const gameLoopRef = useRef<() => void>(() => {});
+
+  const nextRound = useCallback(() => {
     const gs = gsRef.current;
+    gs.phase = 'playing';
+    gs.question = null; gs.questionPlayerId = null;
+    gs.questionAnswered = false; gs.answerWasCorrect = null;
+    gs.ball = freshBall();
+    broadcast(); syncDisplay();
+    rafRef.current = requestAnimationFrame(gameLoopRef.current);
+  }, [broadcast, syncDisplay]);
+
+  const triggerGoal = useCallback((scoredAgainstId: number) => {
+    cancelAnimationFrame(rafRef.current);
+    if (qtRef.current) clearInterval(qtRef.current);
+    const gs = gsRef.current;
+    const p = gs.players[scoredAgainstId];
+    gs.ball = { x: CW/2, y: CH/2, vx: 0, vy: 0 };
+    gs.phase = 'question';
+    gs.questionPlayerId = scoredAgainstId;
+    gs.question = pickQ();
+    gs.questionTimeLeft = 60;
+    gs.questionAnswered = false;
+    gs.answerWasCorrect = null;
+    gs.lastMsg = `🥅 גוול! הכדור נכנס לשער ${p.emoji} ${p.name}!`;
+    broadcast(); syncDisplay();
+
+    qtRef.current = setInterval(() => {
+      const gs2 = gsRef.current;
+      if (gs2.phase !== 'question') { clearInterval(qtRef.current!); return; }
+      gs2.questionTimeLeft--;
+      if (gs2.questionTimeLeft <= 0) {
+        clearInterval(qtRef.current!);
+        if (!gs2.questionAnswered) {
+          gs2.questionAnswered = true;
+          gs2.answerWasCorrect = false;
+          const pp = gs2.players[scoredAgainstId];
+          pp.lives = Math.max(0, pp.lives - 1);
+          gs2.lastMsg = pp.lives === 0
+            ? `💀 ${pp.emoji} ${pp.name} יצא/ה מהמשחק!`
+            : `⏱ זמן אזל! ${pp.emoji} ${pp.name} -לב`;
+        }
+        broadcast(); syncDisplay();
+        setTimeout(() => { if (!checkGameOver()) nextRound(); }, 1500);
+      } else {
+        broadcast(); syncDisplay();
+      }
+    }, 1000);
+  }, [broadcast, syncDisplay, checkGameOver, nextRound]);
+
+  const handleAnswer = useCallback((playerId: number, answerIdx: number) => {
+    const gs = gsRef.current;
+    if (gs.phase !== 'question' || gs.questionPlayerId !== playerId || gs.questionAnswered) return;
+    gs.questionAnswered = true;
     const p = gs.players[playerId];
+    const correct = gs.question?.correct === answerIdx;
     gs.answerWasCorrect = correct;
     if (correct) {
       p.score += 100;
-      gs.lastMsg = `✅ ${p.emoji} ${p.name} ענה/תה נכון! +100 נקודות!`;
+      gs.lastMsg = `✅ ${p.emoji} ${p.name} ענה/תה נכון! +100 ₪`;
     } else {
       p.lives = Math.max(0, p.lives - 1);
       gs.lastMsg = p.lives === 0
         ? `💀 ${p.emoji} ${p.name} יצא/ה מהמשחק!`
-        : `❌ ${p.emoji} ${p.name} ענה/תה טעות — -לב`;
+        : `❌ ${p.emoji} ${p.name} טעה/תה — -לב`;
     }
+    if (qtRef.current) { clearInterval(qtRef.current); qtRef.current = null; }
+    broadcast(); syncDisplay();
+    setTimeout(() => { if (!checkGameOver()) nextRound(); }, 2500);
+  }, [broadcast, syncDisplay, checkGameOver, nextRound]);
+
+  // ── Physics ────────────────────────────────────────────────────────────
+  const physicsStep = useCallback(() => {
+    const gs = gsRef.current;
+    applyMoves();
+    let { x, y, vx, vy } = gs.ball;
+    x += vx; y += vy;
+
+    // GK semicircle — elastic bounce
+    for (const p of gs.players) {
+      if (!p.active || p.lives <= 0) continue;
+      const { cx, cy } = gkCenter(p.side, p.gkPos);
+      const r = gkR(p.side);
+      const dx = x - cx, dy = y - cy;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < r + BALL_R && dist > 0.01) {
+        const nx = dx / dist, ny = dy / dist;
+        const dot = vx*nx + vy*ny;
+        vx = (vx - 2*dot*nx) * BOUNCE_BOOST;
+        vy = (vy - 2*dot*ny) * BOUNCE_BOOST;
+        const spd = Math.sqrt(vx*vx+vy*vy);
+        if (spd > MAX_BALL_SPEED) { vx *= MAX_BALL_SPEED/spd; vy *= MAX_BALL_SPEED/spd; }
+        x = cx + nx*(r+BALL_R+1);
+        y = cy + ny*(r+BALL_R+1);
+        break; // one bounce per frame
+      }
+    }
+
+    // Wall / goal collision
+    if (y - BALL_R < 0) {
+      if (x >= GOAL_H_START && x <= GOAL_H_START+GOAL_H && gs.players[0].active && gs.players[0].lives>0) {
+        gs.ball={x,y,vx,vy}; triggerGoal(0); return;
+      }
+      y=BALL_R; vy=Math.abs(vy);
+    }
+    if (y + BALL_R > CH) {
+      if (x >= GOAL_H_START && x <= GOAL_H_START+GOAL_H && gs.players[1].active && gs.players[1].lives>0) {
+        gs.ball={x,y,vx,vy}; triggerGoal(1); return;
+      }
+      y=CH-BALL_R; vy=-Math.abs(vy);
+    }
+    if (x - BALL_R < 0) {
+      if (y >= GOAL_V_START && y <= GOAL_V_START+GOAL_V && gs.players[2].active && gs.players[2].lives>0) {
+        gs.ball={x,y,vx,vy}; triggerGoal(2); return;
+      }
+      x=BALL_R; vx=Math.abs(vx);
+    }
+    if (x + BALL_R > CW) {
+      if (y >= GOAL_V_START && y <= GOAL_V_START+GOAL_V && gs.players[3].active && gs.players[3].lives>0) {
+        gs.ball={x,y,vx,vy}; triggerGoal(3); return;
+      }
+      x=CW-BALL_R; vx=-Math.abs(vx);
+    }
+    gs.ball={x,y,vx,vy};
+  }, [applyMoves, triggerGoal]);
+
+  // ── Draw ───────────────────────────────────────────────────────────────
+  const draw = useCallback(() => {
+    const canvas=canvasRef.current; if(!canvas) return;
+    const ctx=canvas.getContext('2d'); if(!ctx) return;
+    const gs=gsRef.current;
+    const scx=canvas.width/CW, scy=canvas.height/CH;
+    ctx.save(); ctx.scale(scx,scy);
+
+    // Pitch
+    for(let i=0;i<8;i++){ctx.fillStyle=i%2===0?'#166534':'#15803d';ctx.fillRect(i*CW/8,0,CW/8,CH);}
+    ctx.strokeStyle='rgba(255,255,255,0.65)'; ctx.lineWidth=2;
+    ctx.strokeRect(32,32,CW-64,CH-64);
+    ctx.beginPath(); ctx.moveTo(CW/2,32); ctx.lineTo(CW/2,CH-32); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(32,CH/2); ctx.lineTo(CW-32,CH/2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(CW/2,CH/2,56,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(CW/2,CH/2,4,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill();
+
+    // Goal bars
+    gs.players.forEach(p=>{
+      if(!p.active) return;
+      const col=p.lives>0?p.color:'#374151';
+      ctx.strokeStyle=col; ctx.lineWidth=8; ctx.lineCap='round';
+      if(p.side==='top')    {ctx.beginPath();ctx.moveTo(GOAL_H_START,3);ctx.lineTo(GOAL_H_START+GOAL_H,3);ctx.stroke();}
+      if(p.side==='bottom') {ctx.beginPath();ctx.moveTo(GOAL_H_START,CH-3);ctx.lineTo(GOAL_H_START+GOAL_H,CH-3);ctx.stroke();}
+      if(p.side==='left')   {ctx.beginPath();ctx.moveTo(3,GOAL_V_START);ctx.lineTo(3,GOAL_V_START+GOAL_V);ctx.stroke();}
+      if(p.side==='right')  {ctx.beginPath();ctx.moveTo(CW-3,GOAL_V_START);ctx.lineTo(CW-3,GOAL_V_START+GOAL_V);ctx.stroke();}
+      ctx.lineCap='butt';
+    });
+
+    // GK domes
+    gs.players.forEach(p=>{
+      if(!p.active) return;
+      const{cx,cy}=gkCenter(p.side,p.gkPos);
+      const r=gkR(p.side);
+      const[a0,a1]=gkArcAngles(p.side);
+      const alive=p.lives>0;
+      ctx.beginPath(); ctx.arc(cx,cy,r,a0,a1); ctx.closePath();
+      ctx.fillStyle=alive?p.color+'cc':'#37415188';
+      ctx.fill();
+      ctx.strokeStyle=alive?'rgba(255,255,255,0.9)':'#555'; ctx.lineWidth=3; ctx.stroke();
+      // emoji
+      let lx=cx,ly=cy;
+      const off=r*0.65;
+      if(p.side==='top')    ly=off;
+      if(p.side==='bottom') ly=CH-off;
+      if(p.side==='left')   lx=off;
+      if(p.side==='right')  lx=CW-off;
+      ctx.font='16px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(alive?p.emoji:'💀',lx,ly);
+    });
+
+    // Labels
+    ctx.font='bold 11px sans-serif'; ctx.textBaseline='middle';
+    gs.players.forEach(p=>{
+      if(!p.active) return;
+      const hearts='❤️'.repeat(Math.max(0,p.lives));
+      const label=`${p.name} · ${p.score}₪ ${hearts}${p.lives===0?'💀':''}`;
+      ctx.fillStyle=p.lives>0?p.color:'#6b7280';
+      ctx.shadowColor='rgba(0,0,0,0.9)'; ctx.shadowBlur=5;
+      if(p.side==='top')    {ctx.textAlign='center';ctx.fillText(label,CW/2,13);}
+      if(p.side==='bottom') {ctx.textAlign='center';ctx.fillText(label,CW/2,CH-7);}
+      if(p.side==='left')   {ctx.save();ctx.translate(8,CH/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.fillText(label,0,0);ctx.restore();}
+      if(p.side==='right')  {ctx.save();ctx.translate(CW-8,CH/2);ctx.rotate(Math.PI/2);ctx.textAlign='center';ctx.fillText(label,0,0);ctx.restore();}
+      ctx.shadowBlur=0;
+    });
+
+    // Ball
+    const{x:bx,y:by,vx:bvx,vy:bvy}=gs.ball;
+    // Shadow
+    ctx.beginPath(); ctx.ellipse(bx,by+BALL_R*0.45,BALL_R*0.7,BALL_R*0.25,0,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.fill();
+    // Body
+    const gr=ctx.createRadialGradient(bx-BALL_R*0.35,by-BALL_R*0.35,1,bx,by,BALL_R);
+    gr.addColorStop(0,'#fff'); gr.addColorStop(1,'#ccc');
+    ctx.beginPath(); ctx.arc(bx,by,BALL_R,0,Math.PI*2);
+    ctx.fillStyle=gr; ctx.fill();
+    ctx.strokeStyle='#444'; ctx.lineWidth=1; ctx.stroke();
+    // Seam
+    const ba=Math.atan2(bvy,bvx);
+    ctx.strokeStyle='#666'; ctx.lineWidth=0.8;
+    ctx.beginPath(); ctx.arc(bx,by,BALL_R*0.6,ba,ba+Math.PI*0.8); ctx.stroke();
+
+    ctx.restore();
   }, []);
 
-  // ── PeerJS ────────────────────────────────────────────────────────────
+  // ── Game loop ──────────────────────────────────────────────────────────
+  const gameLoop = useCallback(() => {
+    if (gsRef.current.phase !== 'playing') return;
+    physicsStep(); draw();
+    if (Math.random() < 0.15) broadcast();
+    rafRef.current = requestAnimationFrame(gameLoop);
+  }, [physicsStep, draw, broadcast]);
+
+  // Wire forward-ref
+  useEffect(() => { gameLoopRef.current = gameLoop; }, [gameLoop]);
+
+  // ── PeerJS ─────────────────────────────────────────────────────────────
   useEffect(() => {
     const peer = new Peer(); peerRef.current = peer;
     peer.on('open', id => setHostPeerId(id));
     peer.on('connection', conn => {
       conn.on('data', raw => {
         const msg = raw as Msg;
-        if (msg.type === 'JOIN' && msg.playerId != null && msg.name) {
+        if (msg.type==='JOIN' && msg.playerId!=null && msg.name) {
           connsRef.current.set(msg.playerId, conn);
-          gsRef.current.players[msg.playerId].active = true;
-          gsRef.current.players[msg.playerId].name = msg.name;
+          gsRef.current.players[msg.playerId].active=true;
+          gsRef.current.players[msg.playerId].name=msg.name;
           broadcast(); syncDisplay();
         }
-        // Accept MOVE during playing AND question (for aiming)
-        if (msg.type === 'MOVE' && msg.playerId != null && msg.delta != null
-            && (gsRef.current.phase === 'playing' || gsRef.current.phase === 'question')) {
-          movesRef.current.push({ playerId: msg.playerId, delta: msg.delta });
+        if (msg.type==='MOVE' && msg.playerId!=null && msg.delta!=null && gsRef.current.phase==='playing') {
+          movesRef.current.push({playerId:msg.playerId, delta:msg.delta});
         }
-        if (msg.type === 'ANSWER' && msg.playerId != null && msg.answerIdx != null)
+        if (msg.type==='ANSWER' && msg.playerId!=null && msg.answerIdx!=null) {
           handleAnswer(msg.playerId, msg.answerIdx);
-        if (msg.type === 'KICK' && msg.playerId != null && msg.holdMs != null)
-          handleKick(msg.playerId, msg.holdMs);
+        }
       });
     });
     peer.on('error', e => setPeerError(String(e)));
-    return () => { peer.destroy(); cancelAnimationFrame(rafRef.current); if (qtRef.current) clearInterval(qtRef.current); };
+    return () => { peer.destroy(); cancelAnimationFrame(rafRef.current); if(qtRef.current) clearInterval(qtRef.current); };
   }, []); // eslint-disable-line
-
-  // ── Physics ───────────────────────────────────────────────────────────
-  const physicsStep = useCallback(() => {
-    const gs = gsRef.current;
-    applyMoves();
-
-    let { x, y, vx, vy } = gs.ball;
-    x += vx; y += vy;
-
-    // Semicircle collision — check each active player
-    for (const p of gs.players) {
-      if (!p.active || p.lives <= 0) continue;
-      const { cx, cy } = gkCenter(p.side, p.gkPos);
-      const r = gkR(p.side);
-      const dx = x - cx, dy = y - cy, dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist <= r + BALL_R) {
-        // Compute angle from GK center to ball contact point
-        const angle = dist > 0 ? Math.atan2(dy, dx) : 0;
-        gs.ball = {
-          x: cx + Math.cos(angle)*(r+BALL_R), y: cy + Math.sin(angle)*(r+BALL_R),
-          vx: 0, vy: 0, stuck: true, stuckPlayerId: p.id, stuckAngle: angle,
-        };
-        gs.phase = 'question';
-        gs.questionPlayerId = p.id;
-        gs.question = pickQ();
-        gs.questionTimeLeft = 60;
-        gs.questionAnswered = false;
-        gs.answerWasCorrect = null;
-        gs.lastMsg = `⚽ ${p.emoji} ${p.name} — ענה ובעט!`;
-        broadcast(); syncDisplay();
-        startQuestionTimer();
-        return;
-      }
-    }
-
-    // Wall bounce (all 4 walls — no goal holes in walls, goals are visual only)
-    if (x - BALL_R <= 0)  { x = BALL_R;       vx = Math.abs(vx); }
-    if (x + BALL_R >= CW) { x = CW - BALL_R;  vx = -Math.abs(vx); }
-    if (y - BALL_R <= 0)  { y = BALL_R;        vy = Math.abs(vy); }
-    if (y + BALL_R >= CH) { y = CH - BALL_R;   vy = -Math.abs(vy); }
-    gs.ball = { ...gs.ball, x, y, vx, vy };
-  }, [broadcast, syncDisplay, applyMoves]); // eslint-disable-line
-
-  // ── Draw ──────────────────────────────────────────────────────────────
-  const draw = useCallback(() => {
-    const canvas = canvasRef.current; if (!canvas) return;
-    const ctx = canvas.getContext('2d'); if (!ctx) return;
-    const gs = gsRef.current;
-    const scx = canvas.width / CW, scy = canvas.height / CH;
-    ctx.save(); ctx.scale(scx, scy);
-
-    // Pitch
-    for (let i = 0; i < 8; i++) { ctx.fillStyle = i%2===0?'#166534':'#15803d'; ctx.fillRect(i*CW/8, 0, CW/8, CH); }
-    ctx.strokeStyle = 'rgba(255,255,255,0.65)'; ctx.lineWidth = 2;
-    ctx.strokeRect(32, 32, CW-64, CH-64);
-    ctx.beginPath(); ctx.moveTo(CW/2,32); ctx.lineTo(CW/2,CH-32); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(32,CH/2); ctx.lineTo(CW-32,CH/2); ctx.stroke();
-    ctx.beginPath(); ctx.arc(CW/2,CH/2,60,0,Math.PI*2); ctx.stroke();
-    ctx.beginPath(); ctx.arc(CW/2,CH/2,4,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill();
-
-    // Goals — coloured bars on each edge at 75% width
-    gs.players.forEach(p => {
-      if (!p.active) return;
-      const col = p.lives > 0 ? p.color : '#374151';
-      ctx.strokeStyle = col; ctx.lineWidth = 10;
-      ctx.lineCap = 'round';
-      if (p.side === 'top') {
-        ctx.beginPath(); ctx.moveTo(GOAL_H_START, 3); ctx.lineTo(GOAL_H_START + GOAL_H, 3); ctx.stroke();
-      } else if (p.side === 'bottom') {
-        ctx.beginPath(); ctx.moveTo(GOAL_H_START, CH-3); ctx.lineTo(GOAL_H_START + GOAL_H, CH-3); ctx.stroke();
-      } else if (p.side === 'left') {
-        ctx.beginPath(); ctx.moveTo(3, GOAL_V_START); ctx.lineTo(3, GOAL_V_START + GOAL_V); ctx.stroke();
-      } else {
-        ctx.beginPath(); ctx.moveTo(CW-3, GOAL_V_START); ctx.lineTo(CW-3, GOAL_V_START + GOAL_V); ctx.stroke();
-      }
-      ctx.lineCap = 'butt';
-    });
-
-    // Semicircle GKs
-    gs.players.forEach(p => {
-      if (!p.active) return;
-      const { cx, cy } = gkCenter(p.side, p.gkPos);
-      const r = gkR(p.side);
-      const [a0, a1] = gkArcAngles(p.side);
-      const alive = p.lives > 0;
-      const isStuck = gs.ball.stuck && gs.ball.stuckPlayerId === p.id;
-
-      // Glow when ball stuck
-      if (isStuck) {
-        ctx.save(); ctx.shadowColor = p.color; ctx.shadowBlur = 28;
-        ctx.beginPath(); ctx.arc(cx, cy, r, a0, a1); ctx.closePath();
-        ctx.strokeStyle = '#fff'; ctx.lineWidth = 5; ctx.stroke();
-        ctx.restore();
-      }
-
-      // Fill
-      ctx.beginPath(); ctx.arc(cx, cy, r, a0, a1); ctx.closePath();
-      ctx.fillStyle = alive ? p.color + 'cc' : '#37415199';
-      ctx.fill();
-      ctx.strokeStyle = alive ? 'rgba(255,255,255,0.9)' : '#555'; ctx.lineWidth = 3; ctx.stroke();
-
-      // Emoji inside dome
-      let lx = cx, ly = cy;
-      const off = r * 0.5;
-      if (p.side === 'top')    ly = off;
-      if (p.side === 'bottom') ly = CH - off;
-      if (p.side === 'left')   lx = off;
-      if (p.side === 'right')  lx = CW - off;
-      ctx.font = '22px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(alive ? p.emoji : '💀', lx, ly);
-    });
-
-    // Labels on edges
-    ctx.font = 'bold 11px sans-serif'; ctx.textBaseline = 'middle';
-    gs.players.forEach(p => {
-      if (!p.active) return;
-      const hearts = '❤️'.repeat(Math.max(0, p.lives));
-      const label = `${p.name} · ${p.score}pts ${hearts}${p.lives===0?'💀':''}`;
-      ctx.fillStyle = p.lives > 0 ? p.color : '#6b7280';
-      ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 5;
-      if (p.side==='top')    { ctx.textAlign='center'; ctx.fillText(label, CW/2, 13); }
-      if (p.side==='bottom') { ctx.textAlign='center'; ctx.fillText(label, CW/2, CH-7); }
-      if (p.side==='left')   { ctx.save(); ctx.translate(8, CH/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center'; ctx.fillText(label,0,0); ctx.restore(); }
-      if (p.side==='right')  { ctx.save(); ctx.translate(CW-8, CH/2); ctx.rotate(Math.PI/2); ctx.textAlign='center'; ctx.fillText(label,0,0); ctx.restore(); }
-      ctx.shadowBlur = 0;
-    });
-
-    // Ball
-    const { x: bx, y: by, vx: bvx, vy: bvy } = gs.ball;
-    if (!gs.ball.stuck) {
-      ctx.beginPath(); ctx.ellipse(bx, by+BALL_R*0.45, BALL_R*0.7, BALL_R*0.25, 0, 0, Math.PI*2);
-      ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fill();
-    }
-    ctx.beginPath(); ctx.arc(bx, by, BALL_R, 0, Math.PI*2);
-    if (gs.ball.stuck) {
-      ctx.fillStyle = '#fff'; ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 18; ctx.fill(); ctx.shadowBlur = 0;
-    } else {
-      const gr = ctx.createRadialGradient(bx-BALL_R*0.35, by-BALL_R*0.35, 1, bx, by, BALL_R);
-      gr.addColorStop(0,'#fff'); gr.addColorStop(1,'#ccc');
-      ctx.fillStyle = gr; ctx.fill();
-      ctx.strokeStyle = '#444'; ctx.lineWidth = 1; ctx.stroke();
-      const ba = Math.atan2(bvy, bvx);
-      ctx.strokeStyle = '#666'; ctx.lineWidth = 0.8;
-      ctx.beginPath(); ctx.arc(bx, by, BALL_R*0.6, ba, ba+Math.PI*0.8); ctx.stroke();
-    }
-    ctx.restore();
-  }, []);
-
-  // ── Game loop ─────────────────────────────────────────────────────────
-  const gameLoop = useCallback(() => {
-    const p = gsRef.current.phase;
-    if (p === 'playing') {
-      physicsStep(); draw();
-      if (Math.random() < 0.17) broadcast();
-    } else if (p === 'question') {
-      applyMoves(); draw();
-      if (Math.random() < 0.17) broadcast();
-    } else {
-      return; // stop loop
-    }
-    rafRef.current = requestAnimationFrame(gameLoop);
-  }, [physicsStep, draw, broadcast, applyMoves]);
-
-  const startGame = useCallback(() => {
-    gsRef.current.phase = 'playing';
-    gsRef.current.ball = freshBall();
-    gsRef.current.lastMsg = '';
-    broadcast(); syncDisplay();
-    rafRef.current = requestAnimationFrame(gameLoop);
-  }, [broadcast, syncDisplay, gameLoop]);
-
-  // ── Answer handler ────────────────────────────────────────────────────
-  const handleAnswer = useCallback((playerId: number, answerIdx: number) => {
-    const gs = gsRef.current;
-    if (gs.phase !== 'question' || gs.questionPlayerId !== playerId) return;
-    if (gs.questionAnswered) return;
-    gs.questionAnswered = true;
-    applyAnswerResult(playerId, gs.question?.correct === answerIdx);
-    // KEEP phase as 'question' — wait for KICK. Question panel will hide on client side.
-    broadcast(); syncDisplay();
-  }, [applyAnswerResult, broadcast, syncDisplay]);
-
-  // ── Kick handler ──────────────────────────────────────────────────────
-  const handleKick = useCallback((playerId: number, holdMs: number) => {
-    const gs = gsRef.current;
-    if (gs.phase !== 'question' || gs.ball.stuckPlayerId !== playerId) return;
-    // If they kick without answering, count as wrong
-    if (!gs.questionAnswered) {
-      gs.questionAnswered = true;
-      applyAnswerResult(playerId, false);
-    }
-    if (qtRef.current) clearInterval(qtRef.current);
-    if (checkGameOver()) return;
-    // Direction: stuckAngle points from GK center outward through the ball → into field
-    const speed = MIN_KICK_SPEED + (Math.min(holdMs, MAX_HOLD_MS) / MAX_HOLD_MS) * (MAX_KICK_SPEED - MIN_KICK_SPEED);
-    gs.ball = { ...gs.ball, vx: Math.cos(gs.ball.stuckAngle)*speed, vy: Math.sin(gs.ball.stuckAngle)*speed, stuck: false, stuckPlayerId: null };
-    gs.phase = 'playing';
-    gs.question = null; gs.questionPlayerId = null;
-    broadcast(); syncDisplay();
-  }, [applyAnswerResult, checkGameOver, broadcast, syncDisplay]);
-
-  // ── Question timer ────────────────────────────────────────────────────
-  const startQuestionTimer = useCallback(() => {
-    if (qtRef.current) clearInterval(qtRef.current);
-    qtRef.current = setInterval(() => {
-      const gs = gsRef.current;
-      if (gs.phase !== 'question') { clearInterval(qtRef.current!); return; }
-      gs.questionTimeLeft--;
-      if (gs.questionTimeLeft <= 0) {
-        clearInterval(qtRef.current!);
-        if (!gs.questionAnswered && gs.questionPlayerId != null) {
-          gs.questionAnswered = true; applyAnswerResult(gs.questionPlayerId, false);
-        }
-        if (!checkGameOver()) {
-          gs.ball = { ...gs.ball, vx: Math.cos(gs.ball.stuckAngle)*MIN_KICK_SPEED, vy: Math.sin(gs.ball.stuckAngle)*MIN_KICK_SPEED, stuck: false, stuckPlayerId: null };
-          gs.phase = 'playing'; gs.question = null; gs.questionPlayerId = null;
-          broadcast(); syncDisplay();
-        }
-      } else { broadcast(); syncDisplay(); }
-    }, 1000);
-  }, [applyAnswerResult, checkGameOver, broadcast, syncDisplay]);
 
   useEffect(() => { draw(); }, [draw]);
 
-  const baseUrl = `${window.location.origin}${window.location.pathname}`;
-  const playerUrls = PLAYER_DEFS.map(p => hostPeerId ? `${baseUrl}#bullseye-player-${p.id}-${hostPeerId}` : null);
+  const startGame = useCallback(() => {
+    gsRef.current.phase='playing';
+    gsRef.current.ball=freshBall();
+    gsRef.current.lastMsg='';
+    broadcast(); syncDisplay();
+    rafRef.current=requestAnimationFrame(gameLoop);
+  }, [broadcast, syncDisplay, gameLoop]);
 
   const resetGame = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
-    if (qtRef.current) clearInterval(qtRef.current);
+    if(qtRef.current) clearInterval(qtRef.current);
     connsRef.current.clear();
-    gsRef.current = makeInitialState();
+    gsRef.current=makeInitialState();
     syncDisplay(); draw();
   }, [syncDisplay, draw]);
+
+  const baseUrl=`${window.location.origin}${window.location.pathname}`;
+  const playerUrls=PLAYER_DEFS.map(p=>hostPeerId?`${baseUrl}#bullseye-player-${p.id}-${hostPeerId}`:null);
 
   return (
     <div dir="rtl" className="space-y-4">
@@ -693,133 +638,125 @@ const BullseyeGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       </div>
 
       {peerError && (
-        <div className="rounded-2xl p-4 text-center font-bold text-red-300" style={{ background:'rgba(239,68,68,0.15)', border:'1px solid rgba(239,68,68,0.4)' }}>שגיאת חיבור: {peerError}</div>
+        <div className="rounded-2xl p-4 text-center font-bold text-red-300" style={{background:'rgba(239,68,68,0.15)',border:'1px solid rgba(239,68,68,0.4)'}}>שגיאת חיבור: {peerError}</div>
       )}
 
       {/* LOBBY */}
-      {phase === 'lobby' && (
+      {phase==='lobby' && (
         <div className="space-y-4">
-          {!hostPeerId && !peerError && <div className="rounded-2xl p-4 text-center text-blue-300 font-bold" style={{ background:'rgba(59,130,246,0.1)', border:'1px solid rgba(59,130,246,0.3)' }}>⏳ יוצר חדר...</div>}
-          {hostPeerId && <div className="rounded-2xl p-3 text-center text-green-300 font-bold text-sm" style={{ background:'rgba(74,222,128,0.1)', border:'1px solid rgba(74,222,128,0.3)' }}>✅ חדר מוכן — סרקו ברקוד</div>}
+          {!hostPeerId && !peerError && <div className="rounded-2xl p-4 text-center text-blue-300 font-bold" style={{background:'rgba(59,130,246,0.1)',border:'1px solid rgba(59,130,246,0.3)'}}>⏳ יוצר חדר...</div>}
+          {hostPeerId && <div className="rounded-2xl p-3 text-center text-green-300 font-bold text-sm" style={{background:'rgba(74,222,128,0.1)',border:'1px solid rgba(74,222,128,0.3)'}}>✅ חדר מוכן — סרקו ברקוד</div>}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {PLAYER_DEFS.map((p, idx) => (
-              <div key={p.id} className="rounded-2xl p-4 text-center space-y-3 shadow-lg" style={{ background:`linear-gradient(135deg,${p.color},${p.darkColor})` }}>
+            {PLAYER_DEFS.map((p,idx)=>(
+              <div key={p.id} className="rounded-2xl p-4 text-center space-y-3 shadow-lg" style={{background:`linear-gradient(135deg,${p.color},${p.darkColor})`}}>
                 <p className="text-4xl">{p.emoji}</p>
                 <p className="text-white font-black text-lg">{SIDE_LABEL[p.side]}</p>
-                {playerUrls[idx] ? (
-                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&bgcolor=ffffff&data=${encodeURIComponent(playerUrls[idx]!)}`}
-                    alt={`QR ${p.id+1}`} className="mx-auto rounded-xl" style={{ width:140, height:140 }} />
-                ) : (
-                  <div style={{ width:140, height:140, background:'rgba(255,255,255,0.15)', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center' }} className="mx-auto"><span style={{ fontSize:32 }}>⏳</span></div>
+                {playerUrls[idx]?(
+                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&bgcolor=ffffff&data=${encodeURIComponent(playerUrls[idx]!)}`} alt={`QR ${p.id+1}`} className="mx-auto rounded-xl" style={{width:140,height:140}}/>
+                ):(
+                  <div style={{width:140,height:140,background:'rgba(255,255,255,0.15)',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center'}} className="mx-auto"><span style={{fontSize:32}}>⏳</span></div>
                 )}
-                <div className="rounded-xl py-2 px-3 text-sm font-bold" style={{ background: displayGs.players[p.id].active?'rgba(74,222,128,0.9)':'rgba(255,255,255,0.25)', color:'#fff' }}>
-                  {displayGs.players[p.id].active ? `✅ ${displayGs.players[p.id].name}` : '⏳ ממתין...'}
+                <div className="rounded-xl py-2 px-3 text-sm font-bold" style={{background:displayGs.players[p.id].active?'rgba(74,222,128,0.9)':'rgba(255,255,255,0.25)',color:'#fff'}}>
+                  {displayGs.players[p.id].active?`✅ ${displayGs.players[p.id].name}`:'⏳ ממתין...'}
                 </div>
               </div>
             ))}
           </div>
           <div className="text-center space-y-2">
-            <button onClick={startGame} disabled={!hostPeerId || !displayGs.players.some(p => p.active)}
+            <button onClick={startGame} disabled={!hostPeerId||!displayGs.players.some(p=>p.active)}
               className="px-10 py-4 rounded-2xl font-black text-xl text-black transition-all hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ background:'linear-gradient(135deg,#ffd700,#ff9500)', boxShadow:'0 0 32px rgba(255,215,0,0.5)' }}>
+              style={{background:'linear-gradient(135deg,#ffd700,#ff9500)',boxShadow:'0 0 32px rgba(255,215,0,0.5)'}}>
               🚀 התחל משחק!
             </button>
-            <p className="text-gray-500 text-sm">{!hostPeerId ? 'ממתין...' : 'לפחות שחקן אחד — ואז לחצו התחל'}</p>
+            <p className="text-gray-500 text-sm">{!hostPeerId?'ממתין...':'לפחות שחקן אחד — ואז לחצו התחל'}</p>
           </div>
         </div>
       )}
 
       {/* IN-GAME */}
-      {phase !== 'lobby' && (
+      {phase!=='lobby' && (
         <div className="space-y-3">
-          {/* Scoreboard */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {displayGs.players.filter(p => p.active).map(p => (
-              <div key={p.id} className="rounded-xl p-3 text-center" style={{ background:`linear-gradient(135deg,${p.color}22,${p.color}08)`, border:`2px solid ${p.lives>0?p.color:'#374151'}` }}>
+            {displayGs.players.filter(p=>p.active).map(p=>(
+              <div key={p.id} className="rounded-xl p-3 text-center" style={{background:`linear-gradient(135deg,${p.color}22,${p.color}08)`,border:`2px solid ${p.lives>0?p.color:'#374151'}`}}>
                 <p className="text-xl">{p.emoji}</p>
-                <p className="font-bold text-sm truncate" style={{ color: p.lives>0?p.color:'#6b7280' }}>{p.name}</p>
-                <p className="text-base font-black text-yellow-400">{p.score} <span className="text-xs font-normal text-gray-400">pts</span></p>
-                <p className="text-xs">{Array.from({ length:Math.max(0,p.lives) }).map((_,i)=><span key={i}>❤️</span>)}{p.lives===0?'💀':''}</p>
+                <p className="font-bold text-sm truncate" style={{color:p.lives>0?p.color:'#6b7280'}}>{p.name}</p>
+                <p className="text-base font-black text-yellow-400">{p.score}<span className="text-xs font-normal text-gray-400"> ₪</span></p>
+                <p className="text-xs">{Array.from({length:Math.max(0,p.lives)}).map((_,i)=><span key={i}>❤️</span>)}{p.lives===0?'💀':''}</p>
               </div>
             ))}
           </div>
 
           {displayGs.lastMsg && (
-            <div className="text-center text-base font-black text-yellow-400 rounded-xl py-2 px-4" style={{ background:'rgba(255,215,0,0.08)', border:'1px solid rgba(255,215,0,0.25)' }}>{displayGs.lastMsg}</div>
+            <div className="text-center text-base font-black text-yellow-400 rounded-xl py-2 px-4" style={{background:'rgba(255,215,0,0.08)',border:'1px solid rgba(255,215,0,0.25)'}}>{displayGs.lastMsg}</div>
           )}
 
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ background:'#14532d' }}>
-            <canvas ref={canvasRef} width={CW} height={CH} style={{ width:'100%', maxWidth:CW, display:'block', margin:'0 auto' }} />
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{background:'#14532d'}}>
+            <canvas ref={canvasRef} width={CW} height={CH} style={{width:'100%',maxWidth:CW,display:'block',margin:'0 auto'}}/>
 
-            {/* Question overlay — shown only until player answers */}
-            {phase === 'question' && displayGs.question && displayGs.questionPlayerId != null && !displayGs.questionAnswered && (() => {
-              const qp = displayGs.players[displayGs.questionPlayerId];
-              return (
-                <div className="absolute inset-0 flex items-center justify-center" style={{ background:'rgba(0,0,0,0.6)', backdropFilter:'blur(3px)' }}>
-                  <div className="rounded-3xl p-7 text-center space-y-4 w-full max-w-md mx-4" style={{ background:'linear-gradient(145deg,#1e1b4b,#312e81)', border:`3px solid ${qp.color}`, boxShadow:`0 0 60px ${qp.color}55` }}>
+            {/* Question overlay */}
+            {phase==='question' && displayGs.question && displayGs.questionPlayerId!=null && (()=>{
+              const qp=displayGs.players[displayGs.questionPlayerId];
+              return(
+                <div className="absolute inset-0 flex items-center justify-center" style={{background:'rgba(0,0,0,0.65)',backdropFilter:'blur(3px)'}}>
+                  <div className="rounded-3xl p-7 text-center space-y-4 w-full max-w-md mx-4" style={{background:'linear-gradient(145deg,#1e1b4b,#312e81)',border:`3px solid ${qp.color}`,boxShadow:`0 0 60px ${qp.color}55`}}>
                     <div className="flex items-center justify-center gap-3">
                       <span className="text-3xl">{qp.emoji}</span>
                       <div>
                         <p className="text-white font-black text-lg">{qp.name}</p>
-                        <p className="text-purple-300 text-sm">עונה ובועט מהטלפון</p>
+                        <p className="text-purple-300 text-sm">🥅 כדור נכנס לשערו/ה</p>
                       </div>
                       <span className={`text-2xl font-black ${displayGs.questionTimeLeft<=10?'text-red-400 animate-pulse':'text-yellow-300'}`}>⏱{displayGs.questionTimeLeft}s</span>
                     </div>
-                    <div className="rounded-xl p-3" style={{ background:'rgba(255,255,255,0.08)' }}>
+                    <div className="rounded-xl p-3" style={{background:'rgba(255,255,255,0.08)'}}>
                       <p className="text-white text-lg font-bold">{displayGs.question.prompt}</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-right">
-                      {displayGs.question.options.map((opt, i) => (
-                        <div key={i} className="rounded-xl px-3 py-2 font-semibold text-white text-sm" style={{ background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,215,0,0.2)' }}>{opt}</div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Answered: show result + "waiting for kick" */}
-            {phase === 'question' && displayGs.questionAnswered && displayGs.questionPlayerId != null && (() => {
-              const qp = displayGs.players[displayGs.questionPlayerId];
-              return (
-                <div className="absolute bottom-3 left-0 right-0 flex justify-center pointer-events-none">
-                  <div className="rounded-2xl px-6 py-3 text-center font-black text-lg" style={{
-                    background: displayGs.answerWasCorrect ? 'rgba(74,222,128,0.95)' : 'rgba(239,68,68,0.95)',
-                    color: '#fff', border: '2px solid rgba(255,255,255,0.4)' }}>
-                    {displayGs.answerWasCorrect ? `✅ ${qp.name} ענה/תה נכון! +100` : `❌ ${qp.name} טעה/תה! -לב`}
-                    <span style={{ marginRight: 8, fontSize: 14, fontWeight: 400 }}>— ממתין לבעיטה...</span>
+                    {!displayGs.questionAnswered?(
+                      <div className="grid grid-cols-2 gap-2 text-right">
+                        {displayGs.question.options.map((opt,i)=>(
+                          <div key={i} className="rounded-xl px-3 py-2 font-semibold text-white text-sm" style={{background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,215,0,0.2)'}}>{opt}</div>
+                        ))}
+                      </div>
+                    ):(
+                      <div className="rounded-2xl py-4 px-6" style={{background:displayGs.answerWasCorrect?'rgba(74,222,128,0.2)':'rgba(239,68,68,0.2)',border:`2px solid ${displayGs.answerWasCorrect?'#4ade80':'#ef4444'}`}}>
+                        <p className="font-black text-xl" style={{color:displayGs.answerWasCorrect?'#4ade80':'#ef4444'}}>
+                          {displayGs.answerWasCorrect?'✅ נכון! +100 ₪':'❌ טעות! -לב'}
+                        </p>
+                        <p className="text-gray-400 text-sm mt-1">מכין סיבוב הבא...</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
             })()}
 
             {/* Game over */}
-            {phase === 'gameover' && (
-              <div className="absolute inset-0 flex items-center justify-center" style={{ background:'rgba(0,0,0,0.8)', backdropFilter:'blur(6px)' }}>
-                <div className="text-center space-y-5 p-8 rounded-3xl mx-4" style={{ background:'linear-gradient(145deg,#0f0c29,#302b63)', border:'2px solid rgba(255,215,0,0.5)' }}>
+            {phase==='gameover' && (
+              <div className="absolute inset-0 flex items-center justify-center" style={{background:'rgba(0,0,0,0.8)',backdropFilter:'blur(6px)'}}>
+                <div className="text-center space-y-5 p-8 rounded-3xl mx-4" style={{background:'linear-gradient(145deg,#0f0c29,#302b63)',border:'2px solid rgba(255,215,0,0.5)'}}>
                   <p className="text-6xl animate-bounce">🏆</p>
                   <h3 className="text-3xl font-black text-white">המשחק הסתיים!</h3>
                   <p className="text-xl text-yellow-300 font-bold">מנצח: {displayGs.winnerName}</p>
                   <div className="flex flex-wrap gap-2 justify-center">
                     {displayGs.players.filter(p=>p.active).sort((a,b)=>b.score-a.score).map(p=>(
-                      <div key={p.id} className="rounded-xl px-4 py-2 text-center" style={{ background:`${p.color}33`, border:`1px solid ${p.color}` }}>
-                        <p style={{ color:p.color }} className="font-black text-sm">{p.emoji} {p.name}</p>
-                        <p className="text-yellow-300 font-black text-lg">{p.score} pts</p>
+                      <div key={p.id} className="rounded-xl px-4 py-2 text-center" style={{background:`${p.color}33`,border:`1px solid ${p.color}`}}>
+                        <p style={{color:p.color}} className="font-black text-sm">{p.emoji} {p.name}</p>
+                        <p className="text-yellow-300 font-black text-lg">{p.score} ₪</p>
                       </div>
                     ))}
                   </div>
                   <div className="flex gap-3 justify-center flex-wrap">
-                    <button onClick={resetGame} className="px-6 py-3 rounded-2xl font-black text-black" style={{ background:'linear-gradient(135deg,#ffd700,#ff9500)' }}>🔄 משחק חדש</button>
-                    <button onClick={onBack} className="px-6 py-3 rounded-2xl font-bold text-white" style={{ background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.2)' }}>חזרה</button>
+                    <button onClick={resetGame} className="px-6 py-3 rounded-2xl font-black text-black" style={{background:'linear-gradient(135deg,#ffd700,#ff9500)'}}>🔄 משחק חדש</button>
+                    <button onClick={onBack} className="px-6 py-3 rounded-2xl font-bold text-white" style={{background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.2)'}}>חזרה</button>
                   </div>
                 </div>
               </div>
             )}
           </div>
 
-          {phase !== 'gameover' && (
+          {phase!=='gameover' && (
             <div className="flex justify-center">
-              <button onClick={resetGame} className="px-5 py-2.5 rounded-xl font-bold text-white text-sm" style={{ background:'rgba(239,68,68,0.7)', border:'1px solid rgba(239,68,68,0.5)' }}>🔄 אפס</button>
+              <button onClick={resetGame} className="px-5 py-2.5 rounded-xl font-bold text-white text-sm" style={{background:'rgba(239,68,68,0.7)',border:'1px solid rgba(239,68,68,0.5)'}}>🔄 אפס</button>
             </div>
           )}
         </div>
