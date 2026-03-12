@@ -60,19 +60,58 @@ interface Msg {
   answerIdx?: number; state?: GameState;
 }
 
+// ─── Audio ──────────────────────────────────────────────────────────────────
+let _audioCtx: AudioContext | null = null;
+const getACtx = (): AudioContext => {
+  if (!_audioCtx || _audioCtx.state === 'closed') _audioCtx = new AudioContext();
+  return _audioCtx;
+};
+const playHit = () => {
+  try {
+    const ctx = getACtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(380, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(160, ctx.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.45, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+    osc.start(); osc.stop(ctx.currentTime + 0.12);
+  } catch {}
+};
+const playGoal = () => {
+  try {
+    const ctx = getACtx();
+    const freqs = [523, 659, 784, 1047];
+    freqs.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'triangle';
+      const t = ctx.currentTime + i * 0.13;
+      osc.frequency.setValueAtTime(freq, t);
+      gain.gain.setValueAtTime(0.0, t);
+      gain.gain.linearRampToValueAtTime(0.5, t + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      osc.start(t); osc.stop(t + 0.35);
+    });
+  } catch {}
+};
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 const CW = 800, CH = 600;
 const BALL_R = 13;
-const BALL_SPEED = 9;
+const BALL_SPEED = 7.2;              // 9 × 0.8 (−20%)
 const GK_MOVE = 0.022;
 const BOUNCE_BOOST = 1.06;  // slight speed bump on GK bounce
-const MAX_BALL_SPEED = 30;
+const MAX_BALL_SPEED = 28;
 
-// Goal = original 75% × 0.75 = 56.25% of edge (−25%)
-const GOAL_H = CW * 0.5625;          // ≈ 450px  (top/bottom)
-const GOAL_V = CH * 0.5625;          // ≈ 337.5px (left/right)
-const GOAL_H_START = (CW - GOAL_H) / 2;  // ≈ 175px
-const GOAL_V_START = (CH - GOAL_V) / 2;  // ≈ 131.25px
+// Goal = 56.25% × 0.70 = 39.375% of edge (prev −25%, now extra −30%)
+const GOAL_H = CW * 0.39375;         // ≈ 315px  (top/bottom)
+const GOAL_V = CH * 0.39375;         // ≈ 236px  (left/right)
+const GOAL_H_START = (CW - GOAL_H) / 2;
+const GOAL_V_START = (CH - GOAL_V) / 2;
 
 // GK radius = 15% of goal × 0.5 (−50%)
 const GKR_H = GOAL_H * 0.15 * 0.5;  // ≈ 33.75px
@@ -238,11 +277,11 @@ export const BullseyePlayerView: React.FC = () => {
         </p>
       )}
 
-      {/* ← → Arrows — shown only during playing (no arrows during question) */}
+      {/* ← → Arrows — shown only during playing (dir=ltr so arrows aren't reversed) */}
       {gs?.phase === 'playing' && (
         <div style={{ width:'100%', maxWidth:420 }}>
           <p style={{ color:'#64748b', fontSize:13, margin:'0 0 10px', textAlign:'center' }}>הזזת השוער — לחץ והחזק</p>
-          <div style={{ display:'flex', gap:12 }}>
+          <div dir="ltr" style={{ display:'flex', gap:12 }}>
             {(['←', '→'] as const).map((arrow, i) => (
               <button key={i}
                 onPointerDown={() => startMove(i === 0 ? -1 : 1)}
@@ -384,6 +423,7 @@ const BullseyeGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     gs.questionAnswered = false;
     gs.answerWasCorrect = null;
     gs.lastMsg = `🥅 גוול! הכדור נכנס לשער ${p.emoji} ${p.name}!`;
+    playGoal();
     broadcast(); syncDisplay();
 
     qtRef.current = setInterval(() => {
@@ -453,6 +493,7 @@ const BullseyeGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         if (spd > MAX_BALL_SPEED) { vx *= MAX_BALL_SPEED/spd; vy *= MAX_BALL_SPEED/spd; }
         x = cx + nx*(r+BALL_R+1);
         y = cy + ny*(r+BALL_R+1);
+        playHit();
         break; // one bounce per frame
       }
     }
