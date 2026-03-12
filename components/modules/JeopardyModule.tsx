@@ -30,6 +30,19 @@ export interface Category {
   questions: Question[];
 }
 
+interface WildcardQ { category: string; prompt: string; range: [number, number]; }
+
+const WILDCARD_QUESTIONS: WildcardQ[] = [
+  { category: 'צרכנות נבונה', prompt: '3 מוצרים עולים 45₪, 78₪ ו-123₪. יש מבצע: קנה 3 שלם 2 — הזול חינם. כמה תשלמו?', range: [201, 201] },
+  { category: 'ניהול תקציב', prompt: 'הכנסה 7,500₪. הוצאות: 30% שכ"ד, 18% מזון, 8% תחבורה, 12% חיסכון. כמה נשאר לפנאי?', range: [2400, 2400] },
+  { category: 'יזמות', prompt: 'עלות ייצור 75₪, מחיר מכירה 120₪. כמה יחידות למכור כדי להרוויח 2,025₪?', range: [45, 45] },
+  { category: 'תעסוקה', prompt: 'שכר 40₪/שעה. עבדתם 4 שעות נוספות ב-125%. כמה שכר מגיע על השעות הנוספות בלבד?', range: [200, 200] },
+  { category: 'כלכלה', prompt: 'מוצר עולה 210₪ לאחר אינפלציה של 5%. מה היה מחירו לפני העלייה?', range: [200, 200] },
+  { category: 'ריבית', prompt: 'פיקדון 8,000₪ בריבית דריבית 5% לשנה, לתקופה של שנתיים. כמה כסף יצטבר?', range: [8820, 8820] },
+];
+
+const WHEEL_COLORS = ['#e53e3e','#805ad5','#276749','#d97706','#2b5cb8','#dd6b20'];
+
 const categoryPalette: string[] = [
   'from-[#ff7c7c] to-[#ffb347]', // coral → amber
   'from-[#6a5acd] to-[#b19cd9]', // slate purple → lavender
@@ -304,6 +317,25 @@ function playJeopardySound(type: 'select' | 'correct' | 'wrong' | 'win') {
   } catch {}
 }
 
+function playWheelSpinSound() {
+  try {
+    const ctx = new AudioContext();
+    let t = ctx.currentTime + 0.04;
+    let interval = 0.042;
+    while (t < ctx.currentTime + 3.2 && interval < 0.45) {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'square';
+      o.frequency.value = 550 + Math.random() * 280;
+      g.gain.setValueAtTime(0.065, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.022);
+      o.start(t); o.stop(t + 0.022);
+      t += interval;
+      interval *= 1.058;
+    }
+  } catch {}
+}
+
 const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComplete, questionBanks }) => {
   const [difficulty, setDifficulty] = useState<Difficulty>('בינוני');
   const [step, setStep] = useState<Step>('welcome');
@@ -327,6 +359,16 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
   const [editingTeamName, setEditingTeamName] = useState('');
   const [explanation, setExplanation] = useState<{ text: string; isCorrect: boolean } | null>(null);
   const [shuffledMatchRightOrder, setShuffledMatchRightOrder] = useState<number[]>([]);
+  const [wildcardOpen, setWildcardOpen] = useState(false);
+  const [wildcardUsedCats, setWildcardUsedCats] = useState<Set<number>>(new Set());
+  const [wildcardOpenCatIdx, setWildcardOpenCatIdx] = useState<number | null>(null);
+  const [wildcardPhase, setWildcardPhase] = useState<'spin' | 'answer' | 'steal' | 'done'>('spin');
+  const [wildcardSpinning, setWildcardSpinning] = useState(false);
+  const [wheelAngle, setWheelAngle] = useState(0);
+  const [selectedWildcardQ, setSelectedWildcardQ] = useState<WildcardQ | null>(null);
+  const [wildcardTyped, setWildcardTyped] = useState('');
+  const [wildcardResult, setWildcardResult] = useState<boolean | null>(null);
+  const [scoreAdjAmounts, setScoreAdjAmounts] = useState<Record<number, string>>({});
 
   const banks = useMemo(() => questionBanks || defaultQuestionBanks, [questionBanks]);
   const categories = useMemo(() => banks[difficulty] || [], [banks, difficulty]);
@@ -362,6 +404,15 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
     setTimeLeft(null);
     setExplanation(null);
     setShuffledMatchRightOrder([]);
+    setWildcardOpen(false);
+    setWildcardUsedCats(new Set());
+    setWildcardOpenCatIdx(null);
+    setWildcardPhase('spin');
+    setWildcardSpinning(false);
+    setWheelAngle(0);
+    setSelectedWildcardQ(null);
+    setWildcardTyped('');
+    setWildcardResult(null);
   };
 
   const resetGame = () => {
@@ -386,6 +437,15 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
     setEditingTeamName('');
     setExplanation(null);
     setShuffledMatchRightOrder([]);
+    setWildcardOpen(false);
+    setWildcardUsedCats(new Set());
+    setWildcardOpenCatIdx(null);
+    setWildcardPhase('spin');
+    setWildcardSpinning(false);
+    setWheelAngle(0);
+    setSelectedWildcardQ(null);
+    setWildcardTyped('');
+    setWildcardResult(null);
   };
 
   const openQuestion = (catIdx: number, qIdx: number) => {
@@ -393,7 +453,7 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
     setActive({ cat: catIdx, idx: qIdx });
     setFeedback('');
     const q = categories[catIdx]?.questions[qIdx];
-    if (q && q.value === 100) {
+    if (q && q.value !== 500) {
       setTimeLeft(60);
     } else {
       setTimeLeft(null);
@@ -520,7 +580,7 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
 
   const totalScore = scoreBoard.reduce((sum, t) => sum + t.score, 0);
   const leadingTeam = scoreBoard.length ? scoreBoard.reduce((best, t) => t.score > best.score ? t : best, scoreBoard[0]) : null;
-  const podium = [...scoreBoard].sort((a, b) => b.score - a.score).slice(0, 3);
+  const podium = [...scoreBoard].sort((a, b) => b.score - a.score).slice(0, 4);
   const canStartGame = scoreBoard.length > 0;
 
   const finishGame = () => {
@@ -572,6 +632,70 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
     const allCorrect = matchMapping.every((rightIdx, leftIdx) => rightIdx === leftIdx);
     submitAnswer(undefined, allCorrect);
   };
+
+  const getAdjAmount = (idx: number) => Math.max(1, parseInt(scoreAdjAmounts[idx] ?? '100') || 100);
+  const adjustScore = (idx: number, delta: number) =>
+    setScoreBoard(prev => prev.map((t, i) => i === idx ? { ...t, score: Math.max(0, t.score + delta) } : t));
+
+  const spinWheel = () => {
+    if (wildcardSpinning || wildcardPhase !== 'spin' || wildcardOpenCatIdx === null) return;
+    const idx = wildcardOpenCatIdx % 6;
+    const sectorCenter = idx * 60 + 30;
+    const delta = 4 * 360 + (360 - sectorCenter % 360) % 360;
+    setWheelAngle(prev => prev + delta);
+    setSelectedWildcardQ(WILDCARD_QUESTIONS[idx]);
+    setWildcardSpinning(true);
+    playWheelSpinSound();
+    setTimeout(() => { setWildcardSpinning(false); setWildcardPhase('answer'); }, 3200);
+  };
+
+  const submitWildcard = () => {
+    if (!selectedWildcardQ) return;
+    const given = parseFloat(wildcardTyped.replace(',', '.'));
+    const [mn, mx] = selectedWildcardQ.range;
+    const ok = !Number.isNaN(given) && given >= mn && given <= mx;
+    setWildcardResult(ok);
+    setWildcardPhase(ok ? 'steal' : 'done');
+    if (!ok && wildcardOpenCatIdx !== null) setWildcardUsedCats(prev => { const n = new Set(prev); n.add(wildcardOpenCatIdx); return n; });
+  };
+
+  const stealFrom = (teamIdx: number) => {
+    setScoreBoard(prev => prev.map((t, i) => {
+      if (i === teamIdx) return { ...t, score: Math.max(0, t.score - 200) };
+      if (i === currentTeamIdx) return { ...t, score: t.score + 200 };
+      return t;
+    }));
+    if (wildcardOpenCatIdx !== null) setWildcardUsedCats(prev => { const n = new Set(prev); n.add(wildcardOpenCatIdx); return n; });
+    setWildcardPhase('done');
+  };
+
+  const closeWildcard = () => {
+    if (wildcardOpenCatIdx !== null) setWildcardUsedCats(prev => { const n = new Set(prev); n.add(wildcardOpenCatIdx); return n; });
+    setWildcardOpen(false);
+    setWildcardOpenCatIdx(null);
+    setWildcardPhase('spin');
+    setWildcardSpinning(false);
+    setSelectedWildcardQ(null);
+    setWildcardTyped('');
+    setWildcardResult(null);
+  };
+
+  // SVG Wheel helper
+  const toRad = (deg: number) => deg * Math.PI / 180;
+  const wheelSectors = Array.from({ length: 6 }, (_, i) => {
+    const startDeg = i * 60 - 90;
+    const endDeg = (i + 1) * 60 - 90;
+    const cx = 150, cy = 150, r = 132;
+    const x1 = cx + r * Math.cos(toRad(startDeg));
+    const y1 = cy + r * Math.sin(toRad(startDeg));
+    const x2 = cx + r * Math.cos(toRad(endDeg));
+    const y2 = cy + r * Math.sin(toRad(endDeg));
+    const midDeg = startDeg + 30;
+    const lx = cx + r * 0.62 * Math.cos(toRad(midDeg));
+    const ly = cy + r * 0.62 * Math.sin(toRad(midDeg));
+    const shortLabels = ['צרכנות', 'תקציב', 'יזמות', 'תעסוקה', 'כלכלה', 'ריבית'];
+    return { x1, y1, x2, y2, lx, ly, midDeg, cx, cy, r, color: WHEEL_COLORS[i], label: shortLabels[i] };
+  });
 
   return (
     <div className="animate-fade-in space-y-4" dir="rtl">
@@ -800,8 +924,8 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
                   {cat.name}
                 </div>
               ))}
-              {/* Question tiles — row by row */}
-              {Array.from({ length: 5 }).map((_, qIdx) =>
+              {/* Question tiles rows 0-2 (100, 200, 300) */}
+              {Array.from({ length: 3 }).map((_, qIdx) =>
                 categories.map((cat, catIdx) => {
                   const q = cat.questions[qIdx];
                   if (!q) return <div key={`empty-${catIdx}-${qIdx}`} />;
@@ -835,6 +959,65 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
                   );
                 })
               )}
+              {/* ── WILDCARD ROW — one tile per category ── */}
+              {categories.map((_, catIdx) => {
+                const used = wildcardUsedCats.has(catIdx);
+                return (
+                  <button
+                    key={`wc-${catIdx}`}
+                    onClick={() => {
+                      if (used || wildcardOpen) return;
+                      setWildcardOpenCatIdx(catIdx);
+                      setWildcardOpen(true);
+                    }}
+                    disabled={used}
+                    className="flex flex-col items-center justify-center rounded-2xl font-black transition-all duration-200 select-none"
+                    style={used
+                      ? { minHeight: '90px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.2)', cursor: 'not-allowed', fontSize: '1rem' }
+                      : { minHeight: '90px', background: 'linear-gradient(145deg,#581c87,#7c3aed)', border: '2px solid rgba(167,139,250,0.8)', color: '#fff', boxShadow: '0 0 22px rgba(124,58,237,0.6)', cursor: 'pointer', fontSize: '1.1rem' }}
+                    onMouseEnter={e => { if (!used) { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.06)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 36px rgba(167,139,250,0.8)'; } }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; (e.currentTarget as HTMLButtonElement).style.boxShadow = used ? 'none' : '0 0 22px rgba(124,58,237,0.6)'; }}
+                  >
+                    {used ? '✅' : <><span style={{ fontSize: '1.5rem', display: 'block' }}>⭐</span><span style={{ fontSize: '0.75rem', marginTop: 2 }}>WILD</span></>}
+                  </button>
+                );
+              })}
+              {/* Question tiles rows 3-4 (400, 500) */}
+              {Array.from({ length: 2 }).map((_, rIdx) => {
+                const qIdx = rIdx + 3;
+                return categories.map((cat, catIdx) => {
+                  const q = cat.questions[qIdx];
+                  if (!q) return <div key={`empty-${catIdx}-${qIdx}`} />;
+                  const qKey = keyFor(catIdx, qIdx);
+                  const isAnswered = answered.has(qKey);
+                  const status = results[qKey];
+                  return (
+                    <button
+                      key={qKey}
+                      onClick={() => openQuestion(catIdx, qIdx)}
+                      disabled={isAnswered}
+                      className="flex flex-col items-center justify-center rounded-2xl font-black transition-all duration-200 select-none"
+                      style={{
+                        minHeight: '90px',
+                        fontSize: '1.4rem',
+                        ...(status === 'correct'
+                          ? { background: 'linear-gradient(135deg,#064e3b,#10b981)', border: '2px solid #34d399', color: '#6ee7b7', boxShadow: '0 0 16px rgba(16,185,129,0.4)' }
+                          : status === 'incorrect'
+                          ? { background: 'linear-gradient(135deg,#450a0a,#dc2626)', border: '2px solid #f87171', color: '#fca5a5', boxShadow: '0 0 16px rgba(239,68,68,0.4)' }
+                          : isAnswered
+                          ? { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.2)', cursor: 'not-allowed' }
+                          : { background: 'linear-gradient(145deg,#1e3a5f,#1e1b4b)', border: '2px solid rgba(255,215,0,0.35)', color: '#ffd700', boxShadow: '0 4px 16px rgba(0,0,0,0.4)', cursor: 'pointer' })
+                      }}
+                      onMouseEnter={e => { if (!isAnswered) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.06)'; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 0 28px rgba(255,215,0,0.5)'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = ''; (e.currentTarget as HTMLButtonElement).style.boxShadow = isAnswered ? 'none' : '0 4px 16px rgba(0,0,0,0.4)'; }}
+                    >
+                      {status === 'correct' ? '✅' : status === 'incorrect' ? '❌' : (
+                        <span style={{ textShadow: '0 0 12px rgba(255,215,0,0.7)' }}>₪{q.value}</span>
+                      )}
+                    </button>
+                  );
+                });
+              })}
             </div>
           </div>
         </div>
@@ -851,7 +1034,7 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
             <p className="text-purple-300 text-lg">שיחקתם {answeredCount} שאלות ברמת {difficulty}</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {podium.map((team, idx) => {
+            {podium.slice(0, 3).map((team, idx) => {
               const medals = ['🥇','🥈','🥉'];
               const styles = [
                 { background: 'linear-gradient(145deg,#854d0e,#ca8a04)', border: '2px solid #fbbf24', boxShadow: '0 0 40px rgba(251,191,36,0.5)' },
@@ -867,6 +1050,15 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
               );
             })}
           </div>
+          {podium.length >= 4 && (
+            <div className="rounded-2xl p-4 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)' }}>
+              <div className="flex items-center gap-3">
+                <p className="text-2xl">4️⃣</p>
+                <p className="text-lg font-bold text-white">{podium[3].name}</p>
+              </div>
+              <p className="text-xl font-black text-yellow-300">{podium[3].score} נק'</p>
+            </div>
+          )}
           <div className="flex justify-between items-center">
             <button onClick={onBack} className="px-5 py-2.5 rounded-xl font-bold text-white" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>סיום</button>
             <div className="flex gap-3">
@@ -1081,7 +1273,7 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
               <h3 className="text-2xl font-black text-yellow-300">👥 ניהול קבוצות</h3>
               <button onClick={() => { setShowTeamManager(false); setEditingTeamIdx(null); setEditingTeamName(''); }} className="px-3 py-1.5 rounded-xl text-white font-bold" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>✕ סגירה</button>
             </div>
-            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
               {scoreBoard.map((team, idx) => (
                 <div key={team.name + idx} className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.07)', border: idx === currentTeamIdx ? '2px solid rgba(255,215,0,0.5)' : '1px solid rgba(255,255,255,0.12)' }}>
                   {editingTeamIdx === idx ? (
@@ -1091,11 +1283,43 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
                       <button type="button" onClick={() => { setEditingTeamIdx(null); setEditingTeamName(''); }} className="px-3 py-2 rounded-lg text-white text-sm font-bold" style={{ background: 'rgba(255,255,255,0.1)' }}>ביטול</button>
                     </form>
                   ) : (
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-white flex-1">{team.name}{idx === currentTeamIdx ? ' 🎤' : ''}</span>
-                      <span className="text-yellow-300 font-black text-sm">{team.score} נק'</span>
-                      <button onClick={() => { setEditingTeamIdx(idx); setEditingTeamName(team.name); }} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ background: 'rgba(255,215,0,0.12)', border: '1px solid rgba(255,215,0,0.3)', color: '#ffd700' }}>✏️ שם</button>
-                      <button onClick={() => removeTeam(idx)} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5' }}>🗑️ הסר</button>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white flex-1">{team.name}{idx === currentTeamIdx ? ' 🎤' : ''}</span>
+                        <span className="text-yellow-300 font-black text-sm">{team.score} נק'</span>
+                        <button onClick={() => { setEditingTeamIdx(idx); setEditingTeamName(team.name); }} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ background: 'rgba(255,215,0,0.12)', border: '1px solid rgba(255,215,0,0.3)', color: '#ffd700' }}>✏️ שם</button>
+                        <button onClick={() => removeTeam(idx)} className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5' }}>🗑️ הסר</button>
+                      </div>
+                      {/* Score adjustment row */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-purple-300 text-xs font-bold">שינוי ניקוד:</span>
+                        <button
+                          onClick={() => adjustScore(idx, -getAdjAmount(idx))}
+                          className="px-3 py-1.5 rounded-lg text-sm font-black transition-all hover:scale-105"
+                          style={{ background: 'linear-gradient(135deg,#ef4444,#b91c1c)', color: '#fff', border: '1px solid rgba(239,68,68,0.5)' }}
+                        >−</button>
+                        <input
+                          type="number"
+                          min="1"
+                          value={scoreAdjAmounts[idx] ?? '100'}
+                          onChange={e => setScoreAdjAmounts(prev => ({ ...prev, [idx]: e.target.value }))}
+                          className="text-center text-white font-black text-sm rounded-lg focus:outline-none"
+                          style={{ width: 64, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,215,0,0.4)', padding: '6px 4px' }}
+                        />
+                        <button
+                          onClick={() => adjustScore(idx, getAdjAmount(idx))}
+                          className="px-3 py-1.5 rounded-lg text-sm font-black transition-all hover:scale-105"
+                          style={{ background: 'linear-gradient(135deg,#10b981,#059669)', color: '#fff', border: '1px solid rgba(16,185,129,0.5)' }}
+                        >+</button>
+                        <div className="flex gap-1">
+                          {[50, 100, 200].map(amt => (
+                            <button key={amt} onClick={() => setScoreAdjAmounts(prev => ({ ...prev, [idx]: String(amt) }))}
+                              className="px-2 py-1 rounded-md text-xs font-bold"
+                              style={{ background: 'rgba(255,215,0,0.1)', border: '1px solid rgba(255,215,0,0.25)', color: '#ffd700' }}
+                            >{amt}</button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1136,6 +1360,153 @@ const JeopardyModule: React.FC<JeopardyModuleProps> = ({ onBack, title, onComple
               className="px-10 py-3.5 rounded-2xl font-black text-black text-xl transition-all hover:scale-105"
               style={{ background: 'linear-gradient(135deg,#ffd700,#ff9500)', boxShadow: '0 0 28px rgba(255,215,0,0.6)' }}
             >הבנתי!</button>
+          </div>
+        </div>
+      )}
+
+      {/* ────────── WILDCARD MODAL ────────── */}
+      {wildcardOpen && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center px-3 py-4" style={{ background: 'rgba(10,8,32,0.92)', backdropFilter: 'blur(12px)' }}>
+          <div className="rounded-3xl p-7 w-full shadow-2xl space-y-5 animate-fade-in" style={{ maxWidth: '620px', background: 'linear-gradient(145deg,#1e1b4b,#3b1f6d)', border: '2px solid rgba(167,139,250,0.6)', boxShadow: '0 0 80px rgba(124,58,237,0.5)' }}>
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-3xl font-black text-white" style={{ textShadow: '0 0 24px rgba(167,139,250,0.8)' }}>⭐ WILDCARD</h3>
+              <button onClick={closeWildcard} className="px-3 py-1.5 rounded-xl text-white font-bold" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>✕</button>
+            </div>
+
+            {/* SPIN PHASE */}
+            {(wildcardPhase === 'spin') && (
+              <div className="flex flex-col items-center gap-5">
+                <p className="text-purple-200 text-center text-lg">לחצו על הכפתור לסיבוב הגלגל — ותגיעו לשאלת חישוב קשה מאחת הקטגוריות!</p>
+                {/* Wheel container */}
+                <div className="relative" style={{ width: 300, height: 300 }}>
+                  {/* Pointer triangle at top */}
+                  <div style={{ position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
+                    <svg width="28" height="28" viewBox="0 0 28 28">
+                      <polygon points="14,26 0,0 28,0" fill="#ffd700" stroke="#fff" strokeWidth="1.5" />
+                    </svg>
+                  </div>
+                  {/* Spinning wheel SVG */}
+                  <svg
+                    viewBox="0 0 300 300"
+                    style={{ width: 300, height: 300, display: 'block', transform: `rotate(${wheelAngle}deg)`, transition: 'transform 3.2s cubic-bezier(0.17,0.67,0.12,0.99)', willChange: 'transform' }}
+                  >
+                    {wheelSectors.map((s, i) => (
+                      <g key={i}>
+                        <path
+                          d={`M 150 150 L ${s.x1.toFixed(2)} ${s.y1.toFixed(2)} A ${s.r} ${s.r} 0 0 1 ${s.x2.toFixed(2)} ${s.y2.toFixed(2)} Z`}
+                          fill={s.color}
+                          stroke="#fff"
+                          strokeWidth="2"
+                        />
+                        <text
+                          x={s.lx}
+                          y={s.ly}
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          fontSize="11"
+                          fontWeight="bold"
+                          fill="#fff"
+                          style={{ userSelect: 'none' }}
+                          transform={`rotate(${s.midDeg + 90}, ${s.lx.toFixed(2)}, ${s.ly.toFixed(2)})`}
+                        >{s.label}</text>
+                      </g>
+                    ))}
+                    <circle cx="150" cy="150" r="22" fill="#1e1b4b" stroke="#ffd700" strokeWidth="3" />
+                    <text x="150" y="150" textAnchor="middle" dominantBaseline="middle" fontSize="18" fill="#ffd700" style={{ userSelect: 'none' }}>⭐</text>
+                  </svg>
+                </div>
+                <button
+                  onClick={spinWheel}
+                  disabled={wildcardSpinning}
+                  className="px-10 py-4 rounded-2xl font-black text-xl text-black transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: 'linear-gradient(135deg,#ffd700,#ff9500)', boxShadow: '0 0 32px rgba(255,215,0,0.6)' }}
+                >
+                  {wildcardSpinning ? '🌀 מסתובב...' : '🎡 סובב!'}
+                </button>
+              </div>
+            )}
+
+            {/* ANSWER PHASE */}
+            {wildcardPhase === 'answer' && selectedWildcardQ && (
+              <div className="space-y-4">
+                <div className="rounded-2xl px-5 py-3 text-center" style={{ background: `${WHEEL_COLORS[WILDCARD_QUESTIONS.indexOf(selectedWildcardQ)] || '#7c3aed'}33`, border: `1px solid ${WHEEL_COLORS[WILDCARD_QUESTIONS.indexOf(selectedWildcardQ)] || '#7c3aed'}` }}>
+                  <p className="text-sm font-bold text-purple-300 mb-1">קטגוריה: {selectedWildcardQ.category}</p>
+                  <p className="text-2xl font-bold text-white leading-relaxed">{selectedWildcardQ.prompt}</p>
+                </div>
+                <div className="space-y-2">
+                  <p className="font-bold text-purple-200">כתבו את תשובתכם (מספר בלבד):</p>
+                  <input
+                    value={wildcardTyped}
+                    onChange={e => setWildcardTyped(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && submitWildcard()}
+                    placeholder="הזינו מספר..."
+                    inputMode="numeric"
+                    autoFocus
+                    className="w-full rounded-xl px-4 py-3 text-xl text-white font-bold focus:outline-none"
+                    style={{ background: 'rgba(255,255,255,0.1)', border: '2px solid rgba(167,139,250,0.6)', boxShadow: '0 0 16px rgba(124,58,237,0.15) inset' }}
+                  />
+                </div>
+                <div className="flex justify-end gap-3">
+                  <button onClick={closeWildcard} className="px-5 py-2.5 rounded-xl font-bold text-white" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>ביטול</button>
+                  <button
+                    onClick={submitWildcard}
+                    disabled={!wildcardTyped.trim()}
+                    className="px-7 py-3 rounded-2xl font-black text-xl text-black transition-all hover:scale-105 disabled:opacity-40"
+                    style={{ background: 'linear-gradient(135deg,#ffd700,#ff9500)', boxShadow: '0 0 24px rgba(255,215,0,0.5)' }}
+                  >✅ הגש תשובה</button>
+                </div>
+              </div>
+            )}
+
+            {/* STEAL PHASE */}
+            {wildcardPhase === 'steal' && (
+              <div className="space-y-4">
+                <div className="text-center space-y-2">
+                  <p className="text-5xl">🎉</p>
+                  <p className="text-2xl font-black text-green-300">תשובה נכונה!</p>
+                  <p className="text-purple-200 text-lg">בחרו קבוצה לגנוב ממנה <span className="text-yellow-300 font-black">200 נק'</span>:</p>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {scoreBoard.map((team, idx) => {
+                    if (idx === currentTeamIdx) return null;
+                    return (
+                      <button
+                        key={team.name + idx}
+                        onClick={() => stealFrom(idx)}
+                        className="rounded-xl px-5 py-3 flex items-center justify-between font-bold text-white transition-all hover:scale-[1.02]"
+                        style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', boxShadow: '0 2px 8px rgba(239,68,68,0.15)' }}
+                      >
+                        <span>{team.name}</span>
+                        <span className="text-red-300">-200 נק' 🏴‍☠️</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <button onClick={() => { if (wildcardOpenCatIdx !== null) setWildcardUsedCats(prev => { const n = new Set(prev); n.add(wildcardOpenCatIdx); return n; }); setWildcardPhase('done'); }} className="w-full py-2.5 rounded-xl font-bold text-white text-sm" style={{ background: 'rgba(255,255,255,0.07)', border: '1px dashed rgba(255,255,255,0.2)' }}>
+                  דלג — אל תגנוב
+                </button>
+              </div>
+            )}
+
+            {/* DONE PHASE */}
+            {wildcardPhase === 'done' && (
+              <div className="text-center space-y-4 py-4">
+                <p className="text-6xl">{wildcardResult ? '🎉' : '😬'}</p>
+                <p className="text-2xl font-black text-white">{wildcardResult ? 'מעולה!' : 'לא פעם הזאת...'}</p>
+                {selectedWildcardQ && (
+                  <div className="rounded-2xl p-4 text-right" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)' }}>
+                    <p className="text-purple-300 text-sm font-bold mb-1">התשובה הנכונה:</p>
+                    <p className="text-white font-bold">{selectedWildcardQ.range[0].toLocaleString('he-IL')} ₪</p>
+                  </div>
+                )}
+                <button
+                  onClick={closeWildcard}
+                  className="px-10 py-3.5 rounded-2xl font-black text-black text-xl transition-all hover:scale-105"
+                  style={{ background: 'linear-gradient(135deg,#ffd700,#ff9500)', boxShadow: '0 0 28px rgba(255,215,0,0.6)' }}
+                >סגור</button>
+              </div>
+            )}
           </div>
         </div>
       )}
