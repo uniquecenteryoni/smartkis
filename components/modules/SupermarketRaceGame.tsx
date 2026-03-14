@@ -8,11 +8,16 @@ import { QRCodeSVG } from 'qrcode.react';
 interface Monopoly { id: string; name: string; color: string; bg: string; border: string; website: string; logoText: string; }
 
 const MONOPOLIES: Monopoly[] = [
-  { id: 'strauss',  name: 'שטראוס-עלית', color: '#1d4ed8', bg: '#dbeafe', border: '#93c5fd', website: 'https://www.strauss-group.com', logoText: 'STRAUSS' },
-  { id: 'osem',     name: 'אסם',          color: '#ea580c', bg: '#ffedd5', border: '#fdba74', website: 'https://www.osem.co.il',         logoText: 'OSEM'    },
-  { id: 'tnuva',    name: 'תנובה',         color: '#dc2626', bg: '#fee2e2', border: '#fca5a5', website: 'https://www.tnuva.co.il',        logoText: 'TNUVA'   },
-  { id: 'unilever', name: 'יוניליוור',     color: '#1e40af', bg: '#e0e7ff', border: '#a5b4fc', website: 'https://www.unilever.co.il',     logoText: 'UNILEVER'},
-  { id: 'coca',     name: 'קוקה-קולה',    color: '#b91c1c', bg: '#fecaca', border: '#f87171', website: 'https://www.coca-cola.co.il',    logoText: 'COCA-COLA'},
+  { id: 'strauss',  name: 'שטראוס-עלית',    color: '#1d4ed8', bg: '#dbeafe', border: '#93c5fd', website: 'https://www.strauss-group.com',    logoText: 'STRAUSS'   },
+  { id: 'osem',     name: 'אסם-נסטלה',       color: '#ea580c', bg: '#ffedd5', border: '#fdba74', website: 'https://www.osem.co.il',           logoText: 'OSEM'      },
+  { id: 'tnuva',    name: 'תנובה',            color: '#dc2626', bg: '#fee2e2', border: '#fca5a5', website: 'https://www.tnuva.co.il',          logoText: 'TNUVA'     },
+  { id: 'unilever', name: 'יוניליוור',        color: '#1e40af', bg: '#e0e7ff', border: '#a5b4fc', website: 'https://www.unilever.co.il',       logoText: 'UNILEVER'  },
+  { id: 'coca',     name: 'קוקה-קולה',       color: '#b91c1c', bg: '#fecaca', border: '#f87171', website: 'https://www.coca-cola.co.il',      logoText: 'COCA-COLA' },
+  { id: 'diplomat', name: 'דיפלומט',          color: '#7c3aed', bg: '#ede9fe', border: '#c4b5fd', website: 'https://www.diplomat-il.com',      logoText: 'DIPLOMAT'  },
+  { id: 'leiman',   name: 'ליימן שלייסל',    color: '#065f46', bg: '#d1fae5', border: '#6ee7b7', website: 'https://www.leiman.co.il',         logoText: 'LEIMAN'    },
+  { id: 'yafora',   name: 'יפאורה-תפוזינה',  color: '#c2410c', bg: '#ffedd5', border: '#fb923c', website: 'https://www.yafora.co.il',         logoText: 'YAFORA'    },
+  { id: 'shesto',   name: 'שסטוביץ',          color: '#92400e', bg: '#fef3c7', border: '#fcd34d', website: 'https://www.shestowitz.co.il',     logoText: 'SHESTOWITZ'},
+  { id: 'hogla',    name: 'חוגלה-קימברלי',   color: '#0e7490', bg: '#cffafe', border: '#67e8f9', website: 'https://www.hogla.co.il',          logoText: 'HOGLA'     },
 ];
 
 interface Product { name: string; monopolyId: string; emoji: string; }
@@ -45,6 +50,31 @@ const ALL_PRODUCTS: Product[] = [
   { name: 'פנטה',            monopolyId: 'coca',     emoji: '🍊' },
   { name: 'פאוורייד',       monopolyId: 'coca',     emoji: '🏋️' },
   { name: 'שוופס',          monopolyId: 'coca',     emoji: '🍾' },
+  // דיפלומט (P&G)
+  { name: 'פמפרס',           monopolyId: 'diplomat', emoji: '👶' },
+  { name: 'גילט',            monopolyId: 'diplomat', emoji: '🪒' },
+  { name: 'פנטן',            monopolyId: 'diplomat', emoji: '💆' },
+  { name: 'אוראל-בי',        monopolyId: 'diplomat', emoji: '🦷' },
+  { name: 'אריאל / Ariel',   monopolyId: 'diplomat', emoji: '🧺' },
+  // ליימן שלייסל
+  { name: 'קורנפלקס קלוגס',  monopolyId: 'leiman',   emoji: '🌽' },
+  { name: 'פרינגלס',         monopolyId: 'leiman',   emoji: '🥔' },
+  { name: 'לייס / Lay\'s',   monopolyId: 'leiman',   emoji: '🥓' },
+  { name: 'טרופיקנה',        monopolyId: 'leiman',   emoji: '🍊' },
+  // יפאורה
+  { name: 'תפוזינה',         monopolyId: 'yafora',   emoji: '🍊' },
+  { name: 'מיצי',            monopolyId: 'yafora',   emoji: '🧃' },
+  { name: 'גרנד גרנד',       monopolyId: 'yafora',   emoji: '🫧' },
+  // שסטוביץ
+  { name: 'נסקפה',           monopolyId: 'shesto',   emoji: '☕' },
+  { name: 'קיטקט',           monopolyId: 'shesto',   emoji: '🍫' },
+  { name: 'מאגי',            monopolyId: 'shesto',   emoji: '🍲' },
+  { name: 'אפטר אייט',       monopolyId: 'shesto',   emoji: '🍬' },
+  // חוגלה-קימברלי
+  { name: 'זיוה / Zewa',     monopolyId: 'hogla',    emoji: '🧻' },
+  { name: 'הגי',             monopolyId: 'hogla',    emoji: '👶' },
+  { name: 'קלינקס',          monopolyId: 'hogla',    emoji: '🤧' },
+  { name: 'סקוט / Scott',    monopolyId: 'hogla',    emoji: '📄' },
 ];
 
 function shuffle<T>(arr: T[]): T[] {
@@ -241,6 +271,10 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const peerRef    = useRef<InstanceType<typeof Peer> | null>(null);
   const floatIdRef = useRef(0);
   const connectionsRef = useRef<Map<string, DataConnection>>(new Map());
+  const teamsRef = useRef<TeamScore[]>([]);
+
+  // Keep teamsRef in sync with teams state
+  useEffect(() => { teamsRef.current = teams; }, [teams]);
 
   const baseUrl = window.location.href.split('#')[0];
 
@@ -260,6 +294,10 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     peer.on('connection', (conn: DataConnection) => {
       const connId = conn.peer;
       connectionsRef.current.set(connId, conn);
+      // Send teams immediately when connection opens so player can see team list before joining
+      conn.on('open', () => {
+        try { conn.send({ type: 'TEAMS', teams: teamsRef.current.map(t => t.name) } as Msg); } catch {}
+      });
       conn.on('data', (raw: unknown) => {
         const msg = raw as Msg;
         if (msg.type === 'JOIN') {
@@ -268,8 +306,8 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             const filtered = prev.filter(p => p.connId !== connId);
             return [...filtered, pl];
           });
-          // Send team list
-          conn.send({ type: 'TEAMS', teams: teams.map(t => t.name) } as Msg);
+          // Re-send teams to confirm
+          try { conn.send({ type: 'TEAMS', teams: teamsRef.current.map(t => t.name) } as Msg); } catch {}
         }
         if (msg.type === 'ANSWER') {
           setAnsweredThis(prev => {
@@ -606,15 +644,6 @@ export const SupermarketPlayerView: React.FC = () => {
 
   const currentProduct = productIdx >= 0 && productIdx < products.length ? products[productIdx] : null;
 
-  // Monopoly button positions for 5 items (2 top, left, right, bottom)
-  const positions: Array<{ style: React.CSSProperties }> = [
-    { style: { top: '4%',  left: '5%',  width: '42%' } },
-    { style: { top: '4%',  right: '5%', width: '42%' } },
-    { style: { top: '38%', left: '2%',  width: '38%' } },
-    { style: { top: '38%', right: '2%', width: '38%' } },
-    { style: { bottom: '4%', left: '50%', transform: 'translateX(-50%)', width: '60%' } },
-  ];
-
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(135deg,#f0fdf4,#dbeafe)', fontFamily: 'system-ui,sans-serif' }} dir="rtl">
       <style>{GAME_CSS}</style>
@@ -673,55 +702,51 @@ export const SupermarketPlayerView: React.FC = () => {
 
       {/* Game screen */}
       {status === 'game' && currentProduct && (
-        <div className="flex-1 relative overflow-hidden" style={{ minHeight: '100vh' }}>
-          {/* Score badge */}
-          <div className="absolute top-3 right-3 z-20 bg-white rounded-full px-3 py-1 shadow font-black text-brand-teal text-lg">
-            ✓ {score}
-          </div>
-          <div className="absolute top-3 left-3 z-20 bg-white/80 rounded-full px-3 py-1 shadow text-xs text-brand-dark-blue/70 font-bold">
-            {myName}
+        <div className="flex-1 flex flex-col" style={{ minHeight: '100vh' }}>
+          {/* Top bar */}
+          <div className="flex items-center justify-between px-4 pt-3 pb-2">
+            <span className="text-xs font-bold text-brand-dark-blue/60 bg-white/70 rounded-full px-3 py-1">{myName}</span>
+            <span className="font-black text-brand-teal text-xl bg-white rounded-full px-4 py-1 shadow">✓ {score}</span>
           </div>
 
-          {/* Monopoly buttons */}
-          {MONOPOLIES.map((m, i) => {
-            const pos = positions[i] || positions[4];
-            const fb = feedback?.id === m.id ? (feedback.correct ? 'correct' : null) : feedback && !feedback.correct && feedback.id !== m.id ? null : null;
-            const isCorrect = feedback?.id === m.id;
-            const isWrong   = answered && !feedback?.correct && !isCorrect;
-            return (
-              <div key={m.id} className="absolute z-10" style={pos.style}>
-                <button
-                  onClick={() => answer(m.id)}
-                  disabled={answered}
-                  className="w-full rounded-2xl py-4 px-2 font-black text-lg transition-transform active:scale-95 disabled:cursor-default"
-                  style={{
-                    background: isCorrect && feedback ? '#dcfce7' : m.bg,
-                    border: `3px solid ${isCorrect && feedback ? '#22c55e' : m.border}`,
-                    color: m.color,
-                    boxShadow: isCorrect && feedback ? '0 0 0 4px #22c55e44' : undefined,
-                    transform: isCorrect && feedback ? 'scale(1.05)' : undefined,
-                  }}
-                >
-                  {m.name}
-                </button>
-              </div>
-            );
-          })}
-
-          {/* Center product */}
-          <div
-            className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none"
-            style={{ paddingTop: '22%', paddingBottom: '22%', paddingLeft: '42%', paddingRight: '42%' }}
-          >
-            <div className="bg-white/95 rounded-3xl shadow-2xl p-4 flex flex-col items-center gap-2 border-4 border-white" style={{ minWidth: 120 }}>
-              <span className="text-5xl spin-in">{currentProduct.emoji}</span>
-              <p className="text-sm font-black text-center text-brand-dark-blue leading-tight">{currentProduct.name}</p>
-              {answered && !feedback && <p className="text-xs text-gray-400">נשלח ✓</p>}
+          {/* Product card */}
+          <div className="flex justify-center px-4 pb-3">
+            <div className="bg-white rounded-3xl shadow-xl px-8 py-4 flex flex-col items-center gap-1 border-4 border-white/80 w-full max-w-xs">
+              <span className="text-6xl spin-in">{currentProduct.emoji}</span>
+              <p className="text-2xl font-black text-center text-brand-dark-blue">{currentProduct.name}</p>
+              {answered && !feedback && <p className="text-xs text-gray-400 mt-1">נשלח ✓</p>}
               {feedback && (
-                <p className={`text-xs font-bold ${feedback.correct ? 'text-green-600' : 'text-red-500'}`}>
+                <p className={`text-sm font-bold mt-1 ${feedback.correct ? 'text-green-600' : 'text-red-500'}`}>
                   {feedback.correct ? '✅ נכון!' : '❌ לא נכון'}
                 </p>
               )}
+            </div>
+          </div>
+
+          {/* Monopoly grid */}
+          <div className="flex-1 overflow-y-auto px-3 pb-6">
+            <p className="text-center text-xs text-brand-dark-blue/50 font-bold mb-2">של מי המוצר?</p>
+            <div className="grid grid-cols-2 gap-2">
+              {MONOPOLIES.map(m => {
+                const isCorrect = feedback?.id === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => answer(m.id)}
+                    disabled={answered}
+                    className="rounded-2xl py-3 px-2 font-black text-base transition-transform active:scale-95 disabled:cursor-default"
+                    style={{
+                      background: isCorrect && feedback ? '#dcfce7' : m.bg,
+                      border: `2px solid ${isCorrect && feedback ? '#22c55e' : m.border}`,
+                      color: m.color,
+                      boxShadow: isCorrect && feedback ? '0 0 0 4px #22c55e44' : undefined,
+                      transform: isCorrect && feedback ? 'scale(1.04)' : undefined,
+                    }}
+                  >
+                    {m.name}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
