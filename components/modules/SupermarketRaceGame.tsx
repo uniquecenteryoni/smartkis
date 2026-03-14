@@ -7,49 +7,54 @@ import { QRCodeSVG } from 'qrcode.react';
 
 interface Monopoly { id: string; name: string; color: string; bg: string; border: string; website: string; logoText: string; }
 
+// Monopolies shown in QR study phase (ordered as requested)
+const STUDY_MONOPOLY_IDS = ['osem', 'central', 'tnuva', 'unilever', 'diplomat', 'strauss', 'leiman'];
+
 const MONOPOLIES: Monopoly[] = [
-  { id: 'strauss',  name: 'שטראוס-עלית',    color: '#1d4ed8', bg: '#dbeafe', border: '#93c5fd', website: 'https://www.strauss-group.com',    logoText: 'STRAUSS'   },
-  { id: 'osem',     name: 'אסם-נסטלה',       color: '#ea580c', bg: '#ffedd5', border: '#fdba74', website: 'https://www.osem.co.il',           logoText: 'OSEM'      },
-  { id: 'tnuva',    name: 'תנובה',            color: '#dc2626', bg: '#fee2e2', border: '#fca5a5', website: 'https://www.tnuva.co.il',          logoText: 'TNUVA'     },
-  { id: 'unilever', name: 'יוניליוור',        color: '#1e40af', bg: '#e0e7ff', border: '#a5b4fc', website: 'https://www.unilever.co.il',       logoText: 'UNILEVER'  },
-  { id: 'coca',     name: 'קוקה-קולה',       color: '#b91c1c', bg: '#fecaca', border: '#f87171', website: 'https://www.coca-cola.co.il',      logoText: 'COCA-COLA' },
-  { id: 'diplomat', name: 'דיפלומט',          color: '#7c3aed', bg: '#ede9fe', border: '#c4b5fd', website: 'https://www.diplomat-il.com',      logoText: 'DIPLOMAT'  },
-  { id: 'leiman',   name: 'ליימן שלייסל',    color: '#065f46', bg: '#d1fae5', border: '#6ee7b7', website: 'https://www.leiman.co.il',         logoText: 'LEIMAN'    },
-  { id: 'yafora',   name: 'יפאורה-תפוזינה',  color: '#c2410c', bg: '#ffedd5', border: '#fb923c', website: 'https://www.yafora.co.il',         logoText: 'YAFORA'    },
-  { id: 'shesto',   name: 'שסטוביץ',          color: '#92400e', bg: '#fef3c7', border: '#fcd34d', website: 'https://www.shestowitz.co.il',     logoText: 'SHESTOWITZ'},
-  { id: 'hogla',    name: 'חוגלה-קימברלי',   color: '#0e7490', bg: '#cffafe', border: '#67e8f9', website: 'https://www.hogla.co.il',          logoText: 'HOGLA'     },
+  { id: 'strauss',  name: 'שטראוס-עלית',              color: '#1d4ed8', bg: '#dbeafe', border: '#93c5fd', website: 'https://www.strauss-group.com',               logoText: 'STRAUSS'  },
+  { id: 'osem',     name: 'אסם-נסטלה',                 color: '#ea580c', bg: '#ffedd5', border: '#fdba74', website: 'https://www.osem.co.il',                      logoText: 'OSEM'     },
+  { id: 'tnuva',    name: 'תנובה',                     color: '#dc2626', bg: '#fee2e2', border: '#fca5a5', website: 'https://www.tnuva.co.il',                     logoText: 'TNUVA'    },
+  { id: 'unilever', name: 'יוניליוור',                 color: '#1e40af', bg: '#e0e7ff', border: '#a5b4fc', website: 'https://www.unilever.co.il',                  logoText: 'UNILEVER' },
+  { id: 'central',  name: 'החברה המרכזית למשקאות',     color: '#b91c1c', bg: '#fecaca', border: '#f87171', website: 'https://www.coca-cola.co.il',                  logoText: 'CENTRAL'  },
+  { id: 'diplomat', name: 'דיפלומט',                   color: '#7c3aed', bg: '#ede9fe', border: '#c4b5fd', website: 'https://www.diplomat-il.com',                 logoText: 'DIPLOMAT' },
+  { id: 'leiman',   name: 'ליימן שלייסל',              color: '#065f46', bg: '#d1fae5', border: '#6ee7b7', website: 'https://www.leiman.co.il',                    logoText: 'LEIMAN'   },
 ];
 
 interface Product { name: string; monopolyId: string; emoji: string; }
 
 const ALL_PRODUCTS: Product[] = [
+  // שטראוס-עלית
   { name: 'מילקי',           monopolyId: 'strauss',  emoji: '🍫' },
   { name: 'קוטג׳ שטראוס',   monopolyId: 'strauss',  emoji: '🧀' },
   { name: 'שוקולד עלית',    monopolyId: 'strauss',  emoji: '🍫' },
   { name: 'קפה עלית',       monopolyId: 'strauss',  emoji: '☕' },
   { name: 'הומוס שטראוס',   monopolyId: 'strauss',  emoji: '🫘' },
   { name: 'יוגורט דנונה',   monopolyId: 'strauss',  emoji: '🥣' },
+  // אסם-נסטלה
   { name: 'במבה',            monopolyId: 'osem',     emoji: '🥜' },
   { name: 'ביסלי',           monopolyId: 'osem',     emoji: '🍿' },
   { name: 'שקדי מרק',       monopolyId: 'osem',     emoji: '🥣' },
   { name: 'קצ׳אפ אסם',     monopolyId: 'osem',     emoji: '🍅' },
   { name: 'ספגטי אסם',     monopolyId: 'osem',     emoji: '🍝' },
   { name: 'מרק מצנפת',      monopolyId: 'osem',     emoji: '🍲' },
+  // תנובה
   { name: 'חלב תנובה',      monopolyId: 'tnuva',    emoji: '🥛' },
   { name: 'חמאה תנובה',     monopolyId: 'tnuva',    emoji: '🧈' },
   { name: 'לבן תנובה',      monopolyId: 'tnuva',    emoji: '🍶' },
   { name: 'שמנת 38%',      monopolyId: 'tnuva',    emoji: '🍶' },
   { name: 'גבינה לבנה',     monopolyId: 'tnuva',    emoji: '🧀' },
+  // יוניליוור
   { name: 'תה ליפטון',      monopolyId: 'unilever', emoji: '🍵' },
   { name: 'מיונז הלמן׳ס',  monopolyId: 'unilever', emoji: '🫙' },
   { name: 'סבון דאב',       monopolyId: 'unilever', emoji: '🧴' },
   { name: 'אקס / AXE',      monopolyId: 'unilever', emoji: '💨' },
   { name: 'שמן זית ברגיליו', monopolyId: 'unilever', emoji: '🫒' },
-  { name: 'קוקה-קולה',     monopolyId: 'coca',     emoji: '🥤' },
-  { name: 'ספרייט',         monopolyId: 'coca',     emoji: '🟢' },
-  { name: 'פנטה',            monopolyId: 'coca',     emoji: '🍊' },
-  { name: 'פאוורייד',       monopolyId: 'coca',     emoji: '🏋️' },
-  { name: 'שוופס',          monopolyId: 'coca',     emoji: '🍾' },
+  // החברה המרכזית למשקאות
+  { name: 'קוקה-קולה',     monopolyId: 'central',  emoji: '🥤' },
+  { name: 'ספרייט',         monopolyId: 'central',  emoji: '🟢' },
+  { name: 'פנטה',            monopolyId: 'central',  emoji: '🍊' },
+  { name: 'פאוורייד',       monopolyId: 'central',  emoji: '🏋️' },
+  { name: 'שוופס',          monopolyId: 'central',  emoji: '🍾' },
   // דיפלומט (P&G)
   { name: 'פמפרס',           monopolyId: 'diplomat', emoji: '👶' },
   { name: 'גילט',            monopolyId: 'diplomat', emoji: '🪒' },
@@ -61,20 +66,6 @@ const ALL_PRODUCTS: Product[] = [
   { name: 'פרינגלס',         monopolyId: 'leiman',   emoji: '🥔' },
   { name: 'לייס / Lay\'s',   monopolyId: 'leiman',   emoji: '🥓' },
   { name: 'טרופיקנה',        monopolyId: 'leiman',   emoji: '🍊' },
-  // יפאורה
-  { name: 'תפוזינה',         monopolyId: 'yafora',   emoji: '🍊' },
-  { name: 'מיצי',            monopolyId: 'yafora',   emoji: '🧃' },
-  { name: 'גרנד גרנד',       monopolyId: 'yafora',   emoji: '🫧' },
-  // שסטוביץ
-  { name: 'נסקפה',           monopolyId: 'shesto',   emoji: '☕' },
-  { name: 'קיטקט',           monopolyId: 'shesto',   emoji: '🍫' },
-  { name: 'מאגי',            monopolyId: 'shesto',   emoji: '🍲' },
-  { name: 'אפטר אייט',       monopolyId: 'shesto',   emoji: '🍬' },
-  // חוגלה-קימברלי
-  { name: 'זיוה / Zewa',     monopolyId: 'hogla',    emoji: '🧻' },
-  { name: 'הגי',             monopolyId: 'hogla',    emoji: '👶' },
-  { name: 'קלינקס',          monopolyId: 'hogla',    emoji: '🤧' },
-  { name: 'סקוט / Scott',    monopolyId: 'hogla',    emoji: '📄' },
 ];
 
 function shuffle<T>(arr: T[]): T[] {
@@ -89,6 +80,9 @@ function shuffle<T>(arr: T[]): T[] {
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
 type HostPhase = 'setup' | 'study' | 'waiting' | 'race' | 'done';
+
+// Auto-advance interval in ms after last answer before moving to next product
+const AUTO_ADVANCE_MS = 4000;
 
 interface TeamScore { name: string; score: number; }
 
@@ -242,8 +236,8 @@ const StudyPhase: React.FC<{ onDone: () => void }> = ({ onDone }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {MONOPOLIES.map(m => (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {MONOPOLIES.filter(m => STUDY_MONOPOLY_IDS.includes(m.id)).map(m => (
           <div key={m.id} className="rounded-2xl p-4 flex flex-col items-center gap-3 text-center" style={{ background: m.bg, border: `2px solid ${m.border}` }}>
             <div className="font-black text-lg" style={{ color: m.color }}>{m.name}</div>
             <QRCodeSVG value={m.website} size={100} />
@@ -258,23 +252,33 @@ const StudyPhase: React.FC<{ onDone: () => void }> = ({ onDone }) => {
 // ─── HOST COMPONENT ────────────────────────────────────────────────────────────
 
 const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
-  const [phase, setPhase]             = useState<HostPhase>('setup');
-  const [teamInputs, setTeamInputs]   = useState<string[]>(['קבוצה א', 'קבוצה ב']);
-  const [teams, setTeams]             = useState<TeamScore[]>([]);
-  const [players, setPlayers]         = useState<PlayerEntry[]>([]);
-  const [peerId, setPeerId]           = useState<string | null>(null);
-  const [products, setProducts]       = useState<Product[]>([]);
-  const [productIdx, setProductIdx]   = useState(-1);
-  const [floats, setFloats]           = useState<FloatAnim[]>([]);
-  const [lastAnswer, setLastAnswer]   = useState<{ name: string; correct: boolean } | null>(null);
-  const [answeredThis, setAnsweredThis] = useState<Set<string>>(new Set());
-  const peerRef    = useRef<InstanceType<typeof Peer> | null>(null);
-  const floatIdRef = useRef(0);
+  const [phase, setPhase]               = useState<HostPhase>('setup');
+  const [teamInputs, setTeamInputs]     = useState<string[]>(['קבוצה א', 'קבוצה ב']);
+  const [gameDuration, setGameDuration] = useState(300); // seconds, configurable in setup
+  const [timeLeft, setTimeLeft]         = useState(300);
+  const [teams, setTeams]               = useState<TeamScore[]>([]);
+  const [players, setPlayers]           = useState<PlayerEntry[]>([]);
+  const [peerId, setPeerId]             = useState<string | null>(null);
+  const [products, setProducts]         = useState<Product[]>([]);
+  const [productIdx, setProductIdx]     = useState(-1);
+  const [floats, setFloats]             = useState<FloatAnim[]>([]);
+  const [answeredThis, setAnsweredThis]  = useState<Set<string>>(new Set());
+  const peerRef        = useRef<InstanceType<typeof Peer> | null>(null);
+  const floatIdRef     = useRef(0);
   const connectionsRef = useRef<Map<string, DataConnection>>(new Map());
-  const teamsRef = useRef<TeamScore[]>([]);
+  const teamsRef       = useRef<TeamScore[]>([]);
+  const autoTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const playersRef     = useRef<PlayerEntry[]>([]);
+  const productIdxRef  = useRef(-1);
+  const productsRef    = useRef<Product[]>([]);
+  const answeredRef    = useRef<Set<string>>(new Set());
 
-  // Keep teamsRef in sync with teams state
+  // Keep refs in sync
   useEffect(() => { teamsRef.current = teams; }, [teams]);
+  useEffect(() => { playersRef.current = players; }, [players]);
+  useEffect(() => { productIdxRef.current = productIdx; }, [productIdx]);
+  useEffect(() => { productsRef.current = products; }, [products]);
+  useEffect(() => { answeredRef.current = answeredThis; }, [answeredThis]);
 
   const baseUrl = window.location.href.split('#')[0];
 
@@ -310,41 +314,39 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           try { conn.send({ type: 'TEAMS', teams: teamsRef.current.map(t => t.name) } as Msg); } catch {}
         }
         if (msg.type === 'ANSWER') {
-          setAnsweredThis(prev => {
-            if (prev.has(msg.name)) return prev;
-            const next = new Set(prev);
-            next.add(msg.name);
-            return next;
-          });
-          setProducts(currProds => {
-            setProductIdx(currIdx => {
-              const correct = currIdx >= 0 && currProds[currIdx]?.monopolyId === msg.monopolyId;
-              // Float animation
-              const fid = floatIdRef.current++;
-              setFloats(prev => [...prev, { id: fid, name: msg.name, team: msg.team, correct }]);
-              setTimeout(() => setFloats(prev => prev.filter(f => f.id !== fid)), 1400);
-              setLastAnswer({ name: msg.name, correct });
-              setTimeout(() => setLastAnswer(null), 2000);
-              // Update score
-              if (correct) {
-                setTeams(prev => {
-                  const next = prev.map(t => t.name === msg.team ? { ...t, score: t.score + 1 } : t);
-                  broadcast({ type: 'SCORE', teams: next });
-                  return next;
-                });
-              }
-              // Send result to that player
-              try {
-                connectionsRef.current.get(connId)?.send({
-                  type: 'RESULT',
-                  correct,
-                  correctId: currIdx >= 0 ? currProds[currIdx]?.monopolyId : '',
-                } as Msg);
-              } catch {}
-              return currIdx;
+          if (answeredRef.current.has(msg.name)) return;
+          const currIdx  = productIdxRef.current;
+          const currProds = productsRef.current;
+          const correct = currIdx >= 0 && currProds[currIdx]?.monopolyId === msg.monopolyId;
+          // Float animation
+          const fid = floatIdRef.current++;
+          setFloats(prev => [...prev, { id: fid, name: msg.name, team: msg.team, correct }]);
+          setTimeout(() => setFloats(prev => prev.filter(f => f.id !== fid)), 1400);
+          // Update answered set
+          setAnsweredThis(prev => { const n = new Set(prev); n.add(msg.name); return n; });
+          answeredRef.current = new Set([...answeredRef.current, msg.name]);
+          // Update score
+          if (correct) {
+            setTeams(prev => {
+              const next = prev.map(t => t.name === msg.team ? { ...t, score: t.score + 1 } : t);
+              broadcast({ type: 'SCORE', teams: next });
+              return next;
             });
-            return currProds;
-          });
+          }
+          // Send result to that player
+          try {
+            connectionsRef.current.get(connId)?.send({
+              type: 'RESULT',
+              correct,
+              correctId: currIdx >= 0 ? currProds[currIdx]?.monopolyId : '',
+            } as Msg);
+          } catch {}
+          // Auto-advance: schedule next product if all players answered
+          const allAnswered = [...answeredRef.current].length >= playersRef.current.length && playersRef.current.length > 0;
+          if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
+          autoTimerRef.current = setTimeout(() => {
+            advanceProduct();
+          }, allAnswered ? 1500 : AUTO_ADVANCE_MS);
         }
       });
       conn.on('close',  () => { connectionsRef.current.delete(connId); setPlayers(prev => prev.filter(p => p.connId !== connId)); });
@@ -360,6 +362,42 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     broadcast({ type: 'TEAMS', teams: teams.map(t => t.name) });
   }, [teams, broadcast]);
 
+  // Game countdown timer while in race
+  useEffect(() => {
+    if (phase !== 'race') return;
+    if (timeLeft <= 0) {
+      if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
+      broadcast({ type: 'DONE' });
+      setPhase('done');
+      return;
+    }
+    const t = setTimeout(() => setTimeLeft(s => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [phase, timeLeft, broadcast]);
+
+  const advanceProduct = useCallback(() => {
+    setProducts(currProds => {
+      setProductIdx(currIdx => {
+        const next = currIdx + 1;
+        if (next >= currProds.length) {
+          // loop products endlessly until timer runs out
+          const reshuffled = shuffle(currProds);
+          productsRef.current = reshuffled;
+          broadcast({ type: 'PRODUCTS', products: reshuffled });
+          broadcast({ type: 'PRODUCT', productIndex: 0, total: reshuffled.length });
+          setAnsweredThis(new Set()); answeredRef.current = new Set();
+          productIdxRef.current = 0;
+          return 0;
+        }
+        broadcast({ type: 'PRODUCT', productIndex: next, total: currProds.length });
+        setAnsweredThis(new Set()); answeredRef.current = new Set();
+        productIdxRef.current = next;
+        return next;
+      });
+      return currProds;
+    });
+  }, [broadcast]);
+
   const startSetup = () => {
     const validTeams = teamInputs.filter(t => t.trim()).map(t => ({ name: t.trim(), score: 0 }));
     if (validTeams.length < 1) return;
@@ -374,27 +412,21 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const startRace = () => {
     const shuffled = shuffle(ALL_PRODUCTS);
     setProducts(shuffled);
-    setProductIdx(-1);
+    productsRef.current = shuffled;
+    setProductIdx(0);
+    productIdxRef.current = 0;
+    setTimeLeft(gameDuration);
+    setAnsweredThis(new Set()); answeredRef.current = new Set();
     setPhase('race');
     broadcast({ type: 'PRODUCTS', products: shuffled });
     broadcast({ type: 'TEAMS', teams: teams.map(t => t.name) });
-  };
-
-  const showProduct = () => {
-    const next = productIdx + 1;
-    if (next >= products.length) {
-      setPhase('done');
-      broadcast({ type: 'DONE' });
-      return;
-    }
-    setProductIdx(next);
-    setAnsweredThis(new Set());
-    broadcast({ type: 'PRODUCT', productIndex: next, total: products.length });
+    broadcast({ type: 'PRODUCT', productIndex: 0, total: shuffled.length });
+    // Schedule first auto-advance
+    autoTimerRef.current = setTimeout(() => advanceProduct(), AUTO_ADVANCE_MS);
   };
 
   const qrUrl = peerId ? `${baseUrl}#supermarket-player-${peerId}` : null;
   const currentProduct = productIdx >= 0 && productIdx < products.length ? products[productIdx] : null;
-  const correctMonopoly = currentProduct ? MONOPOLIES.find(m => m.id === currentProduct.monopolyId) : null;
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
@@ -413,7 +445,22 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       {/* ── SETUP ─────────────────────────────────────────────────────── */}
       {phase === 'setup' && (
         <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-6 space-y-6">
-          <h3 className="text-xl font-bold text-brand-dark-blue">הגדרת קבוצות</h3>
+          <h3 className="text-xl font-bold text-brand-dark-blue">הגדרת קבוצות ומשחק</h3>
+
+          {/* Duration picker */}
+          <div className="flex items-center gap-4 flex-wrap">
+            <span className="font-bold text-brand-dark-blue">⏱ משך המשחק:</span>
+            {[120, 180, 300, 420, 600].map(sec => (
+              <button
+                key={sec}
+                onClick={() => setGameDuration(sec)}
+                className={`px-4 py-2 rounded-full font-bold border-2 transition ${gameDuration === sec ? 'bg-brand-teal text-white border-brand-teal' : 'bg-white text-brand-dark-blue border-gray-300 hover:border-brand-teal'}`}
+              >
+                {sec < 60 ? `${sec}ש׳` : `${sec / 60} דק׳`}
+              </button>
+            ))}
+          </div>
+
           <div className="space-y-3">
             {teamInputs.map((name, i) => (
               <div key={i} className="flex items-center gap-2">
@@ -493,72 +540,46 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       )}
 
       {/* ── RACE ──────────────────────────────────────────────────────── */}
-      {phase === 'race' && (
-        <div className="space-y-4">
-          {/* Cart race */}
-          <CartRace teams={teams} maxScore={ALL_PRODUCTS.length} floats={floats} />
-
-          {/* Product control */}
-          <div className="grid md:grid-cols-3 gap-4">
-            {/* Current product */}
-            <div className="md:col-span-2 bg-white/90 rounded-2xl border border-gray-200 shadow p-5 flex flex-col items-center justify-center gap-3 min-h-[160px]">
-              {productIdx < 0 ? (
-                <p className="text-brand-dark-blue/60 text-xl">לחץ "הצג מוצר" להתחלה</p>
-              ) : currentProduct ? (
-                <>
-                  <span className="text-7xl spin-in">{currentProduct.emoji}</span>
-                  <p className="text-3xl font-black text-brand-dark-blue">{currentProduct.name}</p>
-                  <p className="text-sm text-brand-dark-blue/60">מוצר {productIdx + 1} מתוך {products.length}</p>
-                  {lastAnswer && (
-                    <div className={`px-4 py-2 rounded-full font-bold text-white ${lastAnswer.correct ? 'bg-green-500' : 'bg-red-500'}`}>
-                      {lastAnswer.correct ? '✅' : '❌'} {lastAnswer.name}
-                    </div>
-                  )}
-                  {correctMonopoly && (
-                    <div className="text-sm text-brand-dark-blue/50">
-                      תשובה נכונה: <span className="font-bold" style={{ color: correctMonopoly.color }}>{correctMonopoly.name}</span>
-                      {' '}— ענו: {answeredThis.size}/{players.length}
-                    </div>
-                  )}
-                </>
-              ) : null}
-            </div>
-
-            {/* Controls + players */}
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={showProduct}
-                className="w-full py-4 text-xl font-black rounded-2xl text-white transition-transform active:scale-95"
-                style={{ background: productIdx < 0 ? '#0d9488' : '#1d4ed8' }}
+      {phase === 'race' && (() => {
+        const mm = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+        const ss = (timeLeft % 60).toString().padStart(2, '0');
+        const urgent = timeLeft <= 30;
+        return (
+          <div className="space-y-4">
+            {/* Timer + players bar */}
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div
+                className="text-4xl font-black font-mono rounded-2xl px-6 py-2"
+                style={{ background: urgent ? '#fee2e2' : '#f0fdf4', color: urgent ? '#dc2626' : '#15803d', transition: 'background 0.5s' }}
               >
-                {productIdx < 0 ? '🛒 הצג מוצר ראשון' : productIdx >= products.length - 1 ? '🏆 סיום' : '⏭ מוצר הבא'}
-              </button>
-
-              <div className="bg-white/80 rounded-2xl border border-gray-200 p-3 flex-1 overflow-auto max-h-48">
-                <p className="text-xs font-bold text-brand-dark-blue/50 mb-2">שחקנים מחוברים ({players.length})</p>
-                <div className="space-y-1">
-                  {players.map(p => (
-                    <div key={p.name} className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-brand-dark-blue">{p.name}</span>
-                      <span className="text-brand-dark-blue/50">{p.team}</span>
-                    </div>
-                  ))}
-                </div>
+                {urgent ? '⏰ ' : '⏱ '}{mm}:{ss}
               </div>
+              <div className="text-sm text-brand-dark-blue/60 font-bold">
+                {players.length} שחקנים מחוברים — ענו: {answeredThis.size}/{players.length}
+              </div>
+              <button
+                onClick={() => { if (autoTimerRef.current) clearTimeout(autoTimerRef.current); broadcast({ type: 'DONE' }); setPhase('done'); }}
+                className="px-4 py-2 bg-red-100 text-red-600 font-bold rounded-full hover:bg-red-200 text-sm"
+              >
+                סיים עכשיו ⏹
+              </button>
+            </div>
+
+            {/* Cart race */}
+            <CartRace teams={teams} maxScore={Math.max(...teams.map(t => t.score), 1) + 3} floats={floats} />
+
+            {/* Scoreboard */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              {[...teams].sort((a, b) => b.score - a.score).map((t, i) => (
+                <div key={t.name} className="rounded-xl p-3 text-center border shadow-sm" style={{ background: i === 0 ? '#fef3c7' : '#f8fafc', borderColor: TEAM_COLORS[teams.indexOf(t) % TEAM_COLORS.length] + '99' }}>
+                  <p className="text-xs font-bold text-brand-dark-blue/60 truncate">{['🥇','🥈','🥉'][i] || ''} {t.name}</p>
+                  <p className="text-4xl font-black mt-1" style={{ color: TEAM_COLORS[teams.indexOf(t) % TEAM_COLORS.length] }}>{t.score}</p>
+                </div>
+              ))}
             </div>
           </div>
-
-          {/* Scoreboard */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {teams.map((t, i) => (
-              <div key={t.name} className="rounded-xl p-3 text-center border shadow-sm" style={{ background: '#f8fafc', borderColor: TEAM_COLORS[i % TEAM_COLORS.length] + '50' }}>
-                <p className="text-xs font-bold text-brand-dark-blue/60 truncate">{t.name}</p>
-                <p className="text-4xl font-black mt-1" style={{ color: TEAM_COLORS[i % TEAM_COLORS.length] }}>{t.score}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── DONE ──────────────────────────────────────────────────────── */}
       {phase === 'done' && (
@@ -574,7 +595,7 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               </div>
             ))}
           </div>
-          <button onClick={() => { setPhase('setup'); setTeams([]); setPlayers([]); setProductIdx(-1); setFloats([]); }} className="px-8 py-3 bg-brand-magenta text-white font-bold rounded-full hover:bg-pink-700">
+          <button onClick={() => { setPhase('setup'); setTeams([]); setPlayers([]); setProductIdx(-1); setFloats([]); setTimeLeft(gameDuration); }} className="px-8 py-3 bg-brand-magenta text-white font-bold rounded-full hover:bg-pink-700">
             🔄 משחק חדש
           </button>
         </div>
@@ -613,15 +634,15 @@ export const SupermarketPlayerView: React.FC = () => {
       conn.on('open', () => setStatus('join'));
       conn.on('data', (raw: unknown) => {
         const msg = raw as Msg;
-        if (msg.type === 'TEAMS')   { setTeams(msg.teams); }
+        if (msg.type === 'TEAMS')    { setTeams(msg.teams); }
         if (msg.type === 'PRODUCTS') { setProducts(msg.products); }
-        if (msg.type === 'PRODUCT') { setProductIdx(msg.productIndex); setAnswered(false); setFeedback(null); setStatus('game'); }
-        if (msg.type === 'RESULT')  {
+        if (msg.type === 'PRODUCT')  { setProductIdx(msg.productIndex); setAnswered(false); setFeedback(null); setStatus('game'); }
+        if (msg.type === 'RESULT')   {
           setFeedback({ id: msg.correctId, correct: msg.correct });
           if (msg.correct) setScore(s => s + 1);
-          setTimeout(() => { setFeedback(null); }, 1800);
+          setTimeout(() => { setFeedback(null); setAnswered(false); }, 1800);
         }
-        if (msg.type === 'DONE')    { setStatus('done'); }
+        if (msg.type === 'DONE')     { setStatus('done'); }
       });
       conn.on('close', () => setStatus('error'));
       conn.on('error', () => setStatus('error'));
