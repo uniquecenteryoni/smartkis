@@ -5,6 +5,7 @@ export interface Module {
   title: string;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
+  emoji?: string;
   component: React.ComponentType<{ onBack: () => void; title: string; onComplete: () => void; }>;
   completionGoal?: string;
 }

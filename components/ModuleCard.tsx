@@ -4,13 +4,14 @@ interface ModuleCardProps {
   title: string;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
+  emoji?: string;
   onClick: () => void;
   isVisited: boolean;
   completionGoal?: string;
   isLocked?: boolean;
 }
 
-const ModuleCard: React.FC<ModuleCardProps> = ({ title, description, icon: Icon, onClick, isVisited, completionGoal, isLocked = false }) => {
+const ModuleCard: React.FC<ModuleCardProps> = ({ title, description, icon: Icon, emoji, onClick, isVisited, completionGoal, isLocked = false }) => {
   return (
     <div
       onClick={isLocked ? undefined : onClick}
@@ -27,12 +28,16 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ title, description, icon: Icon,
 
       <div className="p-5 sm:p-6 flex flex-col items-start flex-grow w-full">
         {/* Icon */}
-        <div className="relative rounded-2xl p-3.5 mb-4 shadow-lg border border-white/60 overflow-hidden">
-          <div className={`absolute inset-0 ${isLocked ? 'bg-gradient-to-br from-gray-400 to-gray-500' : 'bg-gradient-to-br from-brand-cyan via-brand-teal to-brand-light-blue'}`} />
-          <span className="absolute text-white/35 text-xs font-black -left-0.5 -top-0.5 pointer-events-none">✦</span>
-          <span className="absolute text-white/25 text-xs font-black right-0.5 bottom-0.5 pointer-events-none">₪</span>
-          <Icon className="w-8 h-8 text-white relative z-10" />
-        </div>
+        {emoji ? (
+          <div className="text-5xl mb-4 leading-none">{emoji}</div>
+        ) : (
+          <div className="relative rounded-2xl p-3.5 mb-4 shadow-lg border border-white/60 overflow-hidden">
+            <div className={`absolute inset-0 ${isLocked ? 'bg-gradient-to-br from-gray-400 to-gray-500' : 'bg-gradient-to-br from-brand-cyan via-brand-teal to-brand-light-blue'}`} />
+            <span className="absolute text-white/35 text-xs font-black -left-0.5 -top-0.5 pointer-events-none">✦</span>
+            <span className="absolute text-white/25 text-xs font-black right-0.5 bottom-0.5 pointer-events-none">₪</span>
+            <Icon className="w-8 h-8 text-white relative z-10" />
+          </div>
+        )}
 
         {/* Title row */}
         <div className="flex items-start gap-2 w-full mb-1">

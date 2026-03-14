@@ -3,8 +3,9 @@ import AliasGame from './modules/AliasGame';
 import JeopardyModule from './modules/JeopardyModule';
 import BullseyeGame from './modules/BullseyeGame';
 import MillionDropGame from './modules/MillionDropGame';
+import SupermarketRaceGame from './modules/SupermarketRaceGame';
 import PicassoGame from './modules/PicassoGame';
-import BudgetArcadeGame from './modules/BudgetArcadeGame';
+import CarRaceGame from './modules/CarRaceGame';
 import WorkerRightsParcelGame from './modules/WorkerRightsParcelGame';
 import ParcelGame, { expensesItems, overdraftItems, paystubItems, employmentItems, savingsInvestItems, storyItems, personalItems, costsItems, monopolyItems, consumerItems, relationshipsItems, earnItems, timeItems, publicSpeakingItems, businessItems, mahBakisMixedItems, chachamBakisMixedItems } from './modules/ParcelGame';
 import { HatsarStep } from './modules/HowMuchCostModule';
@@ -12,6 +13,18 @@ import { FutureManagersChallengeContent } from './modules/FutureManagersChalleng
 import { jeopardyChachamBanks } from './modules/jeopardyChachamBanks';
 import SnowballGame from './modules/SnowballGame';
 import InterviewerCardsModule from './modules/InterviewerCardsModule';
+import WhereMoneyComesFromModule from './modules/kisonim/WhereMoneyComesFromModule';
+import NeedsVsWantsModule from './modules/kisonim/NeedsVsWantsModule';
+import SavingsAdventureModule from './modules/kisonim/SavingsAdventureModule';
+import MagicStoreModule from './modules/kisonim/MagicStoreModule';
+import JarBankModule from './modules/kisonim/JarBankModule';
+import WorldTourModule from './modules/kisonim/WorldTourModule';
+import AdSecretsModule from './modules/kisonim/AdSecretsModule';
+import KisonimEarningMissions from './modules/kisonim/EarningMissionsModule';
+import ColorfulMarketModule from './modules/kisonim/ColorfulMarketModule';
+import CoinsVsBillsModule from './modules/kisonim/CoinsVsBillsModule';
+import PowerOfGivingModule from './modules/kisonim/PowerOfGivingModule';
+import SmallDecisionsModule from './modules/kisonim/SmallDecisionsModule';
 import Header from './Header';
 import { SalaryIcon, BusinessIcon, PiggyBankIcon, PodiumIcon } from './icons/Icons';
 
@@ -91,6 +104,21 @@ const CHACHAM_GENERIC_GAME_ACTIVITIES = [
   'שכירים ועצמאיים',
   'חיסכון והשקעות',
 ];
+
+const KISONIM_MODULE_INFO: Record<string, { icon: string; desc: string }> = {
+  'מאיפה בא הכסף?':   { icon: '👷', desc: 'חקר מקורות הכנסה ועבודה ראשונה.' },
+  'צרכים ורצונות':    { icon: '⚖️', desc: 'הבחנה בין צרכים לרצונות ותיעדוף נכון.' },
+  'הרפתקת חיסכון':   { icon: '🐷', desc: 'עידוד חיסכון והתמדה במטרות.' },
+  'חנות הקסמים':     { icon: '🏪', desc: 'התנסות בקנייה ומכירה בסביבה משחקית.' },
+  'בנק הקופות':      { icon: '🏦', desc: 'ניהול חסכונות בקופות וריביות.' },
+  'סיור עולמי':      { icon: '🌍', desc: 'חשיפה למטבעות וערכים בעולם.' },
+  'סודות הפרסום':    { icon: '📢', desc: 'זיהוי טקטיקות פרסום.' },
+  'משימות הרווחה':   { icon: '💪', desc: 'דרכים פשוטות להגדלת הכנסה.' },
+  'שוק צבעוני':      { icon: '🎨', desc: 'חוויה של שוק ומחירים משתנים.' },
+  'מטבעות ושטרות':   { icon: '🪙', desc: 'היכרות עם כסף מזומן.' },
+  'כוח הנתינה':     { icon: '🎁', desc: 'השפעת תרומה ונתינה כלכלית.' },
+  'החלטות קטנות':    { icon: '🧠', desc: 'השפעת החלטות יומיומיות על חיסכון.' },
+};
 
 const MODULE_SUMMARIES: Record<string, string> = {
   'ניהול התקציב הראשון שלי': 'בניית תקציב מאוזן והפקת דו"ח מסכם.',
@@ -341,6 +369,9 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
               onClick={() => { setActiveActivity(moduleName); setActiveModule(null); setActiveSubActivity(null); }}
               className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
             >
+              {KISONIM_MODULE_INFO[moduleName]?.icon && (
+                <p className="text-4xl mb-3">{KISONIM_MODULE_INFO[moduleName].icon}</p>
+              )}
               <p className="text-2xl font-bold text-brand-dark-blue">{moduleName}</p>
               <p className="text-brand-dark-blue/60 mt-3 text-lg">{getSummary(moduleName)}</p>
             </button>
@@ -418,6 +449,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('אל תפילו את המיליון')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">💰</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק כיתתי על הוצאות מחיה והישרדות תקציבית.</p>
               </button>
@@ -425,6 +457,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('BLOOKET')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🎮</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">BLOOKET</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Blooket לתרגול ניהול תקציב.</p>
               </button>
@@ -432,6 +465,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('מירוץ מכוניות')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🏎️</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">מירוץ מכוניות</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק מגניב ללמידה מתכני המודול.</p>
               </button>
@@ -439,6 +473,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('KAHOOT')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🎵</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">KAHOOT</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Kahoot לניהול תקציב.</p>
               </button>
@@ -446,6 +481,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('חבילה עוברת')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📦</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק חבילה עוברת עם משימות תקציב.</p>
               </button>
@@ -453,6 +489,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('פעילויות WORDWAELL')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📝</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">פעילויות WORDWAELL</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Wordwall לתרגול תקציב והוצאות.</p>
               </button>
@@ -528,25 +565,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
               </div>
             </div>
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'ניהול התקציב הראשון שלי' && activeSubActivity === 'מירוץ מכוניות' ? (
-            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div>
-                  <p className="text-brand-dark-blue/70">פעילויות ומשחקים</p>
-                  <h3 className="text-2xl font-bold text-brand-dark-blue">מירוץ מכוניות</h3>
-                  <p className="text-brand-dark-blue/60">משחק ארקייד חווייתי ללמידה מתכני ניהול התקציב הראשון שלי.</p>
-                </div>
-                <button
-                  onClick={() => setActiveSubActivity(null)}
-                  className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
-                >
-                  חזרה לחלון המשחקים
-                </button>
-              </div>
-              <div className="space-y-3">
-                <p className="text-brand-dark-blue/70">הזיזו את מכונית המירוץ עם חיצי המקלדת או הכפתורים, אספו הוצאות קבועות והימנעו מהוצאות משתנות וממכוניות אחרות.</p>
-                <BudgetArcadeGame />
-              </div>
-            </div>
+            <CarRaceGame onBack={() => setActiveSubActivity(null)} />
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'ניהול התקציב הראשון שלי' && activeSubActivity === 'חבילה עוברת' ? (
             <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
               <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -661,6 +680,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('אל תפילו את המיליון')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">💰</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק כיתתי על אבולוציית הכסף והחלטות כלכליות.</p>
               </button>
@@ -668,6 +688,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('חבילה עוברת')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📦</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק כיתתי עם שאלות ומשימות בנושא סיפורו של כסף.</p>
               </button>
@@ -701,6 +722,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('אל תפילו את המיליון')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">💰</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק על קבלת החלטות אישית עם כסף וזהות פיננסית.</p>
               </button>
@@ -708,6 +730,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('חבילה עוברת')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📦</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק כיתתי עם שאלות ומשימות בנושא הכסף ואני.</p>
               </button>
@@ -715,6 +738,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('מנהלי העתיד: אתגר ה-5,000')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🏆</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">מנהלי העתיד: אתגר ה-5,000</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">לוח בקרה כיתתי לניהול תקציב צוותי מול בלת״מים חודשיים.</p>
               </button>
@@ -761,6 +785,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('אל תפילו את המיליון')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">💰</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק על מחירים, השוואות ועלויות נסתרות.</p>
               </button>
@@ -768,6 +793,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('חבילה עוברת')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📦</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק כיתתי עם שאלות ומשימות בנושא כמה זה עולה לי?</p>
               </button>
@@ -775,6 +801,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('מחשבון מודל החצ"ר')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🧮</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">מחשבון מודל החצ"ר</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">תרגול קבלת החלטות קנייה לפי סדר עדיפויות: חייב, צריך, רוצה.</p>
               </button>
@@ -846,6 +873,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('אל תפילו את המיליון')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">💰</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק על כוח שוק, ריכוזיות והשפעתם על מחירים.</p>
               </button>
@@ -853,13 +881,18 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('חבילה עוברת')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📦</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק כיתתי עם שאלות ומשימות בנושא מונופולים בישראל.</p>
               </button>
-              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-8 text-center text-brand-dark-blue/50 min-h-[14rem] flex flex-col items-center justify-center">
-                <p className="text-2xl font-bold">אתגר כיתתי</p>
-                <p className="text-lg mt-2">בקרוב יתווסף אתגר כיתתי.</p>
-              </div>
+              <button
+                onClick={() => setActiveSubActivity('חכם בסופר')}
+                className="rounded-3xl border-2 border-dashed border-brand-teal bg-teal-50 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">🛒</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">חכם בסופר</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק מונופולים כיתתי — מי שייך למי?</p>
+              </button>
             </div>
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'מונופולים בישראל' && activeProgram === "'מה בכיס'" && activeSubActivity === 'אל תפילו את המיליון' ? (
             <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
@@ -880,12 +913,15 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
             </div>
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'מונופולים בישראל' && activeProgram === "'מה בכיס'" && activeSubActivity === 'חבילה עוברת' ? (
             <ParcelGame items={monopolyItems} moduleTitle="מונופולים בישראל" moduleSubtitle="כל סיבוב נעצר בזמן אקראי" musicUrl="/havila.mp3" />
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'מונופולים בישראל' && activeProgram === "'מה בכיס'" && activeSubActivity === 'חכם בסופר' ? (
+            <SupermarketRaceGame onBack={() => setActiveSubActivity(null)} />
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'צרכנות נבונה' && activeProgram === "'מה בכיס'" && !activeSubActivity ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <button
                 onClick={() => setActiveSubActivity('אל תפילו את המיליון')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">💰</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק על השוואות מחירים, מבצעים וטעויות צרכניות נפוצות.</p>
               </button>
@@ -893,6 +929,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('חבילה עוברת')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📦</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק כיתתי עם שאלות ומשימות בנושא צרכנות נבונה.</p>
               </button>
@@ -926,6 +963,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('אל תפילו את המיליון')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">💰</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק על תקשורת, גבולות והוגנות סביב כסף במערכות יחסים.</p>
               </button>
@@ -933,6 +971,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('חבילה עוברת')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📦</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק כיתתי עם שאלות ומשימות בנושא מערכות יחסים וכסף.</p>
               </button>
@@ -966,6 +1005,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('אל תפילו את המיליון')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">💰</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק על דרכים להרוויח, תמחור ראשון ובטיחות בגיגים.</p>
               </button>
@@ -973,6 +1013,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('חבילה עוברת')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📦</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק כיתתי עם שאלות ומשימות בנושא איך להרוויח כסף?</p>
               </button>
@@ -1006,6 +1047,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('אל תפילו את המיליון')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">💰</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק על ניהול זמן, דחיינות וערך שעה.</p>
               </button>
@@ -1013,6 +1055,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('חבילה עוברת')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🕐</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק כיתתי עם שאלות ומשימות בנושא ניהול זמן.</p>
               </button>
@@ -1046,6 +1089,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('אל תפילו את המיליון')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">💰</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק על הצגה מול קהל, פיץ׳ ומסר ברור.</p>
               </button>
@@ -1053,6 +1097,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('חבילה עוברת')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🎤</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק כיתתי עם שאלות ומשימות בנושא עמידה מול קהל.</p>
               </button>
@@ -1086,6 +1131,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('אל תפילו את המיליון')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">💰</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק על בניית עסק: ערך, MVP, תמחור ותזרים.</p>
               </button>
@@ -1093,6 +1139,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('חבילה עוברת')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🏗️</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק כיתתי עם שאלות ומשימות בנושא איך בונים עסק?</p>
               </button>
@@ -1273,6 +1320,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('אל תפילו את המיליון')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">💰</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק על מודל חצ"ר, תיעוד הוצאות והחלטות קנייה.</p>
               </button>
@@ -1280,6 +1328,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('BLOOKET')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🎮</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">BLOOKET</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Blooket למודול זה.</p>
               </button>
@@ -1287,6 +1336,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('KAHOOT')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🎵</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">KAHOOT</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Kahoot למודול זה.</p>
               </button>
@@ -1294,6 +1344,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('WORDWALL')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📝</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">WORDWALL</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Wordwall למודול זה.</p>
               </button>
@@ -1301,6 +1352,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('חבילה עוברת')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📦</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">גרסה מודולרית לחבילה עוברת.</p>
               </button>
@@ -1357,6 +1409,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('אל תפילו את המיליון')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">💰</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק על מינוס, ריביות ודרכי יציאה מהחריגה.</p>
               </button>
@@ -1364,6 +1417,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('BLOOKET')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🎮</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">BLOOKET</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Blooket למודול זה.</p>
               </button>
@@ -1371,6 +1425,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('KAHOOT')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🎵</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">KAHOOT</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Kahoot למודול זה.</p>
               </button>
@@ -1378,6 +1433,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('WORDWALL')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📝</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">WORDWALL</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Wordwall למודול זה.</p>
               </button>
@@ -1385,6 +1441,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('חבילה עוברת')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📦</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">גרסה מודולרית לחבילה עוברת.</p>
               </button>
@@ -1426,6 +1483,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('אל תפילו את המיליון')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">💰</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק על זכויות בסיסיות, שעות נוספות והליך שימוע.</p>
               </button>
@@ -1433,6 +1491,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('BLOOKET')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🎮</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">BLOOKET</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Blooket למודול זה.</p>
               </button>
@@ -1440,6 +1499,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('KAHOOT')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🎵</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">KAHOOT</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Kahoot למודול זה.</p>
               </button>
@@ -1447,6 +1507,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('WORDWALL')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📝</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">WORDWALL</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Wordwall למודול זה.</p>
               </button>
@@ -1454,6 +1515,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('חבילה עוברת')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📦</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">גרסה מודולרית לחבילה עוברת.</p>
               </button>
@@ -1510,6 +1572,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('אל תפילו את המיליון')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">💰</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק על קריאת תלוש: ברוטו/נטו, ניכויים והפרשות.</p>
               </button>
@@ -1517,6 +1580,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('BLOOKET')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🎮</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">BLOOKET</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Blooket למודול זה.</p>
               </button>
@@ -1524,6 +1588,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('KAHOOT')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🎵</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">KAHOOT</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Kahoot למודול זה.</p>
               </button>
@@ -1531,6 +1596,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('WORDWALL')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📝</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">WORDWALL</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Wordwall למודול זה.</p>
               </button>
@@ -1538,6 +1604,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('חבילה עוברת')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📦</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">גרסה מודולרית לחבילה עוברת.</p>
               </button>
@@ -1573,6 +1640,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('אל תפילו את המיליון')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">💰</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק על ההבדלים בין שכיר לעצמאי, מסים ותזרים.</p>
               </button>
@@ -1580,6 +1648,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('BLOOKET')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🎮</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">BLOOKET</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Blooket למודול זה.</p>
               </button>
@@ -1587,6 +1656,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('KAHOOT')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🎵</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">KAHOOT</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Kahoot למודול זה.</p>
               </button>
@@ -1594,6 +1664,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('WORDWALL')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📝</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">WORDWALL</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Wordwall למודול זה.</p>
               </button>
@@ -1601,6 +1672,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('חבילה עוברת')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📦</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">גרסה מודולרית לחבילה עוברת.</p>
               </button>
@@ -1636,6 +1708,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('אל תפילו את המיליון')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">💰</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק על חיסכון, ריבית דריבית ופיזור השקעות.</p>
               </button>
@@ -1643,6 +1716,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('BLOOKET')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🎮</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">BLOOKET</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Blooket למודול זה.</p>
               </button>
@@ -1650,6 +1724,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('KAHOOT')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">🎵</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">KAHOOT</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Kahoot למודול זה.</p>
               </button>
@@ -1657,6 +1732,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('WORDWALL')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📝</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">WORDWALL</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Wordwall למודול זה.</p>
               </button>
@@ -1664,6 +1740,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 onClick={() => setActiveSubActivity('חבילה עוברת')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
+                <p className="text-4xl mb-3">📦</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">גרסה מודולרית לחבילה עוברת.</p>
               </button>
@@ -2006,41 +2083,224 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 <p className="text-base mt-2 text-brand-dark-blue/60">דפי עבודה, קבצים והדפסות עבור "{activeActivity}" יועלו להמשך.</p>
               </div>
             </div>
-          ) : activeModule === 'סרטונים' ? (
+          ) : activeModule === 'סרטונים' && activeProgram === "'חכם בכיס'" && !activeActivity ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {(PROGRAM_ACTIVITY_MODULES[activeProgram || ''] || []).map((moduleName) => (
-                <div
+              {(PROGRAM_ACTIVITY_MODULES["'חכם בכיס'"] || []).map((moduleName) => (
+                <button
                   key={moduleName}
-                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow min-h-[14rem] flex flex-col items-center justify-center"
+                  onClick={() => setActiveActivity(moduleName)}
+                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
                 >
                   <p className="text-2xl font-bold text-brand-dark-blue">{moduleName}</p>
                   <p className="text-brand-dark-blue/60 mt-3 text-lg">{getSummary(moduleName)}</p>
-                </div>
+                </button>
               ))}
-              {(PROGRAM_ACTIVITY_MODULES[activeProgram || ''] || []).length === 0 && (
-                <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-10 text-center text-brand-dark-blue/50 min-h-[14rem] flex flex-col items-center justify-center">
-                  <p className="text-2xl font-bold">אין מודולים זמינים</p>
-                  <p className="text-lg mt-2">הוסיפו שמות מודולים למפה</p>
+            </div>
+          ) : activeModule === 'סרטונים' && !activeActivity ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {(PROGRAM_ACTIVITY_MODULES[activeProgram as keyof typeof PROGRAM_ACTIVITY_MODULES] || []).map((moduleName) => (
+                <button
+                  key={moduleName}
+                  onClick={() => setActiveActivity(moduleName)}
+                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+                >
+                  <p className="text-2xl font-bold text-brand-dark-blue">{moduleName}</p>
+                  <p className="text-brand-dark-blue/60 mt-3 text-lg">{getSummary(moduleName)}</p>
+                </button>
+              ))}
+            </div>
+          ) : activeModule === 'סרטונים' ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">סרטונים</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">{activeActivity}</h3>
+                  <p className="text-brand-dark-blue/60">{getSummary(activeActivity || '')}</p>
                 </div>
-              )}
+                <button
+                  onClick={() => setActiveActivity(null)}
+                  className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                >
+                  חזרה לרשימת הנושאים
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* הוסיפו כאן כרטיסיות סרטון עם href לקישור */}
+                {/* דוגמה:
+                <a href="https://..." target="_blank" rel="noopener noreferrer"
+                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-6 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col items-center justify-center">
+                  <p className="text-4xl mb-3">🎬</p>
+                  <p className="text-2xl font-bold text-brand-dark-blue">שם הסרטון</p>
+                  <p className="text-brand-dark-blue/60 mt-2 text-lg">פתיחה בחלון חדש</p>
+                </a>
+                */}
+              </div>
+              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-10 text-center text-brand-dark-blue/50 flex flex-col items-center justify-center min-h-[12rem]">
+                <p className="text-5xl mb-4">🎬</p>
+                <p className="text-xl font-bold text-brand-dark-blue">סרטונים לנושא זה יתווספו בקרוב</p>
+                <p className="text-base mt-2 text-brand-dark-blue/60">סרטוני הדרכה עבור &quot;{activeActivity}&quot; יועלו להמשך.</p>
+              </div>
+            </div>
+          ) : activeModule === 'עזרים ונספחים' && !activeActivity ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {(PROGRAM_ACTIVITY_MODULES[activeProgram as keyof typeof PROGRAM_ACTIVITY_MODULES] || []).map((moduleName) => (
+                <button
+                  key={moduleName}
+                  onClick={() => setActiveActivity(moduleName)}
+                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+                >
+                  <p className="text-2xl font-bold text-brand-dark-blue">{moduleName}</p>
+                  <p className="text-brand-dark-blue/60 mt-3 text-lg">{getSummary(moduleName)}</p>
+                </button>
+              ))}
             </div>
           ) : activeModule === 'עזרים ונספחים' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {(PROGRAM_ACTIVITY_MODULES[activeProgram || ''] || []).map((moduleName) => (
-                <div
-                  key={moduleName}
-                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow min-h-[14rem] flex flex-col items-center justify-center"
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">עזרים ונספחים</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">{activeActivity}</h3>
+                  <p className="text-brand-dark-blue/60">{getSummary(activeActivity || '')}</p>
+                </div>
+                <button
+                  onClick={() => setActiveActivity(null)}
+                  className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
                 >
-                  <p className="text-2xl font-bold text-brand-dark-blue">{moduleName}</p>
-                  <p className="text-brand-dark-blue/60 mt-3 text-lg">{getSummary(moduleName)}</p>
+                  חזרה לרשימת הנושאים
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* הוסיפו כאן כרטיסיות קובץ עם href לקישור גוגל דרייב */}
+                {/* דוגמה:
+                <a href="https://drive.google.com/..." target="_blank" rel="noopener noreferrer"
+                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-6 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col items-center justify-center">
+                  <p className="text-2xl font-bold text-brand-dark-blue">שם הקובץ</p>
+                  <p className="text-brand-dark-blue/60 mt-2 text-lg">פתיחה בחלון חדש</p>
+                </a>
+                */}
+              </div>
+              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-10 text-center text-brand-dark-blue/50 flex flex-col items-center justify-center min-h-[12rem]">
+                <p className="text-5xl mb-4">📂</p>
+                <p className="text-xl font-bold text-brand-dark-blue">חומרים לנושא זה יתווספו בקרוב</p>
+                <p className="text-base mt-2 text-brand-dark-blue/60">דפי עבודה, קבצים והדפסות עבור &quot;{activeActivity}&quot; יועלו להמשך.</p>
+              </div>
+            </div>
+          ) : activeModule === 'פעילויות ומשחקים' && activeProgram === "'כיסונים פיננסים'" && !activeSubActivity ? (
+            /* Kisonim: game selection grid with icon + BLOOKET/KAHOOT/WORDWALL */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <button
+                onClick={() => setActiveSubActivity('משחק אינטראקטיבי')}
+                className="rounded-3xl border-2 border-dashed border-brand-teal bg-teal-50 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">{KISONIM_MODULE_INFO[activeActivity || '']?.icon || '🎯'}</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">משחק אינטראקטיבי</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">{KISONIM_MODULE_INFO[activeActivity || '']?.desc || 'פעילות אינטראקטיבית למודול זה.'}</p>
+              </button>
+              <button
+                onClick={() => setActiveSubActivity('BLOOKET')}
+                className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">🎮</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">BLOOKET</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Blooket למודול זה.</p>
+              </button>
+              <button
+                onClick={() => setActiveSubActivity('KAHOOT')}
+                className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">🎵</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">KAHOOT</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Kahoot למודול זה.</p>
+              </button>
+              <button
+                onClick={() => setActiveSubActivity('WORDWALL')}
+                className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">📝</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">WORDWALL</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Wordwall למודול זה.</p>
+              </button>
+              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-8 text-center text-brand-dark-blue/50 min-h-[14rem] flex flex-col items-center justify-center">
+                <p className="text-2xl font-bold">פעילות נוספת</p>
+                <p className="text-lg mt-2">בקרוב יתווסף תוכן נוסף.</p>
+              </div>
+            </div>
+          ) : activeModule === 'פעילויות ומשחקים' && activeProgram === "'כיסונים פיננסים'" && activeSubActivity === 'משחק אינטראקטיבי' ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">פעילויות ומשחקים</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">
+                    {KISONIM_MODULE_INFO[activeActivity || '']?.icon} {activeActivity} — משחק אינטראקטיבי
+                  </h3>
                 </div>
-              ))}
-              {(PROGRAM_ACTIVITY_MODULES[activeProgram || ''] || []).length === 0 && (
-                <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-10 text-center text-brand-dark-blue/50 min-h-[14rem] flex flex-col items-center justify-center">
-                  <p className="text-2xl font-bold">אין מודולים זמינים</p>
-                  <p className="text-lg mt-2">הוסיפו שמות מודולים למפה</p>
+                <button
+                  onClick={() => setActiveSubActivity(null)}
+                  className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                >
+                  חזרה לחלון המשחקים
+                </button>
+              </div>
+              {activeActivity === 'מאיפה בא הכסף?' && <WhereMoneyComesFromModule onBack={() => setActiveSubActivity(null)} title="מאיפה בא הכסף?" />}
+              {activeActivity === 'צרכים ורצונות' && <NeedsVsWantsModule onBack={() => setActiveSubActivity(null)} title="צרכים ורצונות" />}
+              {activeActivity === 'הרפתקת חיסכון' && <SavingsAdventureModule onBack={() => setActiveSubActivity(null)} title="הרפתקת חיסכון" />}
+              {activeActivity === 'חנות הקסמים' && <MagicStoreModule onBack={() => setActiveSubActivity(null)} title="חנות הקסמים" />}
+              {activeActivity === 'בנק הקופות' && <JarBankModule onBack={() => setActiveSubActivity(null)} title="בנק הקופות" />}
+              {activeActivity === 'סיור עולמי' && <WorldTourModule onBack={() => setActiveSubActivity(null)} title="סיור עולמי" />}
+              {activeActivity === 'סודות הפרסום' && <AdSecretsModule onBack={() => setActiveSubActivity(null)} title="סודות הפרסום" />}
+              {activeActivity === 'משימות הרווחה' && <KisonimEarningMissions onBack={() => setActiveSubActivity(null)} title="משימות הרווחה" />}
+              {activeActivity === 'שוק צבעוני' && <ColorfulMarketModule onBack={() => setActiveSubActivity(null)} title="שוק צבעוני" />}
+              {activeActivity === 'מטבעות ושטרות' && <CoinsVsBillsModule onBack={() => setActiveSubActivity(null)} title="מטבעות ושטרות" />}
+              {activeActivity === 'כוח הנתינה' && <PowerOfGivingModule onBack={() => setActiveSubActivity(null)} title="כוח הנתינה" />}
+              {activeActivity === 'החלטות קטנות' && <SmallDecisionsModule onBack={() => setActiveSubActivity(null)} title="החלטות קטנות" />}
+            </div>
+          ) : activeModule === 'פעילויות ומשחקים' && activeProgram === "'כיסונים פיננסים'" && activeSubActivity === 'BLOOKET' ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">פעילויות ומשחקים</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">🎮 BLOOKET — {activeActivity}</h3>
+                  <p className="text-brand-dark-blue/60">חידוני Blooket למודול זה. הוסיפו לינקים רלוונטיים כשיהיו מוכנים.</p>
                 </div>
-              )}
+                <button onClick={() => setActiveSubActivity(null)} className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300">חזרה לחלון המשחקים</button>
+              </div>
+              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-10 text-center text-brand-dark-blue/50 flex flex-col items-center justify-center min-h-[12rem]">
+                <p className="text-5xl mb-4">🎮</p>
+                <p className="text-xl font-bold text-brand-dark-blue">קישורי Blooket יתווספו כאן</p>
+                <p className="text-base mt-2 text-brand-dark-blue/60">עבור המודול: {activeActivity}</p>
+              </div>
+            </div>
+          ) : activeModule === 'פעילויות ומשחקים' && activeProgram === "'כיסונים פיננסים'" && activeSubActivity === 'KAHOOT' ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">פעילויות ומשחקים</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">🎵 KAHOOT — {activeActivity}</h3>
+                  <p className="text-brand-dark-blue/60">חידוני Kahoot למודול זה. הוסיפו לינקים רלוונטיים כשיהיו מוכנים.</p>
+                </div>
+                <button onClick={() => setActiveSubActivity(null)} className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300">חזרה לחלון המשחקים</button>
+              </div>
+              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-10 text-center text-brand-dark-blue/50 flex flex-col items-center justify-center min-h-[12rem]">
+                <p className="text-5xl mb-4">🎵</p>
+                <p className="text-xl font-bold text-brand-dark-blue">קישורי Kahoot יתווספו כאן</p>
+                <p className="text-base mt-2 text-brand-dark-blue/60">עבור המודול: {activeActivity}</p>
+              </div>
+            </div>
+          ) : activeModule === 'פעילויות ומשחקים' && activeProgram === "'כיסונים פיננסים'" && activeSubActivity === 'WORDWALL' ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">פעילויות ומשחקים</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">📝 WORDWALL — {activeActivity}</h3>
+                  <p className="text-brand-dark-blue/60">חידוני Wordwall למודול זה. הוסיפו לינקים רלוונטיים כשיהיו מוכנים.</p>
+                </div>
+                <button onClick={() => setActiveSubActivity(null)} className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300">חזרה לחלון המשחקים</button>
+              </div>
+              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-10 text-center text-brand-dark-blue/50 flex flex-col items-center justify-center min-h-[12rem]">
+                <p className="text-5xl mb-4">📝</p>
+                <p className="text-xl font-bold text-brand-dark-blue">קישורי Wordwall יתווספו כאן</p>
+                <p className="text-base mt-2 text-brand-dark-blue/60">עבור המודול: {activeActivity}</p>
+              </div>
             </div>
           ) : (
             <div className="rounded-3xl border border-dashed border-gray-300 bg-white/70 p-10 shadow-xl min-h-[18rem] flex flex-col items-center justify-center text-center">

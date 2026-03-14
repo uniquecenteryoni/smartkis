@@ -5,17 +5,17 @@ import type { DataConnection } from 'peerjs';
 // ─── Word Bank ────────────────────────────────────────────────────────────────
 const WORDS: string[] = [
   // כסף וכלים פיננסיים
-  'ארנק', 'מטבע', 'שטר', 'כרטיס אשראי', 'כספת', 'בנק', 'ATM', 'צ\'ק',
+  'ארנק', 'מטבע', 'שטר', 'כרטיס אשראי', 'כספת', 'בנק', 'כספומט', 'המחאה',
   // רכישה וצריכה
   'קניות', 'חנות', 'קופה', 'תג מחיר', 'מתנה', 'מכירה', 'הנחה',
   // חיסכון והשקעה
-  'קופת חיסכון', 'פיגי בנק', 'גרף', 'מניה', 'בורסה', 'זהב', 'יהלום',
+  'קופת חיסכון', 'קופת חזיר', 'גרף', 'מניה', 'בורסה', 'זהב', 'יהלום',
   // עבודה ושכר
   'תלוש שכר', 'משרד', 'מחשב', 'שעון', 'מנהל', 'עובד', 'ראיון עבודה',
   // הלוואות וחובות
   'הלוואה', 'חוב', 'כרטיס אדום', 'מינוס',
   // יזמות ועסקים
-  'עסק', 'חנות', 'מפעל', 'לוגו', 'תכנית עסקית', 'שותפות', 'חברה',
+  'עסק', 'מפעל', 'סמל מסחרי', 'תכנית עסקית', 'שותפות', 'חברה', 'יזם',
   // ביטוח ופנסיה
   'ביטוח', 'מטריה', 'פנסיה', 'חוזה',
   // כלכלה כללית
@@ -76,49 +76,72 @@ export const PicassoPlayerView: React.FC = () => {
   const hm = window.location.hash.match(/#picasso-player-(.+)/);
   const hostPeerId = hm ? hm[1] : null;
 
-  type PlayerStatus = 'connecting' | 'naming' | 'lobby' | 'drawing' | 'guessing' | 'correct' | 'roundEnd' | 'error';
-  const [status, setStatus] = useState<PlayerStatus>('connecting');
+  type PlayerStatus = 'naming' | 'lobby' | 'drawing' | 'guessing' | 'correct' | 'roundEnd' | 'error';
+  const [status, setStatus]       = useState<PlayerStatus>('naming');
+  const [connReady, setConnReady] = useState(false);   // true when WebRTC data channel is open
   const [inputName, setInputName] = useState('');
   const [inputGuess, setInputGuess] = useState('');
-  const [word, setWord] = useState('');
-  const [gs, setGs] = useState<HostState | null>(null);
+  const [word, setWord]           = useState('');
+  const [gs, setGs]               = useState<HostState | null>(null);
   const [attemptsLeft, setAttemptsLeft] = useState(GUESS_ATTEMPTS);
-  const [errMsg, setErrMsg] = useState('');
-  const [isDrawer, setIsDrawer] = useState(false);
-  const [myConnId, setMyConnId] = useState('');
-  const [lastMsg, setLastMsg] = useState('');
+  const [errMsg, setErrMsg]       = useState('');
+  const [lastMsg, setLastMsg]     = useState('');
+  const [connStatus, setConnStatus] = useState('מתחבר לשרת...'); // shown while naming
 
-  const connRef = useRef<DataConnection | null>(null);
-  const peerRef = useRef<Peer | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const isDrawingRef = useRef(false);
-  const colorRef = useRef('#000000');
-  const widthRef = useRef(6);
+  const connRef        = useRef<DataConnection | null>(null);
+  const peerRef        = useRef<Peer | null>(null);
+  const canvasRef      = useRef<HTMLCanvasElement>(null);
+  const isDrawingRef   = useRef(false);
+  const colorRef       = useRef('#000000');
+  const widthRef       = useRef(6);
+  // Name to send once connection opens (if user submitted form before conn was ready)
+  const pendingJoinRef = useRef<string | null>(null);
 
   const send = useCallback((msg: PicassoMsg) => {
     if (connRef.current?.open) connRef.current.send(msg);
   }, []);
 
+  // ── Connect to host immediately on mount (background) ──
   useEffect(() => {
     if (!hostPeerId) { setStatus('error'); setErrMsg('קישור לא תקין – סרוק מחדש'); return; }
+
+    // Timeout: if no connection after 20s show error with retry
+    const timeout = setTimeout(() => {
+      if (!connRef.current?.open) {
+        setStatus('error');
+        setErrMsg('לא הצלחנו להתחבר — בדקו שמסך המחשב פתוח ונסו שוב');
+      }
+    }, 20000);
+
     const peer = new Peer(); peerRef.current = peer;
-    peer.on('open', (id) => {
-      setMyConnId(id);
+
+    peer.on('open', () => {
+      setConnStatus('מחובר, מצרף...');
       const conn = peer.connect(hostPeerId, { reliable: true }); connRef.current = conn;
-      conn.on('open', () => setStatus('naming'));
+
+      conn.on('open', () => {
+        clearTimeout(timeout);
+        setConnReady(true);
+        setConnStatus('מחובר!');
+        // If user already submitted name while we were connecting — send now
+        if (pendingJoinRef.current !== null) {
+          conn.send({ type: 'JOIN', name: pendingJoinRef.current } as PicassoMsg);
+          setStatus('lobby');
+        }
+      });
+
       conn.on('data', (raw) => {
         const msg = raw as PicassoMsg;
         if (msg.type === 'STATE') {
           setGs(msg.state);
-          if (msg.state.phase === 'lobby') setStatus('lobby');
-          else if (msg.state.phase === 'roundEnd') { setStatus('roundEnd'); }
-          else if (msg.state.phase === 'gameOver') setStatus('roundEnd');
+          // Only handle gameOver via STATE; other transitions use dedicated messages
+          if (msg.state.phase === 'gameOver') setStatus('roundEnd');
         } else if (msg.type === 'YOUR_TURN') {
-          setWord(msg.word); setIsDrawer(true); setAttemptsLeft(GUESS_ATTEMPTS);
+          setWord(msg.word); setAttemptsLeft(GUESS_ATTEMPTS);
           setStatus('drawing');
           setTimeout(() => { const c = canvasRef.current; if (c) { const ctx = c.getContext('2d'); ctx?.clearRect(0,0,c.width,c.height); } }, 50);
         } else if (msg.type === 'ROUND_START') {
-          setIsDrawer(false); setAttemptsLeft(GUESS_ATTEMPTS); setInputGuess(''); setStatus('guessing');
+          setAttemptsLeft(GUESS_ATTEMPTS); setInputGuess(''); setStatus('guessing');
         } else if (msg.type === 'CORRECT') {
           setLastMsg(`✅ ניחשת נכון! +${msg.bonus} ₪`); setStatus('correct');
         } else if (msg.type === 'WRONG') {
@@ -128,17 +151,32 @@ export const PicassoPlayerView: React.FC = () => {
           setStatus('roundEnd');
         }
       });
-      conn.on('error', (e) => { setStatus('error'); setErrMsg(String(e)); });
-      conn.on('close', () => { setStatus('error'); setErrMsg('החיבור נסגר'); });
-    });
-    peer.on('error', (e) => { setStatus('error'); setErrMsg(String(e)); });
-    return () => { peerRef.current?.destroy(); };
-  }, [hostPeerId]);
 
+      conn.on('error', (e) => { setStatus('error'); setErrMsg(String(e)); });
+      conn.on('close',  ()  => { setStatus('error'); setErrMsg('החיבור נסגר'); });
+    });
+
+    peer.on('error', (e) => {
+      clearTimeout(timeout);
+      setStatus('error');
+      setErrMsg(`שגיאת חיבור: ${String(e)}`);
+    });
+
+    return () => { clearTimeout(timeout); peerRef.current?.destroy(); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Join: called when user submits name form ──
   const join = () => {
     const name = inputName.trim() || 'שחקן';
-    send({ type: 'JOIN', name });
-    setStatus('lobby');
+    if (connRef.current?.open) {
+      // Connection already ready — send immediately
+      connRef.current.send({ type: 'JOIN', name } as PicassoMsg);
+      setStatus('lobby');
+    } else {
+      // Not yet connected — save name, conn.on('open') will send it
+      pendingJoinRef.current = name;
+      setStatus('lobby'); // show lobby screen optimistically; JOIN will arrive shortly
+    }
   };
 
   // ── Canvas touch handlers for drawer ──
@@ -196,12 +234,21 @@ export const PicassoPlayerView: React.FC = () => {
   const COLORS = ['#000000','#ef4444','#3b82f6','#22c55e','#f59e0b','#a855f7','#ec4899','#ffffff'];
 
   // ── Screens ──
-  if (status === 'connecting') return (
-    <div style={{ background:'#1e1b4b', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:20, padding:24 }}>
-      <p style={{ fontSize:64, margin:0 }}>🎨</p>
-      <p style={{ color:'#fff', fontSize:22, fontWeight:900 }}>מתחבר...</p>
-      <div style={{ width:48, height:48, border:'5px solid rgba(255,255,255,0.3)', borderTopColor:'#fff', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+  if (status === 'naming') return (
+    <div style={{ background:'linear-gradient(135deg,#1e1b4b,#312e81)', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:20, padding:24 }}>
+      <p style={{ fontSize:72, margin:0 }}>🎨</p>
+      <h1 style={{ color:'#fff', fontSize:28, fontWeight:900, textAlign:'center', margin:0 }}>פיקאסו פיננסי</h1>
+      <p style={{ color:'#a5b4fc', fontSize:16, textAlign:'center', marginTop:0 }}>ציירו מושגים פיננסיים — נחשו וצברו נקודות!</p>
+      <input value={inputName} onChange={e => setInputName(e.target.value)} onKeyDown={e => e.key==='Enter'&&join()}
+        placeholder="הכניסי/ו את שמך..." dir="rtl" autoFocus
+        style={{ fontSize:22, padding:'14px 20px', borderRadius:16, border:'3px solid rgba(255,255,255,0.4)', background:'rgba(255,255,255,0.15)', color:'#fff', width:'100%', maxWidth:320, textAlign:'center', outline:'none' }} />
+      <button onClick={join} style={{ background:'#a855f7', color:'#fff', fontSize:22, fontWeight:900, padding:'16px 48px', borderRadius:20, border:'none', cursor:'pointer' }}>✅ הצטרף</button>
+      {/* Live connection indicator — subtle, bottom of screen */}
+      <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:8 }}>
+        <div style={{ width:8, height:8, borderRadius:'50%', background: connReady ? '#4ade80' : '#fbbf24', animation: connReady ? 'none' : 'pulse 1.5s infinite' }} />
+        <span style={{ color:'rgba(255,255,255,0.5)', fontSize:13 }}>{connReady ? '🔗 מחובר — אפשר להצטרף' : connStatus}</span>
+        <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
+      </div>
     </div>
   );
 
@@ -214,30 +261,29 @@ export const PicassoPlayerView: React.FC = () => {
     </div>
   );
 
-  if (status === 'naming') return (
-    <div style={{ background:'linear-gradient(135deg,#1e1b4b,#312e81)', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:20, padding:24 }}>
-      <p style={{ fontSize:72, margin:0 }}>🎨</p>
-      <h1 style={{ color:'#fff', fontSize:28, fontWeight:900, textAlign:'center', margin:0 }}>פיקאסו פיננסי</h1>
-      <p style={{ color:'#a5b4fc', fontSize:16, textAlign:'center', marginTop:0 }}>ציירו מושגים פיננסיים — נחשו וצברו נקודות!</p>
-      <input value={inputName} onChange={e => setInputName(e.target.value)} onKeyDown={e => e.key==='Enter'&&join()}
-        placeholder="הכניסי/ו את שמך..." dir="rtl" autoFocus
-        style={{ fontSize:22, padding:'14px 20px', borderRadius:16, border:'3px solid rgba(255,255,255,0.4)', background:'rgba(255,255,255,0.15)', color:'#fff', width:'100%', maxWidth:320, textAlign:'center', outline:'none' }} />
-      <button onClick={join} style={{ background:'#a855f7', color:'#fff', fontSize:22, fontWeight:900, padding:'16px 48px', borderRadius:20, border:'none', cursor:'pointer' }}>✅ הצטרף</button>
-    </div>
-  );
-
   if (status === 'lobby') return (
     <div style={{ background:'linear-gradient(135deg,#1e1b4b,#312e81)', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:20, padding:24 }}>
       <p style={{ fontSize:64, margin:0 }}>🎨</p>
-      <h2 style={{ color:'#fff', fontSize:24, fontWeight:900, textAlign:'center', margin:0 }}>הצטרפת בהצלחה!</h2>
-      <p style={{ color:'#a5b4fc', fontSize:16, textAlign:'center' }}>ממתין לתחילת המשחק...<br />
-        {gs && <span>שחקנים מחוברים: {gs.players.length}</span>}
+      <h2 style={{ color:'#fff', fontSize:24, fontWeight:900, textAlign:'center', margin:0 }}>
+        {connReady ? 'הצטרפת בהצלחה!' : 'מצרף אותך...'}
+      </h2>
+      {!connReady && (
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <div style={{ width:24, height:24, border:'3px solid rgba(255,255,255,0.3)', borderTopColor:'#fff', borderRadius:'50%', animation:'spin3 0.8s linear infinite' }} />
+          <span style={{ color:'#a5b4fc', fontSize:15 }}>ממתין לחיבור...</span>
+          <style>{`@keyframes spin3{to{transform:rotate(360deg)}}`}</style>
+        </div>
+      )}
+      <p style={{ color:'#a5b4fc', fontSize:16, textAlign:'center', margin:0 }}>
+        ממתין לתחילת המשחק...{gs ? ` (${gs.players.length} שחקנים)` : ''}
       </p>
-      <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-        {gs?.players.map(p => (
-          <div key={p.connId} style={{ background:'rgba(255,255,255,0.1)', borderRadius:12, padding:'10px 20px', color:'#fff', fontSize:16, textAlign:'center' }}>{p.name}</div>
-        ))}
-      </div>
+      {gs && gs.players.length > 0 && (
+        <div style={{ display:'flex', flexDirection:'column', gap:8, width:'100%', maxWidth:300 }}>
+          {gs.players.map(p => (
+            <div key={p.connId} style={{ background:'rgba(255,255,255,0.1)', borderRadius:12, padding:'10px 20px', color:'#fff', fontSize:16, textAlign:'center' }}>{p.name}</div>
+          ))}
+        </div>
+      )}
     </div>
   );
 
@@ -597,47 +643,63 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
   // ── Lobby ──────────────────────────────────────────────────────────────────
   if (phase === 'lobby') return (
-    <div dir="rtl" style={{ background:'linear-gradient(135deg,#1e1b4b,#0f172a)', minHeight:'100vh', padding:24, display:'flex', flexDirection:'column', gap:20 }}>
-      {/* Header */}
-      <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-        <button onClick={onBack} style={{ background:'rgba(255,255,255,0.1)', color:'#fff', fontSize:16, fontWeight:700, padding:'8px 16px', borderRadius:12, border:'1px solid rgba(255,255,255,0.2)', cursor:'pointer' }}>← חזרה</button>
-        <h1 style={{ color:'#fff', fontSize:28, fontWeight:900, margin:0 }}>🎨 פיקאסו פיננסי</h1>
+    <div dir="rtl" style={{ background:'#0f172a', height:'100vh', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+      {/* Top bar */}
+      <div style={{ background:'#1e1b4b', padding:'10px 20px', display:'flex', alignItems:'center', gap:14, flexShrink:0, borderBottom:'1px solid rgba(255,255,255,0.1)' }}>
+        <button onClick={onBack} style={{ background:'rgba(255,255,255,0.1)', color:'#fff', fontSize:15, fontWeight:700, padding:'7px 14px', borderRadius:10, border:'1px solid rgba(255,255,255,0.2)', cursor:'pointer' }}>← חזרה</button>
+        <h1 style={{ color:'#fff', fontSize:24, fontWeight:900, margin:0 }}>🎨 פיקאסו פיננסי</h1>
+        <span style={{ color:'#a5b4fc', fontSize:15, marginRight:'auto' }}>ממתין לשחקנים — {players.length} מחוברים</span>
       </div>
 
-      <div style={{ display:'flex', gap:24, flexWrap:'wrap', alignItems:'flex-start' }}>
-        {/* QR */}
-        <div style={{ background:'rgba(255,255,255,0.05)', borderRadius:20, padding:20, border:'1px solid rgba(255,255,255,0.1)', textAlign:'center' }}>
-          <p style={{ color:'#a5b4fc', fontSize:14, marginBottom:12, marginTop:0 }}>סרקו להצטרף</p>
-          {peerErr ? (
-            <p style={{ color:'#f87171' }}>שגיאה: {peerErr}</p>
-          ) : hostPeerId ? (
-            <img src={qrUrl} alt="QR" style={{ borderRadius:12, width:200, height:200 }} />
-          ) : (
-            <div style={{ width:200, height:200, display:'flex', alignItems:'center', justifyContent:'center', background:'#fff', borderRadius:12 }}>
-              <div style={{ width:40, height:40, border:'4px solid #312e81', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
-              <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-            </div>
-          )}
-          {hostPeerId && <p style={{ color:'#64748b', fontSize:11, marginTop:8, wordBreak:'break-all', maxWidth:220 }}>{playerUrl}</p>}
+      {/* Main: canvas + sidebar */}
+      <div style={{ flex:1, display:'flex', flexDirection:'row', minHeight:0 }}>
+        {/* Canvas — white, with placeholder text */}
+        <div style={{ flex:1, display:'flex', flexDirection:'column', padding:16, gap:8, minWidth:0 }}>
+          <div style={{ flex:1, background:'#fff', borderRadius:16, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:12, position:'relative', overflow:'hidden' }}>
+            <canvas ref={canvasRef} width={800} height={600} style={{ position:'absolute', inset:0, width:'100%', height:'100%', borderRadius:16 }} />
+            <p style={{ color:'#cbd5e1', fontSize:32, fontWeight:900, zIndex:1, pointerEvents:'none' }}>🎨</p>
+            <p style={{ color:'#cbd5e1', fontSize:18, fontWeight:700, zIndex:1, pointerEvents:'none' }}>הציור יופיע כאן</p>
+          </div>
         </div>
 
-        {/* Players list */}
-        <div style={{ flex:1, minWidth:220 }}>
-          <p style={{ color:'#a5b4fc', fontSize:16, fontWeight:700, margin:'0 0 12px' }}>שחקנים מחוברים ({players.length})</p>
-          {players.length === 0 ? (
-            <p style={{ color:'#64748b', fontSize:14 }}>ממתין לשחקנים...</p>
-          ) : (
-            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-              {players.map(p => (
-                <div key={p.connId} style={{ background:'rgba(255,255,255,0.08)', borderRadius:12, padding:'10px 16px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                  <span style={{ color:'#fff', fontSize:16, fontWeight:700 }}>🎨 {p.name}</span>
-                  <span style={{ color:'#ffd700', fontSize:14 }}>{p.score} ₪</span>
-                </div>
-              ))}
-            </div>
-          )}
+        {/* Sidebar — QR + players + start */}
+        <div dir="rtl" style={{ width:280, background:'#1e1b4b', padding:16, display:'flex', flexDirection:'column', gap:14, borderRight:'1px solid rgba(255,255,255,0.1)', overflowY:'auto', flexShrink:0 }}>
+          {/* QR */}
+          <div style={{ background:'rgba(255,255,255,0.05)', borderRadius:16, padding:14, textAlign:'center', border:'1px solid rgba(255,255,255,0.1)' }}>
+            <p style={{ color:'#a5b4fc', fontSize:13, margin:'0 0 10px', fontWeight:700 }}>📱 סרקו להצטרף</p>
+            {peerErr ? (
+              <p style={{ color:'#f87171', fontSize:13 }}>שגיאה: {peerErr}</p>
+            ) : hostPeerId ? (
+              <img src={qrUrl} alt="QR" style={{ borderRadius:10, width:160, height:160 }} />
+            ) : (
+              <div style={{ width:160, height:160, display:'flex', alignItems:'center', justifyContent:'center', background:'#fff', borderRadius:10, margin:'0 auto' }}>
+                <div style={{ width:36, height:36, border:'4px solid #312e81', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
+                <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+              </div>
+            )}
+          </div>
+
+          {/* Players */}
+          <div>
+            <p style={{ color:'#a5b4fc', fontSize:14, fontWeight:700, margin:'0 0 10px' }}>שחקנים ({players.length})</p>
+            {players.length === 0 ? (
+              <p style={{ color:'#64748b', fontSize:13, textAlign:'center', padding:'16px 0' }}>ממתין לשחקנים שיסרקו...</p>
+            ) : (
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                {players.map((p, i) => (
+                  <div key={p.connId} style={{ background:'rgba(255,255,255,0.08)', borderRadius:12, padding:'10px 14px', display:'flex', alignItems:'center', gap:10, animation:'fadeIn 0.3s ease' }}>
+                    <span style={{ fontSize:20 }}>{i===0?'🥇':i===1?'🥈':i===2?'🥉':'🎨'}</span>
+                    <span style={{ color:'#fff', fontSize:15, fontWeight:700 }}>{p.name}</span>
+                    <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}`}</style>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Start button */}
           <button onClick={startGame} disabled={players.length < 2}
-            style={{ marginTop:20, background: players.length>=2 ? '#a855f7' : '#374151', color:'#fff', fontSize:20, fontWeight:900, padding:'16px 32px', borderRadius:16, border:'none', cursor: players.length>=2 ? 'pointer' : 'default', width:'100%', opacity: players.length>=2 ? 1 : 0.6 }}>
+            style={{ marginTop:'auto', background: players.length>=2 ? '#a855f7' : '#374151', color:'#fff', fontSize:17, fontWeight:900, padding:'14px 20px', borderRadius:14, border:'none', cursor: players.length>=2 ? 'pointer' : 'default', opacity: players.length>=2 ? 1 : 0.6, transition:'all 0.2s' }}>
             {players.length < 2 ? `ממתין לשחקנים נוספים...` : `▶ התחל משחק (${players.length} שחקנים)`}
           </button>
         </div>

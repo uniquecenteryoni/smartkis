@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { AliasPlayerView } from './components/modules/AliasGame';
 import { BullseyePlayerView } from './components/modules/BullseyeGame';
 import { PicassoPlayerView } from './components/modules/PicassoGame';
+import { CarRacePlayerView } from './components/modules/CarRaceGame';
+import { SupermarketPlayerView } from './components/modules/SupermarketRaceGame';
 import Header from './components/Header';
 import ModuleCard from './components/ModuleCard';
 import { Module } from './types';
@@ -233,6 +235,7 @@ const kisonimModules: Module[] = [
     title: 'מאיפה בא הכסף?',
     description: 'נצא להרפתקה ונבין איך מבוגרים "משיגים" כסף. נשחק במשחק סימולציה בו כל אחד בוחר מקצוע ומקבל "משכורת" ראשונה.',
     icon: KisonimSalaryIcon,
+    emoji: '👷',
     component: WhereMoneyComesFromModule,
     completionGoal: 'יש להתאים את כל הכלים לבעלי המקצוע.',
   },
@@ -241,6 +244,7 @@ const kisonimModules: Module[] = [
     title: 'משחק צרכים ורצונות',
     description: 'מה חייבים ומה סתם רוצים? נשחק במשחק מיון צבעוני ונלמד להבדיל בין דברים שאנחנו באמת צריכים לדברים שפשוט כיף לקבל.',
     icon: KisonimHeartIcon,
+    emoji: '⚖️',
     component: NeedsVsWantsModule,
     completionGoal: 'יש לסיים את משחק המיון בהצלחה.',
   },
@@ -249,6 +253,7 @@ const kisonimModules: Module[] = [
     title: 'הרפתקת החיסכון',
     description: 'עזרו לסנאי המתוק לאסוף מטבעות זהב! נלמד לחסוך כסף למטרה גדולה וכיפית, כמו צעצוע חדש או טיול בפארק.',
     icon: KisonimPiggyBankIcon,
+    emoji: '🐷',
     component: SavingsAdventureModule,
     completionGoal: 'יש לאסוף את כל 10 הבלוטים.',
   },
@@ -257,6 +262,7 @@ const kisonimModules: Module[] = [
     title: 'חנות המכולת הקסומה',
     description: 'יש לכם רשימת קניות ותקציב מוגבל. האם תצליחו לקנות את כל מה שצריך מבלי לבזבז יותר מדי? משחק סימולציה מהנה.',
     icon: KisonimStoreIcon,
+    emoji: '🏪',
     component: MagicStoreModule,
     completionGoal: 'יש להשלים את הקנייה בהצלחה.',
   },
@@ -265,6 +271,7 @@ const kisonimModules: Module[] = [
     title: 'בנק הצנצנות',
     description: 'נלמד לחלק את דמי הכיס שלנו לשלוש צנצנות קסומות: בזבוזים, חיסכון ונתינה. דרך פשוטה לנהל את הכסף הראשון שלנו.',
     icon: KisonimBudgetIcon,
+    emoji: '🏦',
     component: JarBankModule,
     completionGoal: 'יש לנצח במשחק איקס עיגול.',
   },
@@ -273,6 +280,7 @@ const kisonimModules: Module[] = [
     title: 'מסע עולמי: מטבעות וארצות',
     description: 'בואו נכיר את הכסף של מדינות אחרות! נגלה איך נראים הדולר, האירו והיין, ונלמד על התרבויות שמאחוריהם.',
     icon: KisonimGlobeIcon,
+    emoji: '🌍',
     component: WorldTourModule,
     completionGoal: 'יש להתאים את כל המטבעות למדינות.',
   },
@@ -281,6 +289,7 @@ const kisonimModules: Module[] = [
     title: 'סודות הפרסומות',
     description: 'למה אנחנו פתאום רוצים את הצעצוע שראינו בטלוויזיה? נגלה את הטריקים של הפרסומות ונלמד איך לקבל החלטות בעצמנו.',
     icon: KisonimResearchIcon,
+    emoji: '📢',
     component: AdSecretsModule,
     completionGoal: 'יש לגלות את כל 4 סודות הפרסום.',
   },
@@ -289,6 +298,7 @@ const kisonimModules: Module[] = [
     title: 'משימות להרוויח כסף',
     description: 'נצא למשימות מיוחדות בבית ובסביבה (כמו סידור החדר או עזרה בגינה) ונבין איך עבודה שווה כסף.',
     icon: KisonimStarIcon,
+    emoji: '💪',
     component: EarningMissionsModule,
     completionGoal: 'יש להשלים 10 משימות.',
   },
@@ -297,6 +307,7 @@ const kisonimModules: Module[] = [
     title: 'השוק הצבעוני',
     description: 'בואו נקים שוק! כל ילד יקבל דוכן למכור ולקנות מוצרים. נלמד על מחירים, משא ומתן, ואיך להיות מוכרים וקונים חכמים.',
     icon: KisonimExpensesIcon,
+    emoji: '🎨',
     component: ColorfulMarketModule,
     completionGoal: 'יש להשלים 3 סיבובי מכירה.',
   },
@@ -305,6 +316,7 @@ const kisonimModules: Module[] = [
     title: 'מטבעות או שטרות?',
     description: 'כמה שווה כל מטבע? וכמה כל שטר? נשחק במשחק זיכרון ובתרגילים כיפיים כדי להכיר את הכסף שלנו מקרוב.',
     icon: KisonimCoinIcon,
+    emoji: '🪙',
     component: CoinsVsBillsModule,
     completionGoal: 'יש להשלים את כל סבבי ההתאמה.',
   },
@@ -313,6 +325,7 @@ const kisonimModules: Module[] = [
     title: 'כוחה של נתינה',
     description: 'כסף יכול גם לעשות טוב לאחרים! נלמד על חשיבות התרומה והעזרה, ונחשוב יחד איך אנחנו יכולים לעזור לקהילה שלנו.',
     icon: KisonimPodiumIcon,
+    emoji: '🎁',
     component: PowerOfGivingModule,
     completionGoal: 'יש לבצע בחירה אחת.',
   },
@@ -321,6 +334,7 @@ const kisonimModules: Module[] = [
     title: 'סיפורי החלטות',
     description: 'דרך סיפורים אינטראקטיביים נראה איך החלטה קטנה היום (כמו לקנות ממתק או לחסוך) יכולה להשפיע על המחר שלנו.',
     icon: KisonimBusinessIcon,
+    emoji: '🧠',
     component: SmallDecisionsModule,
     completionGoal: 'יש להגיע לסוף הסיפור.',
   },
@@ -338,6 +352,8 @@ const App: React.FC = () => {
   const [isAliasPlayer, setIsAliasPlayer] = useState(() => window.location.hash === '#alias-player');
   const [isBullseyePlayer, setIsBullseyePlayer] = useState(() => window.location.hash.startsWith('#bullseye-player-'));
   const [isPicassoPlayer, setIsPicassoPlayer] = useState(() => window.location.hash.startsWith('#picasso-player-'));
+  const [isCarRacePlayer, setIsCarRacePlayer] = useState(() => window.location.hash.startsWith('#carrace-player-'));
+  const [isSupermarketPlayer, setIsSupermarketPlayer] = useState(() => window.location.hash.startsWith('#supermarket-player-'));
   const [appState, setAppState] = useState<AppState>('user_selection');
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [visitedModules, setVisitedModules] = useState<Set<string>>(new Set());
@@ -350,6 +366,8 @@ const App: React.FC = () => {
       setIsAliasPlayer(window.location.hash === '#alias-player');
       setIsBullseyePlayer(window.location.hash.startsWith('#bullseye-player-'));
       setIsPicassoPlayer(window.location.hash.startsWith('#picasso-player-'));
+      setIsCarRacePlayer(window.location.hash.startsWith('#carrace-player-'));
+      setIsSupermarketPlayer(window.location.hash.startsWith('#supermarket-player-'));
     };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
@@ -530,6 +548,7 @@ const App: React.FC = () => {
                       title={module.title}
                       description={module.description}
                       icon={module.icon}
+                      emoji={module.emoji}
                       onClick={() => handleSelectModule(module)}
                       isVisited={visitedModules.has(module.id)}
                       completionGoal={module.completionGoal}
@@ -635,6 +654,8 @@ const App: React.FC = () => {
   };
   
   return (
+    isSupermarketPlayer ? <SupermarketPlayerView /> :
+    isCarRacePlayer ? <CarRacePlayerView /> :
     isPicassoPlayer ? <PicassoPlayerView /> :
     isBullseyePlayer ? <BullseyePlayerView /> :
     isAliasPlayer ? <AliasPlayerView /> :
