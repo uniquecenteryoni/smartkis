@@ -50,6 +50,7 @@ interface HostState {
   timeLeft: number;
   lastEvent: string;
   wordRevealed?: string;
+  wordHint?: string;
 }
 
 type PicassoMsg =
@@ -358,6 +359,11 @@ export const PicassoPlayerView: React.FC = () => {
       <h2 style={{ color:'#fff', fontSize:22, fontWeight:900, textAlign:'center', margin:0 }}>
         {gs?.drawerName} מצייר/ת...
       </h2>
+      {gs?.wordHint && (
+        <div style={{ background:'rgba(255,255,255,0.08)', borderRadius:14, padding:'10px 24px', textAlign:'center' }}>
+          <span style={{ color:'#ffd700', fontSize:22, fontWeight:900, letterSpacing:5, direction:'ltr', display:'inline-block' }}>{gs.wordHint}</span>
+        </div>
+      )}
       <p style={{ color:'#a5b4fc', fontSize:15, textAlign:'center', marginTop:0 }}>נסה/י לנחש את המושג!</p>
       <div style={{ background:'rgba(255,255,255,0.1)', borderRadius:16, padding:'8px 20px', color:'#ffd700', fontSize:16, fontWeight:700 }}>
         {attemptsLeft} ניסיונות נותרו
@@ -427,6 +433,7 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const drawerQueueRef = useRef<string[]>([]);
   const usedWordsRef = useRef<Set<string>>(new Set());
   const guessAttemptsRef = useRef<Map<string, number>>(new Map());
+  const roundSecondsRef  = useRef<number>(60);
 
   const [hostPeerId, setHostPeerId] = useState<string | null>(null);
   const [peerErr, setPeerErr]       = useState<string | null>(null);
@@ -438,6 +445,8 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [roundNum, setRoundNum]     = useState(0);
   const [totalRounds, setTotalRounds] = useState(0);
   const [wordRevealed, setWordRevealed] = useState('');
+  const [roundSeconds, setRoundSeconds] = useState(60);
+  const [currentWord, setCurrentWord]   = useState('');
 
   const syncPlayers = useCallback(() => {
     setPlayers([...playersRef.current.values()]);
@@ -463,6 +472,9 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     totalRounds: totalRoundsRef.current,
     timeLeft: timeLeftRef.current,
     lastEvent: '',
+    wordHint: wordRef.current
+      ? wordRef.current.split('').map((c: string) => c === ' ' ? '  ' : '_').join(' ')
+      : undefined,
     ...extra,
   }), []);
 
@@ -526,6 +538,7 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     const wrd = wordRef.current;
     setLastEvent(evt);
     setWordRevealed(wrd);
+    setCurrentWord('');
     setPhase('roundEnd');
     broadcastState({ phase: 'roundEnd', lastEvent: evt, wordRevealed: wrd });
     broadcast({ type: 'ROUND_END', word: wrd });
@@ -547,6 +560,7 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     drawerIdRef.current = drawerId;
     const word = pickWord();
     wordRef.current = word;
+    setCurrentWord(word);
     const rn = roundNumRef.current + 1;
     roundNumRef.current = rn;
     setRoundNum(rn);
@@ -562,11 +576,11 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     setPhase('drawing');
     setDrawerName(playersRef.current.get(drawerId)?.name ?? '');
     setWordRevealed('');
-    timeLeftRef.current = ROUND_SECONDS;
-    setTimeLeft(ROUND_SECONDS);
+    timeLeftRef.current = roundSecondsRef.current;
+    setTimeLeft(roundSecondsRef.current);
 
     broadcastState({ phase: 'drawing', lastEvent: `🎨 ${playersRef.current.get(drawerId)?.name} מצייר/ת` });
-    sendTo(drawerId, { type: 'YOUR_TURN', word, timeLeft: ROUND_SECONDS });
+    sendTo(drawerId, { type: 'YOUR_TURN', word, timeLeft: roundSecondsRef.current });
     // Tell everyone else to guess
     connsRef.current.forEach((_, id) => { if (id !== drawerId) sendTo(id, { type: 'ROUND_START' }); });
 
@@ -596,6 +610,15 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const nextRound = useCallback(() => {
     startRound();
   }, [startRound]);
+
+  const removePlayer = useCallback((connId: string) => {
+    connsRef.current.get(connId)?.close();
+    connsRef.current.delete(connId);
+    playersRef.current.delete(connId);
+    drawerQueueRef.current = drawerQueueRef.current.filter(id => id !== connId);
+    syncPlayers();
+    broadcastState();
+  }, [syncPlayers, broadcastState]);
 
   // ── Handle incoming messages from players ──────────────────────────────────
   const handleMsg = useCallback((connId: string, msg: PicassoMsg) => {
@@ -730,6 +753,21 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             )}
           </div>
 
+          {/* Duration picker */}
+          <div>
+            <p style={{ color:'#a5b4fc', fontSize:13, fontWeight:700, margin:'0 0 8px' }}>⏱ משך כל סיבוב</p>
+            <div style={{ display:'flex', gap:6 }}>
+              {[30, 45, 60].map(s => (
+                <button key={s} onClick={() => { setRoundSeconds(s); roundSecondsRef.current = s; }}
+                  style={{ flex:1, padding:'7px 0', borderRadius:10, border:'none', cursor:'pointer', fontWeight:900, fontSize:14,
+                    background: roundSeconds === s ? '#a855f7' : 'rgba(255,255,255,0.1)',
+                    color: roundSeconds === s ? '#fff' : '#a5b4fc' }}>
+                  {s}ש׳
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Players */}
           <div>
             <p style={{ color:'#a5b4fc', fontSize:14, fontWeight:700, margin:'0 0 10px' }}>שחקנים ({players.length})</p>
@@ -740,7 +778,9 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 {players.map((p, i) => (
                   <div key={p.connId} style={{ background:'rgba(255,255,255,0.08)', borderRadius:12, padding:'10px 14px', display:'flex', alignItems:'center', gap:10, animation:'fadeIn 0.3s ease' }}>
                     <span style={{ fontSize:20 }}>{i===0?'🥇':i===1?'🥈':i===2?'🥉':'🎨'}</span>
-                    <span style={{ color:'#fff', fontSize:15, fontWeight:700 }}>{p.name}</span>
+                    <span style={{ color:'#fff', fontSize:15, fontWeight:700, flex:1 }}>{p.name}</span>
+                    <button onClick={() => removePlayer(p.connId)}
+                      style={{ background:'rgba(239,68,68,0.25)', color:'#f87171', border:'none', borderRadius:8, cursor:'pointer', fontSize:14, fontWeight:900, padding:'2px 8px', lineHeight:'1.4', flexShrink:0 }}>✕</button>
                     <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}`}</style>
                   </div>
                 ))}
@@ -765,9 +805,16 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       <div style={{ flex:1, display:'flex', flexDirection:'column', background:'#0f172a', padding:16, gap:12, minWidth:0 }}>
         <div style={{ display:'flex', alignItems:'center', gap:12, flexShrink:0 }}>
           <button onClick={onBack} style={{ background:'rgba(255,255,255,0.08)', color:'#fff', fontSize:13, fontWeight:700, padding:'6px 12px', borderRadius:10, border:'1px solid rgba(255,255,255,0.15)', cursor:'pointer' }}>← חזרה</button>
-          <span style={{ color:'#a5b4fc', fontSize:16, fontWeight:700 }}>
-            🎨 {drawerName} מצייר/ת — סיבוב {roundNum}/{totalRounds}
-          </span>
+          <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+            <span style={{ color:'#a5b4fc', fontSize:16, fontWeight:700 }}>
+              🎨 {drawerName} מצייר/ת — סיבוב {roundNum}/{totalRounds}
+            </span>
+            {currentWord && (
+              <span style={{ color:'#ffd700', fontSize:18, fontWeight:900, letterSpacing:4, direction:'ltr', display:'inline-block' }}>
+                {currentWord.split('').map((c: string) => c === ' ' ? '\u00a0\u00a0' : '_').join(' ')}
+              </span>
+            )}
+          </div>
           <span style={{ marginRight:'auto', background: timeLeft <= 10 ? '#ef4444' : '#312e81', color:'#fff', fontSize:16, fontWeight:900, padding:'4px 14px', borderRadius:10 }}>
             ⏱ {timeLeft}ש׳
           </span>
@@ -782,9 +829,11 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         <p style={{ color:'#a5b4fc', fontSize:14, fontWeight:700, margin:0 }}>לוח ניקוד</p>
         {[...players].sort((a,b) => b.score - a.score).map((p, i) => (
           <div key={p.connId} style={{ background: p.connId === drawerIdRef.current ? 'rgba(168,85,247,0.2)' : 'rgba(255,255,255,0.05)', borderRadius:12, padding:'10px 12px', border: p.connId === drawerIdRef.current ? '1px solid #a855f7' : '1px solid transparent' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <span style={{ color:'#fff', fontSize:14, fontWeight:700 }}>{i===0?'🥇':i===1?'🥈':i===2?'🥉':'▸'} {p.name}</span>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:6 }}>
+              <span style={{ color:'#fff', fontSize:14, fontWeight:700, flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{i===0?'🥇':i===1?'🥈':i===2?'🥉':'▸'} {p.name}</span>
               <span style={{ color:'#ffd700', fontSize:14, fontWeight:900 }}>{p.score} ₪</span>
+              <button onClick={() => removePlayer(p.connId)}
+                style={{ background:'rgba(239,68,68,0.25)', color:'#f87171', border:'none', borderRadius:6, cursor:'pointer', fontSize:12, fontWeight:900, padding:'2px 7px', flexShrink:0 }}>✕</button>
             </div>
             {p.connId === drawerIdRef.current && <p style={{ color:'#c4b5fd', fontSize:11, margin:'4px 0 0' }}>✏️ מצייר/ת</p>}
           </div>
