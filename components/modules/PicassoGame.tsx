@@ -64,7 +64,9 @@ type PicassoMsg =
   | { type: 'CORRECT'; bonus: number }
   | { type: 'WRONG'; attemptsLeft: number }
   | { type: 'ROUND_START' }
-  | { type: 'ROUND_END'; word: string };
+  | { type: 'ROUND_END'; word: string }
+  | { type: 'PING' }
+  | { type: 'PONG' };
 
 const ROUND_SECONDS = 60;
 const GUESS_ATTEMPTS = 3;
@@ -94,8 +96,10 @@ export const PicassoPlayerView: React.FC = () => {
   const isDrawingRef   = useRef(false);
   const colorRef       = useRef('#000000');
   const widthRef       = useRef(6);
+  const lastSendTimeRef = useRef(0);  // throttle stroke points
   // Name to send once connection opens (if user submitted form before conn was ready)
   const pendingJoinRef = useRef<string | null>(null);
+  const savedNameRef   = useRef('');  // for reconnect
 
   const send = useCallback((msg: PicassoMsg) => {
     if (connRef.current?.open) connRef.current.send(msg);
@@ -105,26 +109,20 @@ export const PicassoPlayerView: React.FC = () => {
   useEffect(() => {
     if (!hostPeerId) { setStatus('error'); setErrMsg('קישור לא תקין – סרוק מחדש'); return; }
 
-    // Timeout: if no connection after 20s show error with retry
-    const timeout = setTimeout(() => {
-      if (!connRef.current?.open) {
-        setStatus('error');
-        setErrMsg('לא הצלחנו להתחבר — בדקו שמסך המחשב פתוח ונסו שוב');
-      }
-    }, 20000);
-
     const peer = new Peer(); peerRef.current = peer;
 
-    peer.on('open', () => {
-      setConnStatus('מחובר, מצרף...');
-      const conn = peer.connect(hostPeerId, { reliable: true }); connRef.current = conn;
+    const setupConn = (conn: DataConnection) => {
+      connRef.current = conn;
 
       conn.on('open', () => {
-        clearTimeout(timeout);
         setConnReady(true);
         setConnStatus('מחובר!');
-        // If user already submitted name while we were connecting — send now
-        if (pendingJoinRef.current !== null) {
+        // Rejoin automatically with saved name
+        const nameToSend = pendingJoinRef.current ?? savedNameRef.current;
+        if (nameToSend) {
+          conn.send({ type: 'JOIN', name: nameToSend } as PicassoMsg);
+          setStatus(prev => prev === 'naming' ? 'lobby' : prev);
+        } else if (pendingJoinRef.current !== null) {
           conn.send({ type: 'JOIN', name: pendingJoinRef.current } as PicassoMsg);
           setStatus('lobby');
         }
@@ -132,9 +130,9 @@ export const PicassoPlayerView: React.FC = () => {
 
       conn.on('data', (raw) => {
         const msg = raw as PicassoMsg;
+        if (msg.type === 'PING') { try { conn.send({ type: 'PONG' } as PicassoMsg); } catch {} return; }
         if (msg.type === 'STATE') {
           setGs(msg.state);
-          // Only handle gameOver via STATE; other transitions use dedicated messages
           if (msg.state.phase === 'gameOver') setStatus('roundEnd');
         } else if (msg.type === 'YOUR_TURN') {
           setWord(msg.word); setAttemptsLeft(GUESS_ATTEMPTS);
@@ -152,8 +150,41 @@ export const PicassoPlayerView: React.FC = () => {
         }
       });
 
-      conn.on('error', (e) => { setStatus('error'); setErrMsg(String(e)); });
-      conn.on('close',  ()  => { setStatus('error'); setErrMsg('החיבור נסגר'); });
+      conn.on('error', () => {
+        setConnReady(false);
+        // Auto-reconnect after 2s
+        setTimeout(() => {
+          if (peerRef.current && !peerRef.current.destroyed) {
+            setConnStatus('מתחבר מחדש...');
+            setupConn(peerRef.current.connect(hostPeerId, { reliable: true }));
+          }
+        }, 2000);
+      });
+
+      conn.on('close', () => {
+        setConnReady(false);
+        setConnStatus('מתחבר מחדש...');
+        // Auto-reconnect after 2s
+        setTimeout(() => {
+          if (peerRef.current && !peerRef.current.destroyed) {
+            setupConn(peerRef.current.connect(hostPeerId, { reliable: true }));
+          }
+        }, 2000);
+      });
+    };
+
+    // Timeout: if no connection after 25s show error
+    const timeout = setTimeout(() => {
+      if (!connRef.current?.open) {
+        setStatus('error');
+        setErrMsg('לא הצלחנו להתחבר — בדקו שמסך המחשב פתוח ונסו שוב');
+      }
+    }, 25000);
+
+    peer.on('open', () => {
+      setConnStatus('מחובר, מצרף...');
+      clearTimeout(timeout);
+      setupConn(peer.connect(hostPeerId, { reliable: true }));
     });
 
     peer.on('error', (e) => {
@@ -168,14 +199,13 @@ export const PicassoPlayerView: React.FC = () => {
   // ── Join: called when user submits name form ──
   const join = () => {
     const name = inputName.trim() || 'שחקן';
+    savedNameRef.current = name;
     if (connRef.current?.open) {
-      // Connection already ready — send immediately
       connRef.current.send({ type: 'JOIN', name } as PicassoMsg);
       setStatus('lobby');
     } else {
-      // Not yet connected — save name, conn.on('open') will send it
       pendingJoinRef.current = name;
-      setStatus('lobby'); // show lobby screen optimistically; JOIN will arrive shortly
+      setStatus('lobby');
     }
   };
 
@@ -210,7 +240,12 @@ export const PicassoPlayerView: React.FC = () => {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
     ctx.lineTo(x, y); ctx.stroke();
-    send({ type: 'STROKE_POINT', x, y });
+    // Throttle: send at most every 40ms (~25/sec) to avoid flooding the WebRTC buffer
+    const now = Date.now();
+    if (now - lastSendTimeRef.current >= 40) {
+      lastSendTimeRef.current = now;
+      send({ type: 'STROKE_POINT', x, y });
+    }
   };
   const onDrawEnd = (e: React.TouchEvent<HTMLCanvasElement> | React.MouseEvent<HTMLCanvasElement>) => {
     e.preventDefault();
@@ -620,14 +655,30 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         // Send current state to new joiner
         conn.send({ type: 'STATE', state: buildState() });
       });
-      conn.on('data', (raw) => handleMsg(connId, raw as PicassoMsg));
+      conn.on('data', (raw) => {
+        const msg = raw as PicassoMsg;
+        if (msg.type === 'PONG') return; // heartbeat reply — ignore
+        handleMsg(connId, msg);
+      });
       conn.on('close', () => {
         connsRef.current.delete(connId);
         // Keep player in list even if disconnected (don't remove mid-game)
         syncPlayers();
       });
     });
-    return () => { if (timerRef.current) clearInterval(timerRef.current); peerRef.current?.destroy(); };
+
+    // Heartbeat: ping all connections every 8s to keep WebRTC alive
+    const heartbeat = setInterval(() => {
+      connsRef.current.forEach(conn => {
+        if (conn.open) try { conn.send({ type: 'PING' } as PicassoMsg); } catch {}
+      });
+    }, 8000);
+
+    return () => {
+      clearInterval(heartbeat);
+      if (timerRef.current) clearInterval(timerRef.current);
+      peerRef.current?.destroy();
+    };
   }, [handleMsg, buildState, syncPlayers]);
 
   // ── Canvas resize observer ─────────────────────────────────────────────────

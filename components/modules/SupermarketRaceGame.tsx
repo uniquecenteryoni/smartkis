@@ -8,7 +8,7 @@ import { QRCodeSVG } from 'qrcode.react';
 interface Monopoly { id: string; name: string; color: string; bg: string; border: string; website: string; logoText: string; }
 
 // Monopolies shown in QR study phase (ordered as requested)
-const STUDY_MONOPOLY_IDS = ['osem', 'central', 'tnuva', 'unilever', 'diplomat', 'strauss', 'leiman'];
+const STUDY_MONOPOLY_IDS = ['osem', 'central', 'tnuva', 'unilever', 'diplomat', 'strauss', 'leiman', 'yafora'];
 
 const MONOPOLIES: Monopoly[] = [
   { id: 'strauss',  name: 'שטראוס-עלית',              color: '#1d4ed8', bg: '#dbeafe', border: '#93c5fd', website: 'https://www.strauss-group.com',               logoText: 'STRAUSS'  },
@@ -18,6 +18,7 @@ const MONOPOLIES: Monopoly[] = [
   { id: 'central',  name: 'החברה המרכזית למשקאות',     color: '#b91c1c', bg: '#fecaca', border: '#f87171', website: 'https://www.coca-cola.co.il',                  logoText: 'CENTRAL'  },
   { id: 'diplomat', name: 'דיפלומט',                   color: '#7c3aed', bg: '#ede9fe', border: '#c4b5fd', website: 'https://www.diplomat-il.com',                 logoText: 'DIPLOMAT' },
   { id: 'leiman',   name: 'ליימן שלייסל',              color: '#065f46', bg: '#d1fae5', border: '#6ee7b7', website: 'https://www.leiman.co.il',                    logoText: 'LEIMAN'   },
+  { id: 'yafora',   name: 'יפאורה-תבורי',            color: '#c2410c', bg: '#ffedd5', border: '#fb923c', website: 'https://www.yafora-tivall.co.il',             logoText: 'YAFORA'   },
 ];
 
 interface Product { name: string; monopolyId: string; emoji: string; }
@@ -66,6 +67,12 @@ const ALL_PRODUCTS: Product[] = [
   { name: 'פרינגלס',         monopolyId: 'leiman',   emoji: '🥔' },
   { name: 'לייס / Lay\'s',   monopolyId: 'leiman',   emoji: '🥓' },
   { name: 'טרופיקנה',        monopolyId: 'leiman',   emoji: '🍊' },
+  // יפאורה-תבורי
+  { name: 'תפוזינה',         monopolyId: 'yafora',   emoji: '🍊' },
+  { name: 'מיצי',            monopolyId: 'yafora',   emoji: '🧃' },
+  { name: 'טיבול שניצל',      monopolyId: 'yafora',   emoji: '🥩' },
+  { name: 'טיבול קצצייה',      monopolyId: 'yafora',   emoji: '🌶️' },
+  { name: 'סלט תירות טבעי',  monopolyId: 'yafora',   emoji: '🥗' },
 ];
 
 function shuffle<T>(arr: T[]): T[] {
@@ -244,6 +251,10 @@ const StudyPhase: React.FC<{ onDone: () => void }> = ({ onDone }) => {
             <a href={m.website} target="_blank" rel="noopener noreferrer" className="text-xs underline" style={{ color: m.color }}>{m.website.replace('https://www.','')} ↗</a>
           </div>
         ))}
+      </div>
+
+      <div className="mt-6">
+        <img src={`${import.meta.env.BASE_URL}LOGOSMONOPOLY.SVG.svg`} alt="לוגואי המונופולים" className="w-full rounded-2xl shadow-md border border-gray-200" />
       </div>
     </div>
   );
