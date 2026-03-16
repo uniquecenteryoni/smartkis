@@ -4,25 +4,31 @@ import type { DataConnection } from 'peerjs';
 
 // ─── Word Bank ────────────────────────────────────────────────────────────────
 const WORDS: string[] = [
-  // כסף וכלים פיננסיים
-  'ארנק', 'מטבע', 'שטר', 'כרטיס אשראי', 'כספת', 'בנק', 'כספומט', 'המחאה',
-  // רכישה וצריכה
-  'קניות', 'חנות', 'קופה', 'תג מחיר', 'מתנה', 'מכירה', 'הנחה',
-  // חיסכון והשקעה
-  'קופת חיסכון', 'קופת חזיר', 'גרף', 'מניה', 'בורסה', 'זהב', 'יהלום',
-  // עבודה ושכר
-  'תלוש שכר', 'משרד', 'מחשב', 'שעון', 'מנהל', 'עובד', 'ראיון עבודה',
-  // הלוואות וחובות
-  'הלוואה', 'חוב', 'כרטיס אדום', 'מינוס',
-  // יזמות ועסקים
-  'עסק', 'מפעל', 'סמל מסחרי', 'תכנית עסקית', 'שותפות', 'חברה', 'יזם',
-  // ביטוח ופנסיה
-  'ביטוח', 'מטריה', 'פנסיה', 'חוזה',
-  // כלכלה כללית
-  'מחיר', 'מס', 'תקציב', 'רווח', 'הפסד', 'ייצוא', 'ייבוא', 'מפה',
-  // חיי יום יום
-  'דיור', 'שכר דירה', 'חשמל', 'מים', 'מזון', 'תחבורה', 'מכונית', 'אוטובוס', 'רכבת',
+  // חינוך פיננסי בלבד — מושגים שימושיים
+  'תקציב', 'הכנסות', 'הוצאות', 'תזרים מזומנים', 'ניהול כסף',
+  'צרכים ורצונות', 'השוואת מחירים', 'תכנון קניות', 'קנייה אימפולסיבית', 'דמי משלוח',
+  'חשבון בנק', 'עובר ושב', 'כרטיס חיוב', 'כרטיס אשראי', 'מסגרת אשראי',
+  'מינוס', 'עמלה', 'ריבית', 'ריבית דריבית',
+  'חיסכון', 'קרן חירום', 'מטרת חיסכון',
+  'הלוואה', 'החזר חודשי', 'לוח סילוקין', 'חוב',
+  'משכנתא',
+  'ביטוח', 'השתתפות עצמית',
+  'פנסיה', 'קופת גמל', 'קרן השתלמות',
+  'השקעה', 'סיכון', 'תשואה', 'פיזור השקעות',
+  'מניה', 'אגרת חוב', 'מדד', 'קרן סל',
+  'שכר', 'שכר מינימום', 'תלוש שכר', 'מס הכנסה',
+  'מע"מ',
+  'רווח', 'הפסד', 'יזמות', 'תוכנית עסקית',
+  'מיקוח',
 ];
+
+const makeWordHint = (word: string): string => {
+  const parts = word.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '';
+  return parts
+    .map(part => part.split('').map(() => '_').join(' '))
+    .join(' - ');
+};
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Player {
@@ -521,9 +527,7 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     totalRounds: totalRoundsRef.current,
     timeLeft: timeLeftRef.current,
     lastEvent: '',
-    wordHint: wordRef.current
-      ? wordRef.current.split('').map((c: string) => c === ' ' ? '  ' : '_').join(' ')
-      : undefined,
+    wordHint: wordRef.current ? makeWordHint(wordRef.current) : undefined,
     ...extra,
   }), []);
 
@@ -697,12 +701,9 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       if (!player) return;
       const correct = msg.guess.trim().toLowerCase() === wordRef.current.trim().toLowerCase();
       if (correct) {
-        const bonus = Math.max(50, timeLeftRef.current * 2);
+        const bonus = 50;
         player.score += bonus;
         playersRef.current.set(connId, player);
-        // Also give drawer partial credit
-        const drawer = playersRef.current.get(drawerIdRef.current);
-        if (drawer) { drawer.score += 30; playersRef.current.set(drawerIdRef.current, drawer); }
         sendTo(connId, { type: 'CORRECT', bonus });
         syncPlayers();
         const evt = `✅ ${player.name} ניחש/ה נכון! +${bonus} ₪`;
@@ -867,7 +868,7 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             </span>
             {currentWord && (
               <span style={{ color:'#ffd700', fontSize:18, fontWeight:900, letterSpacing:4, direction:'ltr', display:'inline-block' }}>
-                {currentWord.split('').map((c: string) => c === ' ' ? '\u00a0\u00a0' : '_').join(' ')}
+                {makeWordHint(currentWord)}
               </span>
             )}
           </div>
@@ -915,9 +916,11 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       {/* Scoreboard */}
       <div style={{ display:'flex', flexDirection:'column', gap:10, width:'100%', maxWidth:400 }}>
         {[...players].sort((a,b) => b.score - a.score).map((p, i) => (
-          <div key={p.connId} style={{ background:'rgba(255,255,255,0.08)', borderRadius:14, padding:'12px 20px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-            <span style={{ color:'#fff', fontSize:17, fontWeight:700 }}>{i===0?'🥇':i===1?'🥈':i===2?'🥉':'▸'} {p.name}</span>
+          <div key={p.connId} style={{ background:'rgba(255,255,255,0.08)', borderRadius:14, padding:'12px 20px', display:'flex', justifyContent:'space-between', alignItems:'center', gap:10 }}>
+            <span style={{ color:'#fff', fontSize:17, fontWeight:700, flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{i===0?'🥇':i===1?'🥈':i===2?'🥉':'▸'} {p.name}</span>
             <span style={{ color:'#ffd700', fontSize:18, fontWeight:900 }}>{p.score} ₪</span>
+            <button onClick={() => removePlayer(p.connId)}
+              style={{ background:'rgba(239,68,68,0.25)', color:'#f87171', border:'none', borderRadius:8, cursor:'pointer', fontSize:14, fontWeight:900, padding:'4px 10px', flexShrink:0 }}>✕</button>
           </div>
         ))}
       </div>
