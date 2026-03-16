@@ -57,6 +57,7 @@ type PicassoMsg =
   | { type: 'JOIN'; name: string }
   | { type: 'STATE'; state: HostState }
   | { type: 'YOUR_TURN'; word: string; timeLeft: number }
+  | { type: 'KICK' }
   | { type: 'STROKE_START'; x: number; y: number; color: string; width: number }
   | { type: 'STROKE_POINT'; x: number; y: number }
   | { type: 'STROKE_END' }
@@ -93,6 +94,7 @@ export const PicassoPlayerView: React.FC = () => {
 
   const connRef        = useRef<DataConnection | null>(null);
   const peerRef        = useRef<Peer | null>(null);
+  const everConnectedRef = useRef(false);
   const canvasRef      = useRef<HTMLCanvasElement>(null);
   const isDrawingRef   = useRef(false);
   const colorRef       = useRef('#000000');
@@ -101,6 +103,9 @@ export const PicassoPlayerView: React.FC = () => {
   // Name to send once connection opens (if user submitted form before conn was ready)
   const pendingJoinRef = useRef<string | null>(null);
   const savedNameRef   = useRef('');  // for reconnect
+  const reconnectAttemptsRef = useRef(0);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const kickedRef = useRef(false);
 
   const send = useCallback((msg: PicassoMsg) => {
     if (connRef.current?.open) connRef.current.send(msg);
@@ -110,14 +115,15 @@ export const PicassoPlayerView: React.FC = () => {
   useEffect(() => {
     if (!hostPeerId) { setStatus('error'); setErrMsg('קישור לא תקין – סרוק מחדש'); return; }
 
-    const peer = new Peer(); peerRef.current = peer;
-
     const setupConn = (conn: DataConnection) => {
       connRef.current = conn;
 
       conn.on('open', () => {
         setConnReady(true);
         setConnStatus('מחובר!');
+        everConnectedRef.current = true;
+        reconnectAttemptsRef.current = 0;
+        if (reconnectTimerRef.current) { clearTimeout(reconnectTimerRef.current); reconnectTimerRef.current = null; }
         // Rejoin automatically with saved name
         const nameToSend = pendingJoinRef.current ?? savedNameRef.current;
         if (nameToSend) {
@@ -132,6 +138,15 @@ export const PicassoPlayerView: React.FC = () => {
       conn.on('data', (raw) => {
         const msg = raw as PicassoMsg;
         if (msg.type === 'PING') { try { conn.send({ type: 'PONG' } as PicassoMsg); } catch {} return; }
+        if (msg.type === 'KICK') {
+          kickedRef.current = true;
+          if (reconnectTimerRef.current) { clearTimeout(reconnectTimerRef.current); reconnectTimerRef.current = null; }
+          try { conn.close(); } catch {}
+          setConnReady(false);
+          setStatus('error');
+          setErrMsg('הוסרת מהמשחק ע"י המנחה');
+          return;
+        }
         if (msg.type === 'STATE') {
           setGs(msg.state);
           if (msg.state.phase === 'gameOver') setStatus('roundEnd');
@@ -151,50 +166,84 @@ export const PicassoPlayerView: React.FC = () => {
         }
       });
 
-      conn.on('error', () => {
+      const scheduleReconnect = (reason: string) => {
+        if (kickedRef.current) return;
         setConnReady(false);
-        // Auto-reconnect after 2s
-        setTimeout(() => {
-          if (peerRef.current && !peerRef.current.destroyed) {
+        setConnStatus(`מתחבר מחדש... (${reason})`);
+        if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+        reconnectAttemptsRef.current += 1;
+        const attempt = reconnectAttemptsRef.current;
+        const delay = Math.min(8000, 500 * Math.pow(2, attempt - 1));
+        reconnectTimerRef.current = setTimeout(() => {
+          const p = peerRef.current;
+          if (!p || p.destroyed || kickedRef.current) return;
+          try {
+            // If PeerJS lost its signaling connection, ask it to reconnect.
+            // Even if data channels are down, this improves recovery odds.
+            if ((p as any).disconnected && typeof (p as any).reconnect === 'function') (p as any).reconnect();
+          } catch {}
+          try {
             setConnStatus('מתחבר מחדש...');
-            setupConn(peerRef.current.connect(hostPeerId, { reliable: true }));
+            setupConn(p.connect(hostPeerId, { reliable: true }));
+          } catch {
+            scheduleReconnect('שגיאת התחברות');
           }
-        }, 2000);
+        }, delay);
+      };
+
+      conn.on('error', () => scheduleReconnect('שגיאה'));
+      conn.on('close', () => scheduleReconnect('נותק'));
+    };
+
+    const setupPeer = () => {
+      const peer = new Peer();
+      peerRef.current = peer;
+
+      peer.on('open', () => {
+        if (kickedRef.current) return;
+        setConnStatus('מחובר, מצרף...');
+        try { setupConn(peer.connect(hostPeerId, { reliable: true })); } catch {}
       });
 
-      conn.on('close', () => {
+      peer.on('disconnected', () => {
+        if (kickedRef.current) return;
         setConnReady(false);
-        setConnStatus('מתחבר מחדש...');
-        // Auto-reconnect after 2s
+        setConnStatus('איבדנו חיבור לרשת — מנסה להתחבר מחדש...');
+        try {
+          if (typeof (peer as any).reconnect === 'function') (peer as any).reconnect();
+        } catch {}
+      });
+
+      peer.on('close', () => {
+        if (kickedRef.current) return;
+        setConnReady(false);
+        setConnStatus('החיבור נסגר — מנסה לפתוח מחדש...');
+        // Recreate peer instance (rare, but helps recovery)
         setTimeout(() => {
-          if (peerRef.current && !peerRef.current.destroyed) {
-            setupConn(peerRef.current.connect(hostPeerId, { reliable: true }));
-          }
-        }, 2000);
+          if (!kickedRef.current) setupPeer();
+        }, 800);
+      });
+
+      peer.on('error', (e) => {
+        if (kickedRef.current) return;
+        setConnReady(false);
+        const msg = String(e);
+        // Don't throw players into a fatal error screen for transient PeerJS errors.
+        setConnStatus(`שגיאת חיבור — מנסה שוב... (${msg})`);
+        // If we never managed to connect at all, show a soft error after many attempts.
+        if (!everConnectedRef.current && reconnectAttemptsRef.current >= 6) {
+          setStatus('error');
+          setErrMsg('לא מצליחים להתחבר כרגע — נסו לסרוק שוב או לרענן');
+        }
       });
     };
 
-    // Timeout: if no connection after 25s show error
-    const timeout = setTimeout(() => {
-      if (!connRef.current?.open) {
-        setStatus('error');
-        setErrMsg('לא הצלחנו להתחבר — בדקו שמסך המחשב פתוח ונסו שוב');
-      }
-    }, 25000);
+    setupPeer();
 
-    peer.on('open', () => {
-      setConnStatus('מחובר, מצרף...');
-      clearTimeout(timeout);
-      setupConn(peer.connect(hostPeerId, { reliable: true }));
-    });
-
-    peer.on('error', (e) => {
-      clearTimeout(timeout);
-      setStatus('error');
-      setErrMsg(`שגיאת חיבור: ${String(e)}`);
-    });
-
-    return () => { clearTimeout(timeout); peerRef.current?.destroy(); };
+    return () => {
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+      peerRef.current?.destroy();
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Join: called when user submits name form ──
@@ -612,13 +661,14 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   }, [startRound]);
 
   const removePlayer = useCallback((connId: string) => {
+    try { sendTo(connId, { type: 'KICK' }); } catch {}
     connsRef.current.get(connId)?.close();
     connsRef.current.delete(connId);
     playersRef.current.delete(connId);
     drawerQueueRef.current = drawerQueueRef.current.filter(id => id !== connId);
     syncPlayers();
     broadcastState();
-  }, [syncPlayers, broadcastState]);
+  }, [syncPlayers, broadcastState, sendTo]);
 
   // ── Handle incoming messages from players ──────────────────────────────────
   const handleMsg = useCallback((connId: string, msg: PicassoMsg) => {
@@ -671,6 +721,12 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     const peer = new Peer(); peerRef.current = peer;
     peer.on('open', id => setHostPeerId(id));
     peer.on('error', e => setPeerErr(String(e)));
+    peer.on('disconnected', () => {
+      setPeerErr('Signal disconnected — reconnecting...');
+      try {
+        if (typeof (peer as any).reconnect === 'function') (peer as any).reconnect();
+      } catch {}
+    });
     peer.on('connection', (conn: DataConnection) => {
       const connId = conn.peer;
       connsRef.current.set(connId, conn);
