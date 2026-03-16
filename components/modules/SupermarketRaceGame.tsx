@@ -21,59 +21,107 @@ const MONOPOLIES: Monopoly[] = [
   { id: 'yafora',   name: 'יפאורה-תבורי',            color: '#c2410c', bg: '#ffedd5', border: '#fb923c', website: 'https://www.yafora-tivall.co.il',             logoText: 'YAFORA'   },
 ];
 
-interface Product { name: string; monopolyId: string; emoji: string; }
+type MonopolyAnswerId = Monopoly['id'] | 'other';
 
-const ALL_PRODUCTS: Product[] = [
-  // שטראוס-עלית
-  { name: 'מילקי',           monopolyId: 'strauss',  emoji: '🍫' },
-  { name: 'קוטג׳ שטראוס',   monopolyId: 'strauss',  emoji: '🧀' },
-  { name: 'שוקולד עלית',    monopolyId: 'strauss',  emoji: '🍫' },
-  { name: 'קפה עלית',       monopolyId: 'strauss',  emoji: '☕' },
-  { name: 'הומוס שטראוס',   monopolyId: 'strauss',  emoji: '🫘' },
-  { name: 'יוגורט דנונה',   monopolyId: 'strauss',  emoji: '🥣' },
-  // אסם-נסטלה
-  { name: 'במבה',            monopolyId: 'osem',     emoji: '🥜' },
-  { name: 'ביסלי',           monopolyId: 'osem',     emoji: '🍿' },
-  { name: 'שקדי מרק',       monopolyId: 'osem',     emoji: '🥣' },
-  { name: 'קצ׳אפ אסם',     monopolyId: 'osem',     emoji: '🍅' },
-  { name: 'ספגטי אסם',     monopolyId: 'osem',     emoji: '🍝' },
-  { name: 'מרק מצנפת',      monopolyId: 'osem',     emoji: '🍲' },
-  // תנובה
-  { name: 'חלב תנובה',      monopolyId: 'tnuva',    emoji: '🥛' },
-  { name: 'חמאה תנובה',     monopolyId: 'tnuva',    emoji: '🧈' },
-  { name: 'לבן תנובה',      monopolyId: 'tnuva',    emoji: '🍶' },
-  { name: 'שמנת 38%',      monopolyId: 'tnuva',    emoji: '🍶' },
-  { name: 'גבינה לבנה',     monopolyId: 'tnuva',    emoji: '🧀' },
-  // יוניליוור
-  { name: 'תה ליפטון',      monopolyId: 'unilever', emoji: '🍵' },
-  { name: 'מיונז הלמן׳ס',  monopolyId: 'unilever', emoji: '🫙' },
-  { name: 'סבון דאב',       monopolyId: 'unilever', emoji: '🧴' },
-  { name: 'אקס / AXE',      monopolyId: 'unilever', emoji: '💨' },
-  { name: 'שמן זית ברגיליו', monopolyId: 'unilever', emoji: '🫒' },
-  // החברה המרכזית למשקאות
-  { name: 'קוקה-קולה',     monopolyId: 'central',  emoji: '🥤' },
-  { name: 'ספרייט',         monopolyId: 'central',  emoji: '🟢' },
-  { name: 'פנטה',            monopolyId: 'central',  emoji: '🍊' },
-  { name: 'פאוורייד',       monopolyId: 'central',  emoji: '🏋️' },
-  { name: 'שוופס',          monopolyId: 'central',  emoji: '🍾' },
-  // דיפלומט (P&G)
-  { name: 'פמפרס',           monopolyId: 'diplomat', emoji: '👶' },
-  { name: 'גילט',            monopolyId: 'diplomat', emoji: '🪒' },
-  { name: 'פנטן',            monopolyId: 'diplomat', emoji: '💆' },
-  { name: 'אוראל-בי',        monopolyId: 'diplomat', emoji: '🦷' },
-  { name: 'אריאל / Ariel',   monopolyId: 'diplomat', emoji: '🧺' },
-  // ליימן שלייסל
-  { name: 'קורנפלקס קלוגס',  monopolyId: 'leiman',   emoji: '🌽' },
-  { name: 'פרינגלס',         monopolyId: 'leiman',   emoji: '🥔' },
-  { name: 'לייס / Lay\'s',   monopolyId: 'leiman',   emoji: '🥓' },
-  { name: 'טרופיקנה',        monopolyId: 'leiman',   emoji: '🍊' },
-  // יפאורה-תבורי
-  { name: 'תפוזינה',         monopolyId: 'yafora',   emoji: '🍊' },
-  { name: 'מיצי',            monopolyId: 'yafora',   emoji: '🧃' },
-  { name: 'טיבול שניצל',      monopolyId: 'yafora',   emoji: '🥩' },
-  { name: 'טיבול קצצייה',      monopolyId: 'yafora',   emoji: '🌶️' },
-  { name: 'סלט תירות טבעי',  monopolyId: 'yafora',   emoji: '🥗' },
+interface Product {
+  name: string;
+  monopolyId: MonopolyAnswerId;
+  imageFile: string; // lives in /public
+}
+
+const PRODUCT_IMAGE_FILES: string[] = [
+  'bazooka(shtraus).jpg.svg',
+  'deodorant(diplomat).jpg.svg',
+  'doritos(shtraus).jpg.svg',
+  'dove(diplomat).jpg.svg',
+  'energi(shtraus).jpg.svg',
+  'go(tnuva).jpg.svg',
+  'hainz(diplomat).jpg.svg',
+  'jacobs(diplomat).jpg.svg',
+  'kifli(uniliver).jpg.svg',
+  'klik(uniliver).jpg.svg',
+  'kornflex(uniliver).jpg.svg',
+  'loaker(leiman).jpg.svg',
+  'mamaof(tnuva).jpg.svg',
+  'mastershef(shestovich).jpg.svg',
+  'meieden(yfora).jpg.svg',
+  'mentos(leiman).jpg.svg',
+  'meridol(shestovich).jpg.svg',
+  'milka(diplomat).jpg.svg',
+  'milki(shtraus).jpg.svg',
+  'muller(cocacola).jpg.svg',
+  'neviot(cocacola).jpg.svg',
+  'oralb(diplomat).jpg.svg',
+  'oreo(diplomat).jpg.svg',
+  'palmoliv(shestovich).jpg.svg',
+  'pinuk(uniliver).jpg.svg',
+  'pinukit(shtraus).jpg.svg',
+  'prigat(cocacola).jpg.svg',
+  'pringles(diplomat).jpg.svg',
+  'pro(shtraus).jpg.svg',
+  'proud(diplomat).jpg.svg',
+  'purina(osem).jpg.svg',
+  'quaker(shtraus).jpg.svg',
+  'rccoke(yfora).jpg.svg',
+  'sanfrost(tnuva).jpg.svg',
+  'shemen(shtraus).jpg.svg',
+  'shweps(yfora).jpg.svg',
+  'smartis(osem).jpg.svg',
+  'snyder(leiman).jpg.svg',
+  'speedstik(uniliver).jpg.svg',
+  'splendid(shtraus).jpg.svg',
+  'tapochips (shtraus).jpg.svg',
+  'tapozina(yfora).jpg.svg',
+  'testers(osem).jpg.svg',
+  'whitecheese(tnuva).jpg.svg',
+  'yolo(tnuva).jpg.svg',
 ];
+
+const KNOWN_MONOPOLY_IDS = new Set<string>(MONOPOLIES.map(m => m.id));
+
+function normalizeMonopolyTag(raw: string): string {
+  return raw
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/["'`]/g, '');
+}
+
+function tagToMonopolyId(tag: string): MonopolyAnswerId {
+  const t = normalizeMonopolyTag(tag);
+  const mapped: Record<string, MonopolyAnswerId> = {
+    strauss: 'strauss',
+    shtraus: 'strauss',
+    osem: 'osem',
+    tnuva: 'tnuva',
+    unilever: 'unilever',
+    uniliver: 'unilever',
+    diplomat: 'diplomat',
+    leiman: 'leiman',
+    yafora: 'yafora',
+    yfora: 'yafora',
+    central: 'central',
+    cocacola: 'central',
+  };
+  const id = mapped[t] ?? (KNOWN_MONOPOLY_IDS.has(t) ? (t as Monopoly['id']) : 'other');
+  return KNOWN_MONOPOLY_IDS.has(id) ? id : 'other';
+}
+
+function makeProductFromFilename(imageFile: string): Product {
+  const withoutExt = imageFile.replace(/(\.[^.]+)+$/g, '').trim();
+  const m = withoutExt.match(/^(.*)\(([^)]+)\)$/);
+  const rawName = (m ? m[1] : withoutExt).trim();
+  const rawTag = (m ? m[2] : '').trim();
+  const name = rawName
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const monopolyId = rawTag ? tagToMonopolyId(rawTag) : 'other';
+  return { name: name || 'מוצר', monopolyId, imageFile };
+}
+
+const ALL_PRODUCTS: Product[] = PRODUCT_IMAGE_FILES.map(makeProductFromFilename);
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -744,7 +792,12 @@ export const SupermarketPlayerView: React.FC = () => {
           {/* Product card */}
           <div className="flex justify-center px-4 pb-3">
             <div className="bg-white rounded-3xl shadow-xl px-8 py-4 flex flex-col items-center gap-1 border-4 border-white/80 w-full max-w-xs">
-              <span className="text-6xl spin-in">{currentProduct.emoji}</span>
+              <img
+                className="spin-in"
+                src={`${import.meta.env.BASE_URL}${encodeURI(currentProduct.imageFile)}`}
+                alt={currentProduct.name}
+                style={{ width: '100%', height: 170, objectFit: 'contain' }}
+              />
               <p className="text-2xl font-black text-center text-brand-dark-blue">{currentProduct.name}</p>
               {answered && !feedback && <p className="text-xs text-gray-400 mt-1">נשלח ✓</p>}
               {feedback && (
@@ -759,23 +812,25 @@ export const SupermarketPlayerView: React.FC = () => {
           <div className="flex-1 overflow-y-auto px-3 pb-6">
             <p className="text-center text-xs text-brand-dark-blue/50 font-bold mb-2">של מי המוצר?</p>
             <div className="grid grid-cols-2 gap-2">
-              {MONOPOLIES.map(m => {
-                const isCorrect = feedback?.id === m.id;
+              {[...MONOPOLIES.map(m => ({ id: m.id as MonopolyAnswerId, name: m.name, bg: m.bg, border: m.border, color: m.color })),
+                { id: 'other' as const, name: 'אחר', bg: '#f1f5f9', border: '#cbd5e1', color: '#334155' },
+              ].map(opt => {
+                const isCorrect = feedback?.id === opt.id;
                 return (
                   <button
-                    key={m.id}
-                    onClick={() => answer(m.id)}
+                    key={opt.id}
+                    onClick={() => answer(opt.id)}
                     disabled={answered}
                     className="rounded-2xl py-3 px-2 font-black text-base transition-transform active:scale-95 disabled:cursor-default"
                     style={{
-                      background: isCorrect && feedback ? '#dcfce7' : m.bg,
-                      border: `2px solid ${isCorrect && feedback ? '#22c55e' : m.border}`,
-                      color: m.color,
+                      background: isCorrect && feedback ? '#dcfce7' : opt.bg,
+                      border: `2px solid ${isCorrect && feedback ? '#22c55e' : opt.border}`,
+                      color: opt.color,
                       boxShadow: isCorrect && feedback ? '0 0 0 4px #22c55e44' : undefined,
                       transform: isCorrect && feedback ? 'scale(1.04)' : undefined,
                     }}
                   >
-                    {m.name}
+                    {opt.name}
                   </button>
                 );
               })}
