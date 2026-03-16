@@ -8,7 +8,7 @@ import { QRCodeSVG } from 'qrcode.react';
 interface Monopoly { id: string; name: string; color: string; bg: string; border: string; website: string; logoText: string; }
 
 // Monopolies shown in QR study phase (ordered as requested)
-const STUDY_MONOPOLY_IDS = ['osem', 'central', 'tnuva', 'unilever', 'diplomat', 'strauss', 'leiman', 'yafora'];
+const STUDY_MONOPOLY_IDS = ['osem', 'central', 'tnuva', 'unilever', 'diplomat', 'strauss', 'leiman', 'shestovich'];
 
 const MONOPOLIES: Monopoly[] = [
   { id: 'strauss',  name: 'שטראוס-עלית',              color: '#1d4ed8', bg: '#dbeafe', border: '#93c5fd', website: 'https://www.strauss-group.com',               logoText: 'STRAUSS'  },
@@ -18,7 +18,7 @@ const MONOPOLIES: Monopoly[] = [
   { id: 'central',  name: 'החברה המרכזית למשקאות',     color: '#b91c1c', bg: '#fecaca', border: '#f87171', website: 'https://www.coca-cola.co.il',                  logoText: 'CENTRAL'  },
   { id: 'diplomat', name: 'דיפלומט',                   color: '#7c3aed', bg: '#ede9fe', border: '#c4b5fd', website: 'https://www.diplomat-il.com',                 logoText: 'DIPLOMAT' },
   { id: 'leiman',   name: 'ליימן שלייסל',              color: '#065f46', bg: '#d1fae5', border: '#6ee7b7', website: 'https://www.leiman.co.il',                    logoText: 'LEIMAN'   },
-  { id: 'yafora',   name: 'יפאורה-תבורי',            color: '#c2410c', bg: '#ffedd5', border: '#fb923c', website: 'https://www.yafora-tivall.co.il',             logoText: 'YAFORA'   },
+  { id: 'shestovich', name: 'שסטוביץ׳',                color: '#0f766e', bg: '#ccfbf1', border: '#5eead4', website: 'https://www.shestovich.co.il',               logoText: 'SHESTOVICH' },
 ];
 
 type MonopolyAnswerId = Monopoly['id'] | 'other';
@@ -98,8 +98,10 @@ function tagToMonopolyId(tag: string): MonopolyAnswerId {
     uniliver: 'unilever',
     diplomat: 'diplomat',
     leiman: 'leiman',
-    yafora: 'yafora',
-    yfora: 'yafora',
+    shestovich: 'shestovich',
+    // yafora/yfora products should be answered as "other"
+    yafora: 'other',
+    yfora: 'other',
     central: 'central',
     cocacola: 'central',
   };
@@ -798,7 +800,6 @@ export const SupermarketPlayerView: React.FC = () => {
                 alt={currentProduct.name}
                 style={{ width: '100%', height: 170, objectFit: 'contain' }}
               />
-              <p className="text-2xl font-black text-center text-brand-dark-blue">{currentProduct.name}</p>
               {answered && !feedback && <p className="text-xs text-gray-400 mt-1">נשלח ✓</p>}
               {feedback && (
                 <p className={`text-sm font-bold mt-1 ${feedback.correct ? 'text-green-600' : 'text-red-500'}`}>
