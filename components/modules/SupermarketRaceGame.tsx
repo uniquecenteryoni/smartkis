@@ -11,14 +11,14 @@ interface Monopoly { id: string; name: string; color: string; bg: string; border
 const STUDY_MONOPOLY_IDS = ['osem', 'central', 'tnuva', 'unilever', 'diplomat', 'strauss', 'leiman', 'shestovich'];
 
 const MONOPOLIES: Monopoly[] = [
-  { id: 'strauss',  name: 'שטראוס-עלית',              color: '#1d4ed8', bg: '#dbeafe', border: '#93c5fd', website: 'https://www.strauss-group.com',               logoText: 'STRAUSS'  },
-  { id: 'osem',     name: 'אסם-נסטלה',                 color: '#ea580c', bg: '#ffedd5', border: '#fdba74', website: 'https://www.osem.co.il',                      logoText: 'OSEM'     },
-  { id: 'tnuva',    name: 'תנובה',                     color: '#dc2626', bg: '#fee2e2', border: '#fca5a5', website: 'https://www.tnuva.co.il',                     logoText: 'TNUVA'    },
-  { id: 'unilever', name: 'יוניליוור',                 color: '#1e40af', bg: '#e0e7ff', border: '#a5b4fc', website: 'https://www.unilever.co.il',                  logoText: 'UNILEVER' },
-  { id: 'central',  name: 'החברה המרכזית למשקאות',     color: '#b91c1c', bg: '#fecaca', border: '#f87171', website: 'https://www.coca-cola.co.il',                  logoText: 'CENTRAL'  },
-  { id: 'diplomat', name: 'דיפלומט',                   color: '#7c3aed', bg: '#ede9fe', border: '#c4b5fd', website: 'https://www.diplomat-il.com',                 logoText: 'DIPLOMAT' },
-  { id: 'leiman',   name: 'ליימן שלייסל',              color: '#065f46', bg: '#d1fae5', border: '#6ee7b7', website: 'https://www.leiman.co.il',                    logoText: 'LEIMAN'   },
-  { id: 'shestovich', name: 'שסטוביץ׳',                color: '#0f766e', bg: '#ccfbf1', border: '#5eead4', website: 'https://www.shestovich.co.il',               logoText: 'SHESTOVICH' },
+  { id: 'strauss',  name: 'שטראוס',                    color: '#1d4ed8', bg: '#dbeafe', border: '#93c5fd', website: 'https://www.strauss-group.co.il/brand/',                                                logoText: 'STRAUSS'  },
+  { id: 'osem',     name: 'אסם',                       color: '#ea580c', bg: '#ffedd5', border: '#fdba74', website: 'https://www.osem-nestle.co.il/brands',                                                  logoText: 'OSEM'     },
+  { id: 'tnuva',    name: 'תנובה',                     color: '#dc2626', bg: '#fee2e2', border: '#fca5a5', website: 'https://www.tnuva.co.il/products/',                                                     logoText: 'TNUVA'    },
+  { id: 'unilever', name: 'יוניליוור',                 color: '#1e40af', bg: '#e0e7ff', border: '#a5b4fc', website: 'https://docs.google.com/document/d/1pkR8V29Zg70TTsZ-EN13fMz9aZDteh-2GfIuaRcrqBM/edit?usp=sharing', logoText: 'UNILEVER' },
+  { id: 'central',  name: 'החברה המרכזית למשקאות',     color: '#b91c1c', bg: '#fecaca', border: '#f87171', website: 'https://cbcsales.co.il/',                                                               logoText: 'CENTRAL'  },
+  { id: 'diplomat', name: 'דיפלומט',                   color: '#7c3aed', bg: '#ede9fe', border: '#c4b5fd', website: 'https://www.diplomat.co.il/he/the-brands/',                                             logoText: 'DIPLOMAT' },
+  { id: 'leiman',   name: 'ליימן שלייסל',              color: '#065f46', bg: '#d1fae5', border: '#6ee7b7', website: 'https://www.l-s.co.il/brands/',                                                         logoText: 'LEIMAN'   },
+  { id: 'shestovich', name: 'שסטוביץ׳',                color: '#0f766e', bg: '#ccfbf1', border: '#5eead4', website: 'https://www.sch.co.il/%D7%9E%D7%95%D7%AA%D7%92%D7%99%D7%9D/',                           logoText: 'SHESTOVICH' },
 ];
 
 type MonopolyAnswerId = Monopoly['id'] | 'other';
@@ -281,6 +281,43 @@ const CartRace: React.FC<{ teams: TeamScore[]; maxScore: number; floats: FloatAn
 
 // ─── Study Phase ───────────────────────────────────────────────────────────────
 
+function downloadLinksPDF() {
+  const rows = MONOPOLIES.map(m => `
+    <tr>
+      <td style="padding:10px 16px;font-weight:bold;font-size:15px;color:${m.color};background:${m.bg};border:1px solid ${m.border};direction:rtl">${m.name}</td>
+      <td style="padding:10px 16px;font-size:13px;color:#1e3a5f;border:1px solid #e5e7eb;word-break:break-all">${m.website}</td>
+    </tr>`).join('');
+  const html = `<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+  <meta charset="UTF-8"/>
+  <title>קישורי המונופולים — חכם בסופר</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 32px; direction: rtl; }
+    h1   { font-size: 22px; color: #1b2550; margin-bottom: 4px; }
+    p    { color: #64748b; margin-bottom: 20px; font-size: 13px; }
+    table { border-collapse: collapse; width: 100%; }
+    th   { background: #1b2550; color: #fff; padding: 10px 16px; text-align: right; font-size: 14px; }
+    tr:hover td { background: #f8fafc; }
+    @media print { body { padding: 16px; } }
+  </style>
+</head>
+<body>
+  <h1>🛒 חכם בסופר — קישורי המונופולים</h1>
+  <p>סרקו את הברקוד או היכנסו לקישור כדי לגלות אילו מוצרים שייכים לאיזו חברה</p>
+  <table>
+    <thead><tr><th>חברה</th><th style="text-align:left">קישור</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+</body>
+</html>`;
+  const win = window.open('', '_blank');
+  if (!win) return;
+  win.document.write(html);
+  win.document.close();
+  setTimeout(() => win.print(), 400);
+}
+
 const StudyPhase: React.FC<{ onDone: () => void }> = ({ onDone }) => {
   const [secs, setSecs] = useState(600);
   useEffect(() => {
@@ -302,9 +339,18 @@ const StudyPhase: React.FC<{ onDone: () => void }> = ({ onDone }) => {
           <div className="text-5xl font-black font-mono rounded-2xl px-6 py-3" style={{ background: secs < 60 ? '#fee2e2' : '#f0fdf4', color: secs < 60 ? '#dc2626' : '#15803d' }}>
             {mm}:{ss}
           </div>
-          <button onClick={onDone} className="px-6 py-3 bg-brand-teal text-white font-bold rounded-full hover:bg-teal-700">
-            המשך למשחק ←
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={downloadLinksPDF}
+              title="הורד PDF עם הקישורים"
+              className="px-4 py-3 bg-white border-2 border-gray-300 text-brand-dark-blue font-bold rounded-full hover:border-brand-teal hover:text-brand-teal text-sm flex items-center gap-1"
+            >
+              📄 הדפס קישורים
+            </button>
+            <button onClick={onDone} className="px-6 py-3 bg-brand-teal text-white font-bold rounded-full hover:bg-teal-700">
+              המשך למשחק ←
+            </button>
+          </div>
         </div>
       </div>
 
@@ -648,24 +694,68 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       })()}
 
       {/* ── DONE ──────────────────────────────────────────────────────── */}
-      {phase === 'done' && (
-        <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-8 text-center space-y-6">
-          <p className="text-5xl">🏆</p>
-          <h3 className="text-3xl font-black text-brand-dark-blue">סיום המשחק!</h3>
-          <div className="space-y-3 max-w-xs mx-auto">
-            {[...teams].sort((a, b) => b.score - a.score).map((t, i) => (
-              <div key={t.name} className="flex items-center gap-3 rounded-2xl p-3 border" style={{ background: i === 0 ? '#fef3c7' : '#f8fafc' }}>
-                <span className="text-2xl">{['🥇', '🥈', '🥉'][i] || `${i + 1}.`}</span>
-                <span className="flex-1 font-bold text-brand-dark-blue text-right">{t.name}</span>
-                <span className="text-2xl font-black text-brand-teal">{t.score}</span>
+      {phase === 'done' && (() => {
+        const sorted = [...teams].sort((a, b) => b.score - a.score);
+        // podium order: 2nd | 1st | 3rd
+        const podiumOrder   = sorted.length >= 3 ? [sorted[1], sorted[0], sorted[2]] : sorted;
+        const podiumHeights = ['h-28', 'h-40', 'h-20'];
+        const podiumColors  = ['#9ca3af', '#fbbf24', '#cd7c2c'];
+        const podiumLabels  = ['🥈', '🥇', '🥉'];
+        return (
+          <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-8 text-center space-y-8">
+            <div>
+              <p className="text-5xl mb-1">🏆</p>
+              <h3 className="text-4xl font-black text-brand-dark-blue">סיום המשחק!</h3>
+            </div>
+
+            {/* Podium */}
+            {sorted.length >= 2 && (
+              <div className="flex items-end justify-center gap-4">
+                {podiumOrder.map((t, pi) => {
+                  const col = TEAM_COLORS[teams.indexOf(t) % TEAM_COLORS.length];
+                  return (
+                    <div key={t.name} className="flex flex-col items-center gap-2" style={{ minWidth: 100 }}>
+                      <span className="text-4xl">{podiumLabels[pi]}</span>
+                      <span className="font-black text-sm text-brand-dark-blue text-center leading-tight max-w-[96px]">{t.name}</span>
+                      <span className="text-3xl font-black" style={{ color: col }}>{t.score}</span>
+                      <div
+                        className={`w-24 ${podiumHeights[pi]} rounded-t-2xl flex items-start justify-center pt-2 font-black text-white text-2xl`}
+                        style={{ background: podiumColors[pi] }}
+                      >
+                        {[2, 1, 3][pi]}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
+            )}
+
+            {/* 4th place and beyond */}
+            {sorted.length === 1 && (
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-5xl">🥇</span>
+                <span className="text-2xl font-black text-brand-dark-blue">{sorted[0].name}</span>
+                <span className="text-4xl font-black text-brand-teal">{sorted[0].score}</span>
+              </div>
+            )}
+            {sorted.length > 3 && (
+              <div className="space-y-2 max-w-xs mx-auto">
+                {sorted.slice(3).map((t, i) => (
+                  <div key={t.name} className="flex items-center gap-3 rounded-xl p-2 border bg-gray-50">
+                    <span className="text-sm font-bold text-gray-500 w-6">{i + 4}.</span>
+                    <span className="flex-1 font-bold text-brand-dark-blue text-right">{t.name}</span>
+                    <span className="text-xl font-black text-brand-teal">{t.score}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button onClick={() => { setPhase('setup'); setTeams([]); setPlayers([]); setFloats([]); setTimeLeft(gameDuration); }} className="px-8 py-3 bg-brand-magenta text-white font-bold rounded-full hover:bg-pink-700">
+              🔄 משחק חדש
+            </button>
           </div>
-          <button onClick={() => { setPhase('setup'); setTeams([]); setPlayers([]); setFloats([]); setTimeLeft(gameDuration); }} className="px-8 py-3 bg-brand-magenta text-white font-bold rounded-full hover:bg-pink-700">
-            🔄 משחק חדש
-          </button>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };
@@ -679,7 +769,7 @@ export const SupermarketPlayerView: React.FC = () => {
   const peerRef2  = useRef<InstanceType<typeof Peer> | null>(null);
   const productsRef = useRef<Product[]>([]);
 
-  const [status,     setStatus]     = useState<'connecting' | 'join' | 'waiting' | 'game' | 'done' | 'error'>('connecting');
+  const [status,     setStatus]     = useState<'connecting' | 'join' | 'waiting' | 'game' | 'done' | 'error' | 'perfect'>('connecting');
   const [teams,      setTeams]      = useState<string[]>([]);
   const [myName,     setMyName]     = useState('');
   const [myTeam,     setMyTeam]     = useState('');
@@ -690,7 +780,11 @@ export const SupermarketPlayerView: React.FC = () => {
   const [score,      setScore]      = useState(0);
   const [answered,   setAnswered]   = useState(false);
 
+  const wrongIdxsRef  = useRef<Set<number>>(new Set());
+  const productIdxRef = useRef(-1);
+
   useEffect(() => { productsRef.current = products; }, [products]);
+  useEffect(() => { productIdxRef.current = productIdx; }, [productIdx]);
 
   const send = useCallback((msg: Msg) => { try { connRef.current?.send(msg); } catch {} }, []);
 
@@ -706,7 +800,9 @@ export const SupermarketPlayerView: React.FC = () => {
         const msg = raw as Msg;
         if (msg.type === 'TEAMS')    { setTeams(msg.teams); }
         if (msg.type === 'PRODUCTS') {
+          wrongIdxsRef.current = new Set();
           setProducts(msg.products);
+          productsRef.current = msg.products;
           setProductIdx(0);
           setCycle(0);
           setAnswered(false);
@@ -716,21 +812,35 @@ export const SupermarketPlayerView: React.FC = () => {
         // Backward compatibility (older host)
         if (msg.type === 'PRODUCT')  { setProductIdx(msg.productIndex); setAnswered(false); setFeedback(null); setStatus('game'); }
         if (msg.type === 'RESULT')   {
-          setFeedback({ id: msg.correctId, correct: msg.correct });
-          if (msg.correct) setScore(s => s + 1);
+          const wasCorrect = msg.correct;
+          const curIdx = productIdxRef.current;
+          if (!wasCorrect) wrongIdxsRef.current.add(curIdx);
+          setFeedback({ id: msg.correctId, correct: wasCorrect });
+          if (wasCorrect) setScore(s => s + 1);
           setTimeout(() => {
             setFeedback(null);
             setAnswered(false);
-            const len = productsRef.current.length;
-            if (len <= 0) return;
-            setProductIdx(idx => {
-              const next = idx + 1;
-              if (next >= len) {
+            const prods = productsRef.current;
+            if (prods.length <= 0) return;
+            const next = productIdxRef.current + 1;
+            if (next >= prods.length) {
+              // End of round
+              const wrongs = wrongIdxsRef.current;
+              if (wrongs.size === 0) {
+                // All correct!
+                setStatus('perfect');
+              } else {
+                // Restart with only wrong products
+                const wrongProds = prods.filter((_, i) => wrongs.has(i));
+                wrongIdxsRef.current = new Set();
+                productsRef.current = wrongProds;
+                setProducts(wrongProds);
                 setCycle(c => c + 1);
-                return 0;
+                setProductIdx(0);
               }
-              return next;
-            });
+            } else {
+              setProductIdx(next);
+            }
           }, 900);
         }
         if (msg.type === 'DONE')     { setStatus('done'); }
@@ -843,23 +953,28 @@ export const SupermarketPlayerView: React.FC = () => {
           {/* Monopoly grid */}
           <div className="flex-1 overflow-y-auto px-3 pb-6">
             <p className="text-center text-xs text-brand-dark-blue/50 font-bold mb-2">של מי המוצר?</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2.5">
               {[...MONOPOLIES.map(m => ({ id: m.id as MonopolyAnswerId, name: m.name, bg: m.bg, border: m.border, color: m.color })),
                 { id: 'other' as const, name: 'אחר', bg: '#f1f5f9', border: '#cbd5e1', color: '#334155' },
               ].map(opt => {
                 const isCorrect = feedback?.id === opt.id;
+                const isWrong   = feedback && !feedback.correct && answered && opt.id === feedback.id;
                 return (
                   <button
                     key={opt.id}
                     onClick={() => answer(opt.id)}
                     disabled={answered}
-                    className="rounded-2xl py-3 px-2 font-black text-base transition-transform active:scale-95 disabled:cursor-default"
+                    className="rounded-2xl font-black transition-transform active:scale-95 disabled:cursor-default select-none"
                     style={{
                       background: isCorrect && feedback ? '#dcfce7' : opt.bg,
-                      border: `2px solid ${isCorrect && feedback ? '#22c55e' : opt.border}`,
+                      border: `2.5px solid ${isCorrect && feedback ? '#22c55e' : isWrong ? '#ef4444' : opt.border}`,
                       color: opt.color,
                       boxShadow: isCorrect && feedback ? '0 0 0 4px #22c55e44' : undefined,
-                      transform: isCorrect && feedback ? 'scale(1.04)' : undefined,
+                      transform: isCorrect && feedback ? 'scale(1.05)' : undefined,
+                      fontSize: 15,
+                      padding: '14px 8px',
+                      lineHeight: 1.25,
+                      minHeight: 60,
                     }}
                   >
                     {opt.name}
@@ -879,6 +994,19 @@ export const SupermarketPlayerView: React.FC = () => {
             <p className="text-2xl font-black text-gray-700">המשחק הסתיים!</p>
             <p className="text-4xl font-black text-brand-teal">{score} נקודות</p>
             <p className="text-gray-500">{myName} | {myTeam}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Perfect - all products answered correctly */}
+      {status === 'perfect' && (
+        <div className="flex-1 flex items-center justify-center px-6">
+          <div className="text-center space-y-5 bg-white rounded-3xl shadow-2xl p-8 border-4 border-yellow-300">
+            <p className="text-7xl">⭐</p>
+            <p className="text-2xl font-black text-brand-dark-blue">כל הכבוד!</p>
+            <p className="text-base font-bold text-green-700 leading-relaxed">שייכתם את כל המוצרים נכון<br/>אין ספק שאתם חכמים בסופר!</p>
+            <p className="text-3xl font-black text-brand-teal">{score} נקודות 🚀</p>
+            <p className="text-gray-400 text-sm">{myName} | {myTeam}</p>
           </div>
         </div>
       )}
