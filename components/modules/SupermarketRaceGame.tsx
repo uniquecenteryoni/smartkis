@@ -154,14 +154,6 @@ type Msg =
   | { type: 'SCORE';   teams: TeamScore[] }
   | { type: 'DONE' };
 
-function playHostCorrectSfx() {
-  try {
-    const a = new Audio(`${import.meta.env.BASE_URL}havila.mp3`);
-    a.volume = 0.6;
-    void a.play();
-  } catch {}
-}
-
 function playTapSfx() {
   try {
     const AudioCtx = (window.AudioContext || (window as any).webkitAudioContext) as typeof AudioContext | undefined;
@@ -352,6 +344,7 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const playersRef     = useRef<PlayerEntry[]>([]);
   const productsRef    = useRef<Product[]>([]);
   const answeredKeyRef = useRef<Set<string>>(new Set());
+  const bgMusicRef     = useRef<HTMLAudioElement | null>(null);
 
   // Keep refs in sync
   useEffect(() => { teamsRef.current = teams; }, [teams]);
@@ -366,6 +359,34 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       try { conn.send(msg); } catch {}
     });
   }, []);
+
+  const startBgMusic = useCallback(() => {
+    try {
+      if (!bgMusicRef.current) {
+        const a = new Audio(`${import.meta.env.BASE_URL}havila.mp3`);
+        a.loop = true;
+        a.volume = 0.22;
+        bgMusicRef.current = a;
+      }
+      void bgMusicRef.current.play();
+    } catch {}
+  }, []);
+
+  const stopBgMusic = useCallback(() => {
+    try {
+      bgMusicRef.current?.pause();
+      if (bgMusicRef.current) bgMusicRef.current.currentTime = 0;
+    } catch {}
+  }, []);
+
+  // Ensure music stops when leaving race / unmounting
+  useEffect(() => {
+    if (phase !== 'race') stopBgMusic();
+  }, [phase, stopBgMusic]);
+
+  useEffect(() => {
+    return () => stopBgMusic();
+  }, [stopBgMusic]);
 
   // Init PeerJS
   useEffect(() => {
@@ -406,7 +427,6 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           setTimeout(() => setFloats(prev => prev.filter(f => f.id !== fid)), 1400);
           // Update score
           if (correct) {
-            playHostCorrectSfx();
             setTeams(prev => {
               const next = prev.map(t => t.name === msg.team ? { ...t, score: t.score + 1 } : t);
               broadcast({ type: 'SCORE', teams: next });
@@ -460,6 +480,8 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   };
 
   const startRace = () => {
+    // Start background music from a user gesture (button click) so mobile/desktop browsers allow playback.
+    startBgMusic();
     const shuffled = shuffle(ALL_PRODUCTS);
     setProducts(shuffled);
     productsRef.current = shuffled;
@@ -602,7 +624,7 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 {players.length} שחקנים מחוברים
               </div>
               <button
-                onClick={() => { broadcast({ type: 'DONE' }); setPhase('done'); }}
+                onClick={() => { stopBgMusic(); broadcast({ type: 'DONE' }); setPhase('done'); }}
                 className="px-6 py-3 bg-red-100 text-red-600 font-bold rounded-full hover:bg-red-200 text-base"
               >
                 סיים עכשיו ⏹
