@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import ModuleView from '../ModuleView';
 import { TrophyIcon } from '../icons/Icons';
 
@@ -8,319 +8,475 @@ interface MonopoliesModuleProps {
   onComplete: () => void;
 }
 
-const steps = ["מהו מונופול?", "אתגר השוקו", "דוגמאות מהשוק", "מי השופט?", "חידון המונופולים"];
+const steps = ['מהו מונופול?', 'אתגר השוקו', 'שרשרת הצריכה', 'מיזוגים ורכישות', 'מי שומר עלינו?', 'חידון המונופולים'];
+const BASE = import.meta.env.BASE_URL;
 
-// --- Step 1: Introduction ---
-const IntroductionStep: React.FC = () => (
-    <div className="bg-white/40 backdrop-blur-md border border-white/30 p-8 rounded-2xl animate-fade-in text-center">
-        <h3 className="text-4xl font-bold text-brand-teal mb-4">מהו מונופול?</h3>
-        <p className="text-2xl text-brand-dark-blue/90 mb-8">
-            דמיינו שוק. בשוק תחרותי יש הרבה מוכרים, והם מתחרים ביניהם על המחיר והאיכות כדי שתקנו מהם. אבל מה קורה כשיש רק מוכר אחד?
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-green-100/60 p-6 rounded-xl border-2 border-green-300">
-                <h4 className="font-bold text-3xl text-green-700 mb-3">✅ שוק תחרותי</h4>
-                <div className="flex justify-around items-end text-5xl mb-3"><span>🏪</span><span>🏪</span><span>🏪</span></div>
-                <p className="text-xl">הרבה מוכרים, מחירים נמוכים, איכות גבוהה, ומבחר גדול.</p>
-            </div>
-            <div className="bg-red-100/60 p-6 rounded-xl border-2 border-red-300">
-                <h4 className="font-bold text-3xl text-red-700 mb-3">❌ שוק מונופוליסטי</h4>
-                <div className="flex justify-around items-end text-7xl mb-3"><span>🏢</span></div>
-                <p className="text-xl">מוכר אחד שולט, מחירים גבוהים, איכות נמוכה, ואין לכם ברירה אחרת.</p>
-            </div>
-        </div>
+const IntroductionStep: React.FC = () => {
+  const [mode, setMode] = useState<'competitive' | 'oligopoly' | 'monopoly' | 'bigSupplier'>('competitive');
+
+  const model = {
+    competitive: {
+      title: 'שוק תחרותי',
+      icon: '🏪🏪🏪',
+      color: 'text-green-700',
+      bg: 'bg-green-50 border-green-300',
+      text: 'הרבה מוכרים, מחירים נמוכים, מבחר גדול – הצרכן מרוויח.',
+    },
+    oligopoly: {
+      title: 'אוליגופול',
+      icon: '🏢🏢🏢',
+      color: 'text-yellow-700',
+      bg: 'bg-yellow-50 border-yellow-300',
+      text: 'מעט חברות גדולות שולטות ברוב השוק – התחרות מוגבלת.',
+    },
+    monopoly: {
+      title: 'מונופול',
+      icon: '👑',
+      color: 'text-red-700',
+      bg: 'bg-red-50 border-red-300',
+      text: 'לפי חוק התחרות הכלכלית (בנוסחו לאחר תיקון 2019): מונופול הוא מי שמחזיק ביותר ממחצית מכלל אספקת הנכס/השירות בשוק מסוים, או ביותר ממחצית מכלל רכישתו.',
+    },
+    bigSupplier: {
+      title: 'ספק גדול',
+      icon: '🏭',
+      color: 'text-indigo-700',
+      bg: 'bg-indigo-50 border-indigo-300',
+      text: 'בענף המזון: ספק שמחזור המכירות השנתי שלו בישראל עולה על 300 מיליון ש״ח (לפי חוק המזון).',
+    },
+  }[mode];
+
+  return (
+    <div className="bg-white/40 backdrop-blur-md border border-white/30 p-6 rounded-2xl space-y-5 animate-fade-in">
+      <h3 className="text-3xl font-bold text-brand-teal text-center">מהו מונופול?</h3>
+      <p className="text-xl text-center text-brand-dark-blue/85">עברו בין שלושת המצבים כדי להבין איך מבנה השוק משפיע עלינו.</p>
+
+      <div className="flex justify-center gap-2 flex-wrap">
+        <button onClick={() => setMode('competitive')} className={`px-4 py-2 rounded-full font-bold border-2 ${mode === 'competitive' ? 'bg-green-600 text-white border-green-600' : 'bg-white border-gray-300 text-brand-dark-blue'}`}>תחרותי</button>
+        <button onClick={() => setMode('oligopoly')} className={`px-4 py-2 rounded-full font-bold border-2 ${mode === 'oligopoly' ? 'bg-yellow-500 text-white border-yellow-500' : 'bg-white border-gray-300 text-brand-dark-blue'}`}>אוליגופול</button>
+        <button onClick={() => setMode('monopoly')} className={`px-4 py-2 rounded-full font-bold border-2 ${mode === 'monopoly' ? 'bg-red-600 text-white border-red-600' : 'bg-white border-gray-300 text-brand-dark-blue'}`}>מונופול</button>
+        <button onClick={() => setMode('bigSupplier')} className={`px-4 py-2 rounded-full font-bold border-2 ${mode === 'bigSupplier' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white border-gray-300 text-brand-dark-blue'}`}>ספק גדול</button>
+      </div>
+
+      <div className={`rounded-2xl border-2 p-6 text-center ${model.bg}`}>
+        <p className="text-5xl mb-2">{model.icon}</p>
+        <h4 className={`text-2xl font-black ${model.color}`}>{model.title}</h4>
+        <p className="text-lg text-brand-dark-blue mt-2">{model.text}</p>
+      </div>
+
+      <div className="bg-white/70 border border-gray-200 rounded-2xl p-4">
+        <p className="text-sm font-bold text-brand-dark-blue/70 mb-2 text-center">המונופולים והספקים הגדולים בישראל</p>
+        <img
+          src={`${BASE}LOGOSMONOPOLY.SVG.svg`}
+          alt="המונופולים והספקים הגדולים בישראל"
+          className="w-full rounded-xl border border-gray-200"
+        />
+      </div>
     </div>
-);
-
-// Step 2: Monopoly Game
-const MonopolyGame: React.FC = () => {
-    const [round, setRound] = useState(1);
-    const [boughtItem, setBoughtItem] = useState<string | null>(null);
-    const [takeover, setTakeover] = useState(false);
-
-    const competitiveStores = [
-        { name: 'שוקו-כיף', price: 6, logo: '🥛', quality: 'טעם מעולה!', color: 'bg-blue-400' },
-        { name: 'שוקו-לנד', price: 5, logo: '🧃', quality: 'הכי זול!', color: 'bg-green-400' },
-        { name: 'שוקו-פרימיום', price: 8, logo: '✨', quality: 'הכי איכותי!', color: 'bg-yellow-400' },
-    ];
-    const monopolyStore = { name: 'תאגיד השוקו הגדול', price: 10, logo: '👑', quality: 'טעם חדש (פחות שוקולד)', color: 'bg-red-500' };
-
-    const handleBuy = (name: string) => {
-        if (boughtItem) return;
-        setBoughtItem(name);
-    };
-
-    const handleNextRound = () => {
-        setTakeover(true);
-        setTimeout(() => {
-            setRound(2);
-            setBoughtItem(null);
-        }, 1500);
-    };
-    
-    return (
-        <div className="bg-white/40 backdrop-blur-md border border-white/30 p-8 rounded-2xl animate-fade-in text-center">
-            <h3 className="text-4xl font-bold text-brand-teal mb-4">אתגר השוקו!</h3>
-            {round === 1 && (
-                 <>
-                    <p className="text-2xl mb-6">סיבוב 1: שוק תחרותי. אתם רוצים לקנות שוקו. בחרו את האפשרות המועדפת עליכם.</p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {competitiveStores.map((store, i) => (
-                            <div 
-                                key={store.name} 
-                                onClick={() => handleBuy(store.name)}
-                                className={`p-6 rounded-2xl border-4 transition-all duration-300 transform ${boughtItem ? (boughtItem === store.name ? 'scale-110 shadow-2xl' : 'opacity-50 scale-90') : 'hover:scale-105 cursor-pointer'} ${store.color}`}
-                                style={{transitionDelay: `${i * 100}ms`}}
-                            >
-                                <p className="text-6xl mb-2">{store.logo}</p>
-                                <h4 className="font-bold text-3xl text-white">{store.name}</h4>
-                                <p className="text-white font-semibold text-xl">{store.quality}</p>
-                                <p className="text-5xl font-bold text-white mt-2">{store.price} ₪</p>
-                            </div>
-                        ))}
-                    </div>
-                    {boughtItem && <button onClick={handleNextRound} className="mt-8 bg-brand-magenta text-white font-bold p-3 rounded-lg animate-pulse">לסיבוב הבא</button>}
-                </>
-            )}
-            {round === 2 && (
-                <div className="relative">
-                    <p className="text-2xl mb-6">סיבוב 2: השתלטות מונופוליסטית! "תאגיד השוקו הגדול" קנה את כל המתחרים.</p>
-                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative h-64">
-                        {competitiveStores.map((store, i) => (
-                             <div key={store.name} className={`p-6 rounded-2xl border-4 ${store.color} absolute top-0 w-1/3 transition-all duration-1000 ${takeover ? 'left-1/3 top-1/2 opacity-0' : 'left-[calc(33.33%*'+i+')]'}`}>
-                                <p className="text-6xl">{store.logo}</p>
-                            </div>
-                        ))}
-                    </div>
-                    <div className={`p-6 rounded-2xl border-4 ${monopolyStore.color} max-w-sm mx-auto ${takeover ? 'animate-fade-in' : 'opacity-0'}`} style={{animationDelay: '1s'}}>
-                        <p className="text-6xl mb-2">{monopolyStore.logo}</p>
-                        <h4 className="font-bold text-3xl text-white">{monopolyStore.name}</h4>
-                        <p className="text-white font-semibold text-xl">{monopolyStore.quality}</p>
-                        <p className="text-5xl font-bold text-white mt-2">{monopolyStore.price} ₪</p>
-                    </div>
-                    <p className="text-3xl font-bold mt-6">עכשיו יש רק אפשרות אחת. המחיר עלה והאיכות ירדה. זוהי המשמעות של מונופול!</p>
-                </div>
-            )}
-        </div>
-    );
+  );
 };
 
-// Step 3: Real World Examples
-const ExamplesStep: React.FC = () => {
-     const examples = [
-        { name: 'חברת החשמל', logo: '⚡', desc: 'החברה היחידה שמספקת חשמל לרוב הבתים בישראל.' },
-        { name: 'אסם', logo: '🥨', desc: 'שולטת בחלק גדול מאוד משוק החטיפים (למשל, במבה) והפסטה.' },
-        { name: 'תנובה', logo: '🐄', desc: 'בעלת נתח שוק עצום במוצרי חלב רבים, כמו גבינה קוטג\'.' },
-    ];
-    return (
-        <div className="bg-white/40 backdrop-blur-md border border-white/30 p-8 rounded-2xl animate-fade-in">
-            <h3 className="text-4xl font-bold text-brand-teal mb-6 text-center">מונופולים וריכוזיות בשוק הישראלי</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {examples.map(ex => (
-                    <div key={ex.name} className="bg-white/50 p-6 rounded-xl border text-center">
-                        <p className="text-6xl mb-3">{ex.logo}</p>
-                        <h4 className="text-3xl font-bold text-brand-light-blue">{ex.name}</h4>
-                        <p className="mt-2 text-brand-dark-blue/90 text-xl">{ex.desc}</p>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
+const ShokoGame: React.FC = () => {
+  const [round, setRound] = useState(0);
+  const rounds = [
+    {
+      title: 'סיבוב 1 — שוק תחרותי',
+      desc: 'בחרו מאיזו חנות לקנות שוקו. יש הרבה אפשרויות.',
+      cards: [
+        { name: 'שוקו-כיף', price: 5, icon: '🥛', color: 'bg-green-500' },
+        { name: 'שוקו-לנד', price: 4, icon: '🧃', color: 'bg-blue-500' },
+        { name: 'שוקו-פרימיום', price: 7, icon: '✨', color: 'bg-purple-500' },
+      ],
+      insight: 'תחרות = מחירים נוחים ובחירה אמיתית.',
+    },
+    {
+      title: 'סיבוב 2 — אוליגופול',
+      desc: 'החברות הקטנות נרכשו ונשארו רק 3 גדולות.',
+      cards: [
+        { name: 'מגה-שוקו א׳', price: 9, icon: '🏢', color: 'bg-yellow-500' },
+        { name: 'מגה-שוקו ב׳', price: 9, icon: '🏢', color: 'bg-yellow-500' },
+        { name: 'מגה-שוקו ג׳', price: 10, icon: '🏢', color: 'bg-yellow-600' },
+      ],
+      insight: 'פחות תחרות = מחירים דומים וגבוהים יותר.',
+    },
+    {
+      title: 'סיבוב 3 — מונופול',
+      desc: 'נשאר שחקן אחד בלבד בשוק.',
+      cards: [{ name: 'תאגיד השוקו', price: 18, icon: '👑', color: 'bg-red-600' }],
+      insight: 'מונופול = כוח שוק גבוה, והצרכן משלם יותר.',
+    },
+  ];
+
+  const current = rounds[round];
+
+  return (
+    <div className="bg-white/40 backdrop-blur-md border border-white/30 p-6 rounded-2xl space-y-5 animate-fade-in text-center">
+      <h3 className="text-3xl font-bold text-brand-teal">אתגר השוקו</h3>
+      <p className="text-brand-dark-blue/80 text-lg">{current.desc}</p>
+
+      <div className={`grid gap-3 ${current.cards.length === 1 ? 'grid-cols-1 max-w-xs mx-auto' : 'grid-cols-1 md:grid-cols-3'}`}>
+        {current.cards.map(c => (
+          <div key={c.name} className={`${c.color} rounded-2xl p-5 text-white border-4 border-white/40`}>
+            <p className="text-4xl mb-2">{c.icon}</p>
+            <p className="text-xl font-black">{c.name}</p>
+            <p className="text-4xl font-black mt-1">₪{c.price}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-white/70 border border-gray-200 rounded-xl p-4">
+        <p className="font-bold text-brand-dark-blue">{current.insight}</p>
+      </div>
+
+      <div className="flex justify-center gap-2">
+        <button onClick={() => setRound(r => Math.max(0, r - 1))} disabled={round === 0} className="px-5 py-2 rounded-full font-bold bg-gray-200 text-brand-dark-blue disabled:opacity-40">הקודם</button>
+        <button onClick={() => setRound(r => Math.min(rounds.length - 1, r + 1))} disabled={round === rounds.length - 1} className="px-5 py-2 rounded-full font-bold bg-brand-teal text-white disabled:opacity-40">הבא</button>
+      </div>
+    </div>
+  );
 };
 
-// Step 4: Competition Authority
-const AuthorityStep: React.FC = () => (
-     <div className="bg-white/40 backdrop-blur-md border border-white/30 p-8 rounded-2xl animate-fade-in text-center">
-        <h3 className="text-4xl font-bold text-brand-teal mb-4">אז מי שומר עלינו?</h3>
-         <p className="text-6xl mb-4">👮‍♀️</p>
-        <h4 className="text-3xl font-bold text-brand-light-blue mb-3">רשות התחרות</h4>
-        <p className="text-2xl max-w-2xl mx-auto text-brand-dark-blue/90">
-           בישראל קיים גוף ממשלתי שנקרא "רשות התחרות". תפקידה הוא להיות ה"שופט" של השוק. היא מפקחת על חברות גדולות, מונעת מהן להפוך למונופולים שפוגעים בצרכנים, ובודקת שחברות לא מתאמות מחירים ביניהן. המטרה שלה היא לשמור על תחרות הוגנת לטובת כולנו.
-        </p>
+const chainStages = [
+  {
+    name: 'יצרן',
+    icon: '🏭',
+    extra: 'עלות ייצור + חומרי גלם',
+    pct: '≈ 35%',
+    why: 'אם יש מעט יצרנים גדולים, כוח המיקוח שלהם מול השוק עולה.',
+  },
+  {
+    name: 'יבואן / מפיץ',
+    icon: '🚚',
+    extra: 'שינוע, אחסון והפצה',
+    pct: '≈ 15%',
+    why: 'ריכוזיות בהפצה יכולה לייקר את המעבר מהיצרן למדף.',
+  },
+  {
+    name: 'קמעונאי (רשת)',
+    icon: '🏪',
+    extra: 'שכר, שכירות, תפעול ורווח',
+    pct: '≈ 35%',
+    why: 'רשתות גדולות קובעות את נקודת המחיר הסופית לצרכן.',
+  },
+  {
+    name: 'צרכן',
+    icon: '🛒',
+    extra: 'המחיר בקופה',
+    pct: '≈ 15%',
+    why: 'בסוף השרשרת, כל עלייה בדרך מתגלגלת אל הצרכן.',
+  },
+];
+
+const chainPins = [
+  { icon: '🏭', label: 'יצרן', top: '22%', left: '14%' },
+  { icon: '🚚', label: 'מפיץ', top: '60%', left: '36%' },
+  { icon: '🏪', label: 'סופר', top: '34%', left: '63%' },
+  { icon: '🛒', label: 'צרכן', top: '66%', left: '84%' },
+];
+
+const ConsumptionChainStep: React.FC = () => {
+  const [active, setActive] = useState(0);
+  const [zoomed, setZoomed] = useState(false);
+  const stage = chainStages[active];
+
+  return (
+    <div className="bg-white/40 backdrop-blur-md border border-white/30 p-6 rounded-2xl space-y-5 animate-fade-in">
+      <h3 className="text-3xl font-bold text-brand-teal text-center">שרשרת הצריכה</h3>
+      <p className="text-center text-brand-dark-blue/80 text-lg">איך מוצר מגיע למדף — ומה קורה למחיר בכל תחנה בדרך.</p>
+
+      <div className="relative rounded-2xl border border-gray-200 bg-white/80 p-2 overflow-hidden">
+        <img
+          src={`${BASE}consumelink2.svg`}
+          alt="שרשרת הצריכה"
+          className="w-full rounded-xl border border-gray-200 bg-white"
+        />
+        <div className="hidden md:block absolute inset-0 pointer-events-none">
+          {chainPins.map((pin, i) => (
+            <button
+              key={pin.label}
+              onClick={() => setActive(i)}
+              className={`pointer-events-auto absolute -translate-x-1/2 -translate-y-1/2 rounded-full px-2 py-1 text-xs font-black border-2 shadow ${i === active ? 'bg-brand-teal text-white border-brand-teal' : 'bg-white text-brand-dark-blue border-gray-300'}`}
+              style={{ top: pin.top, left: pin.left }}
+            >
+              <span className="ml-1">{pin.icon}</span>
+              {pin.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex justify-center">
+        <button onClick={() => setZoomed(true)} className="px-5 py-2 rounded-full border-2 border-brand-teal text-brand-teal font-bold bg-white hover:bg-brand-teal hover:text-white transition">
+          🔍 הגדל תמונה
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        {chainStages.map((s, i) => (
+          <button
+            key={s.name}
+            onClick={() => setActive(i)}
+            className={`rounded-xl py-2 px-2 text-center border-2 font-bold transition ${i === active ? 'bg-brand-teal text-white border-brand-teal' : 'bg-white border-gray-300 text-brand-dark-blue'}`}
+          >
+            <span className="block text-2xl">{s.icon}</span>
+            <span className="text-xs">{s.name}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="bg-white/80 rounded-2xl border border-gray-200 p-4 space-y-2">
+        <p className="text-xl font-black text-brand-dark-blue">{stage.icon} {stage.name}</p>
+        <p className="text-sm font-bold text-brand-teal">מרכיב מחיר משוער: {stage.pct}</p>
+        <p className="text-brand-dark-blue/80">{stage.extra}</p>
+        <p className="text-brand-dark-blue/90 font-bold">{stage.why}</p>
+      </div>
+
+      <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 text-amber-800 font-bold">
+        💡 מסקנה: גם בלי שינוי בעלות הייצור, כוח שוק באחת התחנות יכול להעלות את המחיר לצרכן.
+      </div>
+
+      {zoomed && (
+        <div className="fixed inset-0 z-50 bg-black/85 p-4 md:p-8 flex flex-col" dir="rtl">
+          <div className="flex justify-between items-center mb-3">
+            <p className="text-white font-black text-lg">שרשרת הצריכה — תצוגה מוגדלת</p>
+            <button onClick={() => setZoomed(false)} className="px-4 py-2 rounded-full bg-white text-brand-dark-blue font-bold">סגור ✕</button>
+          </div>
+          <div className="flex-1 flex items-center justify-center">
+            <img
+              src={`${BASE}consumelink2.svg`}
+              alt="שרשרת הצריכה מוגדל"
+              className="max-h-full max-w-full object-contain rounded-xl border-2 border-white"
+            />
+          </div>
+        </div>
+      )}
     </div>
-);
+  );
+};
 
-// Step 5: "Millionaire" Quiz Game
-const MillionaireQuiz: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
-    const questions = [
-        { product: 'במבה', productImage: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Bamba-2020-new.jpg/440px-Bamba-2020-new.jpg', options: ['אסם', 'תנובה', 'שטראוס', 'החברה המרכזית למשקאות'], correctAnswer: 'אסם' },
-        { product: 'קוטג\'', productImage: 'https://upload.wikimedia.org/wikipedia/he/thumb/e/e6/Tnuva_Cottage_2020.jpg/500px-Tnuva_Cottage_2020.jpg', options: ['טרה', 'שטראוס', 'תנובה', 'גד'], correctAnswer: 'תנובה' },
-        { product: 'קטשופ', productImage: 'https://www.osem.co.il/tm-content/uploads/2021/11/7290000053912.jpg', options: ['היינץ', 'אסם', 'ויליפוד', 'יכין'], correctAnswer: 'אסם' },
-        { product: 'שוקולד פרה', productImage: 'https://upload.wikimedia.org/wikipedia/he/b/bd/Elite_Cow_Chocolate.jpg', options: ['שטראוס', 'כרמית', 'אסם', 'תנובה'], correctAnswer: 'שטראוס' },
-        { product: 'קוקה קולה', productImage: 'https://m.pricez.co.il/ProductPictures/7290000189035.jpg', options: ['טמפו', 'יפאורה', 'החברה המרכזית למשקאות', 'אסם'], correctAnswer: 'החברה המרכזית למשקאות' },
-        { product: 'פסטה פרפקטו', productImage: 'https://www.osem.co.il/tm-content/uploads/2021/11/7290000062754.jpg', options: ['ברילה', 'אסם', 'שופרסל', 'ויליפוד'], correctAnswer: 'אסם' },
-        { product: 'מילקי', productImage: 'https://res.cloudinary.com/shufersal/image/upload/f_auto,q_auto/v1551801217/prod/product_images/products_zoom/YAK44_Z_P_7296007000105_1.png', options: ['תנובה', 'טרה', 'שטראוס', 'יופלה'], correctAnswer: 'שטראוס' },
-        { product: 'מי עדן', productImage: 'https://res.cloudinary.com/shufersal/image/upload/f_auto,q_auto/v1551801217/prod/product_images/products_zoom/UQL20_Z_P_7290000114037_1.png', options: ['נביעות', 'החברה המרכזית למשקאות', 'טמפו', 'יפאורה'], correctAnswer: 'החברה המרכזית למשקאות' },
-        { product: 'שמן זית יד מרדכי', productImage: 'https://res.cloudinary.com/shufersal/image/upload/f_auto,q_auto/v1551801217/prod/product_images/products_zoom/VEG54_Z_P_7290000130839_1.png', options: ['זיתא', 'עץ הזית', 'שטראוס', 'תנובה'], correctAnswer: 'שטראוס' },
-        { product: 'גבינה לבנה', productImage: 'https://res.cloudinary.com/shufersal/image/upload/f_auto,q_auto/v1551801217/prod/product_images/products_zoom/AUK40_Z_P_7290000042022_1.png', options: ['שטראוס', 'גד', 'טרה', 'תנובה'], correctAnswer: 'תנובה' },
-    ];
-    const companyLogos: Record<string, string> = {
-        'אסם': 'https://upload.wikimedia.org/wikipedia/he/thumb/1/13/Osem_Logo.svg/440px-Osem_Logo.svg.png',
-        'תנובה': 'https://upload.wikimedia.org/wikipedia/he/thumb/9/91/Tnuva_logo_2017.svg/440px-Tnuva_logo_2017.svg.png',
-        'שטראוס': 'https://upload.wikimedia.org/wikipedia/he/thumb/e/e2/Strauss_Group_logo.svg/440px-Strauss_Group_logo.svg.png',
-        'החברה המרכזית למשקאות': 'https://upload.wikimedia.org/wikipedia/he/thumb/c/c3/Central_Bottling_Company_logo.svg/600px-Central_Bottling_Company_logo.svg.png',
-        'טרה': 'https://upload.wikimedia.org/wikipedia/he/thumb/8/8c/Tara_logo.svg/440px-Tara_logo.svg.png',
-        'גד': 'https://www.gad-dairy.co.il/wp-content/uploads/2021/08/logo.svg',
-        'יפאורה': 'https://upload.wikimedia.org/wikipedia/he/thumb/e/e9/Yafura_tavori_logo.svg/440px-Yafura_tavori_logo.svg.png',
-        'טמפו': 'https://upload.wikimedia.org/wikipedia/he/thumb/a/a2/Tempo_Beer_Industries_logo.svg/440px-Tempo_Beer_Industries_logo.svg.png',
-        'היינץ': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Heinz_logo.svg/440px-Heinz_logo.svg.png',
-        'ויליפוד': 'https://www.globes.co.il/news/article.aspx?did=1001323381#:~:text=images/NewGlobeLogo.png',
-        'יכין': 'https://www.yachin.co.il/wp-content/themes/yachin/images/logo.png',
-        'כרמית': 'https://www.carmit.co.il/wp-content/uploads/2020/09/logo.png',
-        'ברילה': 'https://www.barilla.com/-/media/images/se/logo/barilla-logo.png',
-        'שופרסל': 'https://upload.wikimedia.org/wikipedia/he/thumb/9/95/Shufersal_logo_2017.svg/440px-Shufersal_logo_2017.svg.png',
-        'יופלה': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Yoplait_logo.svg/440px-Yoplait_logo.svg.png',
-        'נביעות': 'https://upload.wikimedia.org/wikipedia/he/a/ab/Neviot_Logo_2021.svg',
-        'זיתא': 'https://www.zeta.co.il/wp-content/uploads/2020/07/logo.png',
-        'עץ הזית': 'https://www.etz-hayit.co.il/wp-content/themes/etz-hayit/img/logo.png'
+const mergers = [
+  { year: '2006', title: 'נסטלה מרחיבה אחיזה באסם', text: 'חיזוק כוח בשוק המזון הארוז.' },
+  { year: '2008', title: 'שותפויות גדולות בתחום החלב', text: 'שחקנים גדולים מתקרבים זה לזה.' },
+  { year: '2011', title: 'מחאת הקוטג׳', text: 'לחץ צרכני הביא לשינוי במחירים.' },
+  { year: '2013', title: 'חוק הריכוזיות', text: 'ניסיון מדינתי לצמצם כוח מרוכז במשק.' },
+  { year: '2021', title: 'בדיקות מיזוגים בשוק המזון', text: 'רשות התחרות בוחנת פגיעה אפשרית בצרכן.' },
+];
 
-    };
+const MergersStep: React.FC = () => {
+  const [visible, setVisible] = useState(2);
 
-    const [current, setCurrent] = useState(0);
-    const [score, setScore] = useState(0);
-    const [selected, setSelected] = useState<string | null>(null);
-    const [answerState, setAnswerState] = useState<'pending' | 'correct' | 'incorrect' | null>(null);
-    const [finished, setFinished] = useState(false);
-    
-    useEffect(() => {
-        if (finished && (score / questions.length) >= 0.8) {
-            onComplete();
-        }
-    }, [finished, score, onComplete, questions.length]);
+  return (
+    <div className="bg-white/40 backdrop-blur-md border border-white/30 p-6 rounded-2xl space-y-4 animate-fade-in">
+      <h3 className="text-3xl font-bold text-brand-teal text-center">מיזוגים ורכישות</h3>
+      <p className="text-center text-brand-dark-blue/80 text-lg">מונופולים מתחזקים לא רק דרך מכירה — אלא גם דרך קנייה של מתחרים.</p>
 
-    const handleSelect = (option: string) => {
-        if (selected) return;
-        setSelected(option);
-        setAnswerState('pending');
+      <div className="space-y-3">
+        {mergers.slice(0, visible).map((m, i) => (
+          <div key={i} className="rounded-xl border-2 border-blue-200 bg-blue-50 p-4">
+            <p className="font-black text-blue-900">{m.year} — {m.title}</p>
+            <p className="text-blue-800">{m.text}</p>
+          </div>
+        ))}
+      </div>
 
-        setTimeout(() => {
-            if (option === questions[current].correctAnswer) {
-                setScore(s => s + 1);
-                setAnswerState('correct');
-            } else {
-                setAnswerState('incorrect');
-            }
-        }, 2000);
-    };
+      {visible < mergers.length ? (
+        <button onClick={() => setVisible(v => v + 1)} className="w-full py-3 rounded-full bg-brand-teal text-white font-black">הצג אירוע נוסף</button>
+      ) : (
+        <div className="text-center text-green-700 font-bold bg-green-50 border border-green-300 rounded-xl p-3">סיימתם את ציר הזמן ✅</div>
+      )}
+    </div>
+  );
+};
 
-    const handleNext = () => {
-        if (current < questions.length - 1) {
-            setCurrent(c => c + 1);
-            setSelected(null);
-            setAnswerState(null);
-        } else {
-            setFinished(true);
-        }
-    };
+const AuthorityStep: React.FC = () => {
+  const tools = [
+    { icon: '🚫', title: 'הכרזה על מונופול', desc: 'חברה עם כוח שוק משמעותי נכנסת לפיקוח מוגבר.' },
+    { icon: '⛔', title: 'בדיקת מיזוגים', desc: 'רכישות גדולות נבדקות כדי למנוע פגיעה בתחרות.' },
+    { icon: '⚖️', title: 'איסור קרטלים', desc: 'תיאום מחירים בין מתחרים אסור על פי חוק.' },
+    { icon: '🧾', title: 'אכיפה וקנסות', desc: 'לרשות התחרות יש סמכויות אכיפה וכלים משפטיים.' },
+  ];
 
-    if (finished) {
-        return (
-            <div className="text-center p-6 bg-white/80 rounded-lg">
-                <TrophyIcon className="w-16 h-16 mx-auto text-yellow-500" />
-                <h3 className="text-4xl font-bold mt-2">סיימתם את החידון!</h3>
-                <p className="text-3xl my-2">הציון שלך: <span className="font-bold">{score} / {questions.length}</span></p>
-                {(score / questions.length) >= 0.8 ?
-                    <p className="text-green-600 font-bold text-2xl">כל הכבוד! זיהיתם את המונופולים והשלמתם את המודול.</p> :
-                    <p className="text-red-600 font-bold text-2xl">עבודה טובה! נסו שוב כדי להגיע ל-80% הצלחה.</p>
-                }
-            </div>
-        )
+  return (
+    <div className="bg-white/40 backdrop-blur-md border border-white/30 p-6 rounded-2xl space-y-5 animate-fade-in">
+      <h3 className="text-3xl font-bold text-brand-teal text-center">מי שומר עלינו?</h3>
+      <p className="text-center text-brand-dark-blue/80 text-lg">רשות התחרות פועלת כדי לשמור על שוק הוגן ועל הצרכנים.</p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {tools.map(t => (
+          <div key={t.title} className="rounded-xl p-4 border-2 bg-white/70 border-gray-200">
+            <p className="text-2xl mb-1">{t.icon}</p>
+            <p className="font-black text-brand-dark-blue">{t.title}</p>
+            <p className="text-brand-dark-blue/80 text-sm">{t.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const quizQuestions = [
+  { product: 'מילקי', image: `${BASE}milki(shtraus).jpg.svg`, options: ['שטראוס', 'תנובה', 'אסם', 'אחר'], correct: 'שטראוס', fact: 'מילקי שייך לקבוצת שטראוס.' },
+  { product: 'פרינגלס', image: `${BASE}pringles(diplomat).jpg.svg`, options: ['דיפלומט', 'אסם', 'שסטוביץ׳', 'אחר'], correct: 'דיפלומט', fact: 'פרינגלס מופץ בישראל ע״י דיפלומט.' },
+  { product: 'נביעות', image: `${BASE}neviot(cocacola).jpg.svg`, options: ['החברה המרכזית', 'יפאורה', 'טמפו', 'אחר'], correct: 'החברה המרכזית', fact: 'נביעות שייכת לחברה המרכזית למשקאות.' },
+  { product: 'אוראל-B', image: `${BASE}oralb(diplomat).jpg.svg`, options: ['דיפלומט', 'שסטוביץ׳', 'יוניליוור', 'אחר'], correct: 'דיפלומט', fact: 'Oral-B מופץ בארץ ע"י דיפלומט.' },
+  { product: 'מנטוס', image: `${BASE}mentos(leiman).jpg.svg`, options: ['ליימן שלייסל', 'אסם', 'שטראוס', 'אחר'], correct: 'ליימן שלייסל', fact: 'מנטוס מופץ בישראל על ידי ליימן שלייסל.' },
+  { product: 'גבינה לבנה', image: `${BASE}whitecheese(tnuva).jpg.svg`, options: ['תנובה', 'שטראוס', 'טרה', 'אחר'], correct: 'תנובה', fact: 'לתנובה נתח שוק גבוה במוצרי חלב.' },
+  { product: 'קורנפלקס', image: `${BASE}kornflex(uniliver).jpg.svg`, options: ['יוניליוור', 'אסם', 'שסטוביץ׳', 'אחר'], correct: 'יוניליוור', fact: 'המוצר משויך כאן לפעילות יוניליוור.' },
+  { product: 'מולר', image: `${BASE}muller(cocacola).jpg.svg`, options: ['החברה המרכזית', 'תנובה', 'שטראוס', 'אחר'], correct: 'החברה המרכזית', fact: 'מותג מולר מופץ בישראל ע"י החברה המרכזית.' },
+];
+
+const MonopolyQuiz: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
+  const [idx, setIdx] = useState(0);
+  const [score, setScore] = useState(0);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [reveal, setReveal] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const q = quizQuestions[idx];
+
+  const handleChoose = (option: string) => {
+    if (selected) return;
+    setSelected(option);
+    setReveal(true);
+    if (option === q.correct) setScore(s => s + 1);
+  };
+
+  const next = () => {
+    if (idx < quizQuestions.length - 1) {
+      setIdx(i => i + 1);
+      setSelected(null);
+      setReveal(false);
+    } else {
+      setDone(true);
+      if ((score + (selected === q.correct ? 1 : 0)) / quizQuestions.length >= 0.7) {
+        onComplete();
+      }
     }
-    
-    const q = questions[current];
-    const prizeLevels = [1000, 2000, 5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000].reverse();
+  };
 
+  const finalScore = useMemo(() => {
+    if (!done) return score;
+    return score;
+  }, [done, score]);
+
+  if (done) {
+    const pct = Math.round((finalScore / quizQuestions.length) * 100);
     return (
-        <div className="bg-brand-dark-blue p-4 sm:p-6 rounded-2xl animate-fade-in text-white shadow-2xl">
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                <div className="lg:col-span-3">
-                    <div className="bg-white/10 p-6 rounded-xl border-2 border-brand-light-blue text-center">
-                        <p className="font-bold text-4xl mb-4">מי שולט במוצר: {q.product}?</p>
-                        <img src={q.productImage} alt={q.product} className="h-48 mx-auto object-contain rounded-lg"/>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 mt-6">
-                        {q.options.map((opt) => {
-                            const isSelected = selected === opt;
-                            const isCorrect = answerState && q.correctAnswer === opt;
-                            let stateClass = '';
-                            if (answerState === 'pending' && isSelected) stateClass = 'bg-yellow-500 animate-pulse';
-                            else if (answerState === 'correct' && isCorrect) stateClass = 'bg-green-500';
-                            else if (answerState === 'incorrect' && isSelected) stateClass = 'bg-red-500';
-                            else if (answerState === 'incorrect' && isCorrect) stateClass = 'bg-green-500';
-
-                            return (
-                                <button key={opt} onClick={() => handleSelect(opt)} disabled={!!selected}
-                                    className={`flex items-center justify-center p-3 rounded-lg border-2 border-brand-light-blue transition-all duration-300 min-h-[80px]
-                                    ${stateClass || 'bg-brand-dark-blue hover:bg-brand-light-blue/20'}`}
-                                >
-                                    <img src={companyLogos[opt] || 'https://via.placeholder.com/100x40?text='+opt} alt={opt} className="h-10 object-contain"/>
-                                </button>
-                            )
-                        })}
-                    </div>
-                    {answerState && answerState !== 'pending' && (
-                        <button onClick={handleNext} className="mt-6 w-full bg-brand-magenta font-bold p-3 rounded-lg text-xl">
-                            {current === questions.length - 1 ? 'סיים משחק' : 'לשאלה הבאה'}
-                        </button>
-                    )}
-                </div>
-                <div className="lg:col-span-1 bg-white/10 p-4 rounded-xl flex flex-col-reverse">
-                    {prizeLevels.map((level, index) => (
-                        <div key={level} className={`p-2 my-1 rounded text-center font-bold text-lg sm:text-xl ${
-                            score > (prizeLevels.length - 1 - index) ? 'bg-green-500 text-white' : 
-                            current === (prizeLevels.length - 1 - index) ? 'bg-yellow-400 text-black' : 
-                            'bg-brand-dark-blue'
-                        }`}>
-                           <span className="text-gray-400 mr-2">{prizeLevels.length - index}</span> {level.toLocaleString()} ₪
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
+      <div className="text-center p-8 bg-white/80 rounded-2xl space-y-4 animate-fade-in">
+        <TrophyIcon className="w-16 h-16 mx-auto text-yellow-500" />
+        <h3 className="text-3xl font-black">סיימתם את החידון!</h3>
+        <p className="text-2xl">ציון: <span className="font-black text-brand-teal">{finalScore} / {quizQuestions.length}</span></p>
+        {pct >= 70 ? (
+          <p className="text-green-700 font-black text-xl">כל הכבוד! זיהיתם את מוקדי הכוח בשוק 👏</p>
+        ) : (
+          <p className="text-red-600 font-black text-xl">נסו שוב כדי להגיע ל-70% ומעלה.</p>
+        )}
+      </div>
     );
+  }
+
+  return (
+    <div className="bg-brand-dark-blue rounded-2xl p-4 md:p-6 text-white shadow-2xl animate-fade-in">
+      <p className="text-center text-lg font-bold mb-3">שאלה {idx + 1} מתוך {quizQuestions.length}</p>
+      <div className="bg-white/10 rounded-xl p-4 text-center border border-brand-light-blue">
+        <p className="text-2xl font-black mb-3">מי שולט במוצר: {q.product}?</p>
+        <img
+          src={q.image}
+          alt={q.product}
+          className="h-44 mx-auto object-contain rounded-xl"
+          onError={e => {
+            (e.target as HTMLImageElement).src = `https://placehold.co/260x180?text=${encodeURIComponent(q.product)}`;
+          }}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mt-4">
+        {q.options.map(option => {
+          const isCorrect = option === q.correct;
+          const isChosen = option === selected;
+          const cls = !reveal
+            ? 'bg-brand-dark-blue border-brand-light-blue hover:bg-brand-light-blue/20'
+            : isCorrect
+              ? 'bg-green-600 border-green-400'
+              : isChosen
+                ? 'bg-red-600 border-red-400'
+                : 'bg-brand-dark-blue/60 border-brand-light-blue/50';
+
+          return (
+            <button
+              key={option}
+              onClick={() => handleChoose(option)}
+              disabled={!!selected}
+              className={`min-h-[68px] p-3 rounded-xl border-2 text-lg font-bold transition ${cls}`}
+            >
+              {option}
+            </button>
+          );
+        })}
+      </div>
+
+      {reveal && (
+        <div className="mt-4 space-y-3">
+          <div className={`p-3 rounded-xl border-2 font-bold ${selected === q.correct ? 'bg-green-500/20 border-green-400' : 'bg-red-500/20 border-red-400'}`}>
+            {selected === q.correct ? '✅ תשובה נכונה!' : '❌ לא מדויק.'} {q.fact}
+          </div>
+          <button onClick={next} className="w-full py-3 rounded-xl bg-brand-magenta hover:bg-pink-700 font-black text-xl">
+            {idx === quizQuestions.length - 1 ? 'סיום חידון 🏁' : 'לשאלה הבאה →'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
 };
 
-// Main Component
 const MonopoliesModule: React.FC<MonopoliesModuleProps> = ({ onBack, title, onComplete }) => {
-    const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(0);
 
-    const renderStepContent = () => {
-        switch (currentStep) {
-            case 0: return <IntroductionStep />;
-            case 1: return <MonopolyGame />;
-            case 2: return <ExamplesStep />;
-            case 3: return <AuthorityStep />;
-            case 4: return <MillionaireQuiz onComplete={onComplete} />;
-            default: return <IntroductionStep />;
-        }
-    };
+  const renderStep = () => {
+    switch (currentStep) {
+      case 0: return <IntroductionStep />;
+      case 1: return <ShokoGame />;
+      case 2: return <ConsumptionChainStep />;
+      case 3: return <MergersStep />;
+      case 4: return <AuthorityStep />;
+      case 5: return <MonopolyQuiz onComplete={onComplete} />;
+      default: return <IntroductionStep />;
+    }
+  };
 
-    return (
-        <ModuleView title={title} onBack={onBack}>
-            <div className="mb-8">
-                <div className="flex justify-between items-center mb-2">
-                    {steps.map((step, index) => (
-                        <React.Fragment key={index}>
-                            <div className="flex flex-col items-center flex-1">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${currentStep >= index ? 'bg-brand-teal border-brand-teal text-white' : 'bg-white/50 border-gray-300'}`}>
-                                    {index + 1}
-                                </div>
-                                <p className={`mt-2 text-xs text-center font-bold ${currentStep >= index ? 'text-brand-teal' : 'text-gray-500'}`}>{step}</p>
-                            </div>
-                            {index < steps.length - 1 && <div className={`flex-1 h-1 mx-2 ${currentStep > index ? 'bg-brand-teal' : 'bg-gray-300'}`}></div>}
-                        </React.Fragment>
-                    ))}
+  return (
+    <ModuleView title={title} onBack={onBack}>
+      <div className="mb-8 overflow-x-auto">
+        <div className="flex justify-between items-center min-w-[620px]">
+          {steps.map((step, index) => (
+            <React.Fragment key={index}>
+              <button onClick={() => setCurrentStep(index)} className="flex flex-col items-center flex-1 group">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 font-bold ${
+                  currentStep > index
+                    ? 'bg-brand-teal border-brand-teal text-white'
+                    : currentStep === index
+                      ? 'bg-brand-teal border-brand-teal text-white scale-110 shadow-lg'
+                      : 'bg-white/50 border-gray-300 group-hover:border-brand-teal'
+                }`}>
+                  {currentStep > index ? '✓' : index + 1}
                 </div>
-            </div>
-            
-            {renderStepContent()}
+                <p className={`mt-1 text-xs text-center font-bold transition-colors ${currentStep >= index ? 'text-brand-teal' : 'text-gray-400'}`}>{step}</p>
+              </button>
+              {index < steps.length - 1 && (
+                <div className={`flex-1 h-1 mx-1 rounded-full transition-all duration-500 ${currentStep > index ? 'bg-brand-teal' : 'bg-gray-300'}`} />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
 
-            <div className="flex justify-between mt-8">
-                <button onClick={() => setCurrentStep(s => s - 1)} disabled={currentStep === 0} className="bg-gray-300 hover:bg-gray-400 text-brand-dark-blue font-bold py-2 px-6 rounded-lg disabled:opacity-50">הקודם</button>
-                <button onClick={() => setCurrentStep(s => s + 1)} disabled={currentStep === steps.length - 1} className="bg-brand-teal hover:bg-teal-500 text-white font-bold py-2 px-6 rounded-lg disabled:opacity-50">הבא</button>
-            </div>
-        </ModuleView>
-    );
+      {renderStep()}
+
+      <div className="flex justify-between mt-8">
+        <button onClick={() => setCurrentStep(s => Math.max(0, s - 1))} disabled={currentStep === 0} className="bg-gray-300 hover:bg-gray-400 text-brand-dark-blue font-bold py-2 px-6 rounded-lg disabled:opacity-50">הקודם</button>
+        <button onClick={() => setCurrentStep(s => Math.min(steps.length - 1, s + 1))} disabled={currentStep === steps.length - 1} className="bg-brand-teal hover:bg-teal-500 text-white font-bold py-2 px-6 rounded-lg disabled:opacity-50">הבא</button>
+      </div>
+    </ModuleView>
+  );
 };
 
 export default MonopoliesModule;

@@ -888,7 +888,7 @@ export const SupermarketPlayerView: React.FC = () => {
             } else {
               setProductIdx(next);
             }
-          }, 900);
+          }, 400);
         }
         if (msg.type === 'DONE')     { setStatus('done'); }
       });
@@ -932,7 +932,7 @@ export const SupermarketPlayerView: React.FC = () => {
       } else {
         setProductIdx(next);
       }
-    }, 900);
+    }, 400);
   }, []);
 
   const answer = (monopolyId: string) => {
