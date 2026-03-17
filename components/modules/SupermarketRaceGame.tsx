@@ -138,9 +138,6 @@ function shuffle<T>(arr: T[]): T[] {
 
 type HostPhase = 'setup' | 'study' | 'waiting' | 'race' | 'done';
 
-// Auto-advance interval in ms after last answer before moving to next product
-const AUTO_ADVANCE_MS = 4000;
-
 interface TeamScore { name: string; score: number; }
 
 interface PlayerEntry { connId: string; name: string; team: string; conn: DataConnection; }
@@ -149,13 +146,39 @@ interface FloatAnim { id: number; name: string; team: string; correct: boolean; 
 
 type Msg =
   | { type: 'JOIN';    name: string; team: string }
-  | { type: 'ANSWER';  name: string; team: string; monopolyId: string }
+  | { type: 'ANSWER';  name: string; team: string; monopolyId: string; productIndex: number; cycle: number }
   | { type: 'TEAMS';   teams: string[] }
   | { type: 'PRODUCTS'; products: Product[] }
   | { type: 'PRODUCT'; productIndex: number; total: number }
   | { type: 'RESULT';  correct: boolean; correctId: string }
   | { type: 'SCORE';   teams: TeamScore[] }
   | { type: 'DONE' };
+
+function playHostCorrectSfx() {
+  try {
+    const a = new Audio(`${import.meta.env.BASE_URL}havila.mp3`);
+    a.volume = 0.6;
+    void a.play();
+  } catch {}
+}
+
+function playTapSfx() {
+  try {
+    const AudioCtx = (window.AudioContext || (window as any).webkitAudioContext) as typeof AudioContext | undefined;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 660;
+    gain.gain.value = 0.04;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.08);
+    osc.onended = () => { try { ctx.close(); } catch {} };
+  } catch {}
+}
 
 // ─── Styles ────────────────────────────────────────────────────────────────────
 
@@ -215,7 +238,7 @@ const TEAM_COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6', '#ec
 const CartRace: React.FC<{ teams: TeamScore[]; maxScore: number; floats: FloatAnim[]; }> = ({ teams, maxScore, floats }) => {
   const total = Math.max(maxScore, 1);
   return (
-    <div className="relative w-full rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(180deg,#f8fafc 0%,#e2e8f0 100%)', border: '2px solid #cbd5e1', minHeight: 120 + teams.length * 72 }}>
+    <div className="relative w-full rounded-3xl overflow-hidden" style={{ background: 'linear-gradient(180deg,#f8fafc 0%,#e2e8f0 100%)', border: '2px solid #cbd5e1', minHeight: 160 + teams.length * 92 }}>
       {/* Aisle background */}
       <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'repeating-linear-gradient(90deg,#94a3b8 0px,#94a3b8 2px,transparent 2px,transparent 60px)', animation: 'aisleScroll 2s linear infinite' }} />
       {/* Finish line */}
@@ -226,24 +249,24 @@ const CartRace: React.FC<{ teams: TeamScore[]; maxScore: number; floats: FloatAn
       <div className="absolute right-4 top-2 text-xs text-gray-500 font-bold">🛒 קופה</div>
 
       {/* Tracks */}
-      <div className="pt-8 pb-4 px-4 space-y-3">
+      <div className="pt-10 pb-6 px-6 space-y-4">
         {teams.map((team, i) => {
           const pct = Math.min((team.score / total) * 85, 90);
           const colors = TEAM_COLORS[i % TEAM_COLORS.length];
           const teamFloats = floats.filter(f => f.team === team.name);
           return (
-            <div key={team.name} className="relative flex items-center gap-2" style={{ height: 56 }}>
+            <div key={team.name} className="relative flex items-center gap-3" style={{ height: 76 }}>
               {/* Track */}
-              <div className="flex-1 h-10 rounded-full relative" style={{ background: '#e2e8f0', border: `1px solid #cbd5e1` }}>
+              <div className="flex-1 h-12 rounded-full relative" style={{ background: '#e2e8f0', border: `1px solid #cbd5e1` }}>
                 {/* Progress fill */}
                 <div className="absolute inset-0 rounded-full opacity-30 transition-all duration-700" style={{ width: `${pct}%`, background: colors }} />
                 {/* Cart */}
                 <div
                   className="absolute top-0 flex flex-col items-center transition-all duration-700"
-                  style={{ left: `${pct}%`, transform: 'translateX(-50%)', top: -8 }}
+                  style={{ left: `${pct}%`, transform: 'translateX(-50%)', top: -14 }}
                 >
-                  <span className="text-2xl select-none" style={{ filter: `drop-shadow(0 2px 4px ${colors})` }}>🛒</span>
-                  <span className="text-xs font-bold rounded-full px-2 py-0.5 text-white mt-0.5 truncate max-w-[80px]" style={{ background: colors }}>
+                  <span className="text-3xl select-none" style={{ filter: `drop-shadow(0 4px 8px ${colors})` }}>🛒</span>
+                  <span className="text-sm font-black rounded-full px-3 py-1 text-white mt-1 truncate max-w-[140px]" style={{ background: colors }}>
                     {team.name}
                   </span>
                   {/* Float animations */}
@@ -255,7 +278,7 @@ const CartRace: React.FC<{ teams: TeamScore[]; maxScore: number; floats: FloatAn
                 </div>
               </div>
               {/* Score */}
-              <div className="text-lg font-black shrink-0 w-10 text-center" style={{ color: colors }}>{team.score}</div>
+              <div className="text-2xl font-black shrink-0 w-14 text-center" style={{ color: colors }}>{team.score}</div>
             </div>
           );
         })}
@@ -321,25 +344,19 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [players, setPlayers]           = useState<PlayerEntry[]>([]);
   const [peerId, setPeerId]             = useState<string | null>(null);
   const [products, setProducts]         = useState<Product[]>([]);
-  const [productIdx, setProductIdx]     = useState(-1);
   const [floats, setFloats]             = useState<FloatAnim[]>([]);
-  const [answeredThis, setAnsweredThis]  = useState<Set<string>>(new Set());
   const peerRef        = useRef<InstanceType<typeof Peer> | null>(null);
   const floatIdRef     = useRef(0);
   const connectionsRef = useRef<Map<string, DataConnection>>(new Map());
   const teamsRef       = useRef<TeamScore[]>([]);
-  const autoTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null);
   const playersRef     = useRef<PlayerEntry[]>([]);
-  const productIdxRef  = useRef(-1);
   const productsRef    = useRef<Product[]>([]);
-  const answeredRef    = useRef<Set<string>>(new Set());
+  const answeredKeyRef = useRef<Set<string>>(new Set());
 
   // Keep refs in sync
   useEffect(() => { teamsRef.current = teams; }, [teams]);
   useEffect(() => { playersRef.current = players; }, [players]);
-  useEffect(() => { productIdxRef.current = productIdx; }, [productIdx]);
   useEffect(() => { productsRef.current = products; }, [products]);
-  useEffect(() => { answeredRef.current = answeredThis; }, [answeredThis]);
 
   const baseUrl = window.location.href.split('#')[0];
 
@@ -375,19 +392,21 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           try { conn.send({ type: 'TEAMS', teams: teamsRef.current.map(t => t.name) } as Msg); } catch {}
         }
         if (msg.type === 'ANSWER') {
-          if (answeredRef.current.has(msg.name)) return;
-          const currIdx  = productIdxRef.current;
+          const key = `${connId}:${msg.cycle}:${msg.productIndex}`;
+          if (answeredKeyRef.current.has(key)) return;
+          answeredKeyRef.current.add(key);
+
           const currProds = productsRef.current;
-          const correct = currIdx >= 0 && currProds[currIdx]?.monopolyId === msg.monopolyId;
+          const prod = currProds[msg.productIndex];
+          const correctId = prod?.monopolyId ?? '';
+          const correct = !!prod && correctId === msg.monopolyId;
           // Float animation
           const fid = floatIdRef.current++;
           setFloats(prev => [...prev, { id: fid, name: msg.name, team: msg.team, correct }]);
           setTimeout(() => setFloats(prev => prev.filter(f => f.id !== fid)), 1400);
-          // Update answered set
-          setAnsweredThis(prev => { const n = new Set(prev); n.add(msg.name); return n; });
-          answeredRef.current = new Set([...answeredRef.current, msg.name]);
           // Update score
           if (correct) {
+            playHostCorrectSfx();
             setTeams(prev => {
               const next = prev.map(t => t.name === msg.team ? { ...t, score: t.score + 1 } : t);
               broadcast({ type: 'SCORE', teams: next });
@@ -399,15 +418,9 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             connectionsRef.current.get(connId)?.send({
               type: 'RESULT',
               correct,
-              correctId: currIdx >= 0 ? currProds[currIdx]?.monopolyId : '',
+              correctId,
             } as Msg);
           } catch {}
-          // Auto-advance: schedule next product if all players answered
-          const allAnswered = [...answeredRef.current].length >= playersRef.current.length && playersRef.current.length > 0;
-          if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
-          autoTimerRef.current = setTimeout(() => {
-            advanceProduct();
-          }, allAnswered ? 1500 : AUTO_ADVANCE_MS);
         }
       });
       conn.on('close',  () => { connectionsRef.current.delete(connId); setPlayers(prev => prev.filter(p => p.connId !== connId)); });
@@ -427,7 +440,6 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   useEffect(() => {
     if (phase !== 'race') return;
     if (timeLeft <= 0) {
-      if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
       broadcast({ type: 'DONE' });
       setPhase('done');
       return;
@@ -435,29 +447,6 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     const t = setTimeout(() => setTimeLeft(s => s - 1), 1000);
     return () => clearTimeout(t);
   }, [phase, timeLeft, broadcast]);
-
-  const advanceProduct = useCallback(() => {
-    setProducts(currProds => {
-      setProductIdx(currIdx => {
-        const next = currIdx + 1;
-        if (next >= currProds.length) {
-          // loop products endlessly until timer runs out
-          const reshuffled = shuffle(currProds);
-          productsRef.current = reshuffled;
-          broadcast({ type: 'PRODUCTS', products: reshuffled });
-          broadcast({ type: 'PRODUCT', productIndex: 0, total: reshuffled.length });
-          setAnsweredThis(new Set()); answeredRef.current = new Set();
-          productIdxRef.current = 0;
-          return 0;
-        }
-        broadcast({ type: 'PRODUCT', productIndex: next, total: currProds.length });
-        setAnsweredThis(new Set()); answeredRef.current = new Set();
-        productIdxRef.current = next;
-        return next;
-      });
-      return currProds;
-    });
-  }, [broadcast]);
 
   const startSetup = () => {
     const validTeams = teamInputs.filter(t => t.trim()).map(t => ({ name: t.trim(), score: 0 }));
@@ -474,20 +463,14 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     const shuffled = shuffle(ALL_PRODUCTS);
     setProducts(shuffled);
     productsRef.current = shuffled;
-    setProductIdx(0);
-    productIdxRef.current = 0;
     setTimeLeft(gameDuration);
-    setAnsweredThis(new Set()); answeredRef.current = new Set();
+    answeredKeyRef.current = new Set();
     setPhase('race');
     broadcast({ type: 'PRODUCTS', products: shuffled });
     broadcast({ type: 'TEAMS', teams: teams.map(t => t.name) });
-    broadcast({ type: 'PRODUCT', productIndex: 0, total: shuffled.length });
-    // Schedule first auto-advance
-    autoTimerRef.current = setTimeout(() => advanceProduct(), AUTO_ADVANCE_MS);
   };
 
   const qrUrl = peerId ? `${baseUrl}#supermarket-player-${peerId}` : null;
-  const currentProduct = productIdx >= 0 && productIdx < products.length ? products[productIdx] : null;
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
@@ -606,21 +589,21 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         const ss = (timeLeft % 60).toString().padStart(2, '0');
         const urgent = timeLeft <= 30;
         return (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Timer + players bar */}
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div
-                className="text-4xl font-black font-mono rounded-2xl px-6 py-2"
+                className="text-6xl font-black font-mono rounded-3xl px-8 py-3"
                 style={{ background: urgent ? '#fee2e2' : '#f0fdf4', color: urgent ? '#dc2626' : '#15803d', transition: 'background 0.5s' }}
               >
                 {urgent ? '⏰ ' : '⏱ '}{mm}:{ss}
               </div>
-              <div className="text-sm text-brand-dark-blue/60 font-bold">
-                {players.length} שחקנים מחוברים — ענו: {answeredThis.size}/{players.length}
+              <div className="text-lg text-brand-dark-blue/60 font-bold">
+                {players.length} שחקנים מחוברים
               </div>
               <button
-                onClick={() => { if (autoTimerRef.current) clearTimeout(autoTimerRef.current); broadcast({ type: 'DONE' }); setPhase('done'); }}
-                className="px-4 py-2 bg-red-100 text-red-600 font-bold rounded-full hover:bg-red-200 text-sm"
+                onClick={() => { broadcast({ type: 'DONE' }); setPhase('done'); }}
+                className="px-6 py-3 bg-red-100 text-red-600 font-bold rounded-full hover:bg-red-200 text-base"
               >
                 סיים עכשיו ⏹
               </button>
@@ -630,11 +613,11 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             <CartRace teams={teams} maxScore={Math.max(...teams.map(t => t.score), 1) + 3} floats={floats} />
 
             {/* Scoreboard */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               {[...teams].sort((a, b) => b.score - a.score).map((t, i) => (
-                <div key={t.name} className="rounded-xl p-3 text-center border shadow-sm" style={{ background: i === 0 ? '#fef3c7' : '#f8fafc', borderColor: TEAM_COLORS[teams.indexOf(t) % TEAM_COLORS.length] + '99' }}>
-                  <p className="text-xs font-bold text-brand-dark-blue/60 truncate">{['🥇','🥈','🥉'][i] || ''} {t.name}</p>
-                  <p className="text-4xl font-black mt-1" style={{ color: TEAM_COLORS[teams.indexOf(t) % TEAM_COLORS.length] }}>{t.score}</p>
+                <div key={t.name} className="rounded-2xl p-4 text-center border shadow-md" style={{ background: i === 0 ? '#fef3c7' : '#f8fafc', borderColor: TEAM_COLORS[teams.indexOf(t) % TEAM_COLORS.length] + '99' }}>
+                  <p className="text-sm font-black text-brand-dark-blue/70 truncate">{['🥇','🥈','🥉'][i] || ''} {t.name}</p>
+                  <p className="text-6xl font-black mt-2" style={{ color: TEAM_COLORS[teams.indexOf(t) % TEAM_COLORS.length] }}>{t.score}</p>
                 </div>
               ))}
             </div>
@@ -656,7 +639,7 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               </div>
             ))}
           </div>
-          <button onClick={() => { setPhase('setup'); setTeams([]); setPlayers([]); setProductIdx(-1); setFloats([]); setTimeLeft(gameDuration); }} className="px-8 py-3 bg-brand-magenta text-white font-bold rounded-full hover:bg-pink-700">
+          <button onClick={() => { setPhase('setup'); setTeams([]); setPlayers([]); setFloats([]); setTimeLeft(gameDuration); }} className="px-8 py-3 bg-brand-magenta text-white font-bold rounded-full hover:bg-pink-700">
             🔄 משחק חדש
           </button>
         </div>
@@ -672,6 +655,7 @@ export const SupermarketPlayerView: React.FC = () => {
   const hostId    = hm ? hm[1] : null;
   const connRef   = useRef<DataConnection | null>(null);
   const peerRef2  = useRef<InstanceType<typeof Peer> | null>(null);
+  const productsRef = useRef<Product[]>([]);
 
   const [status,     setStatus]     = useState<'connecting' | 'join' | 'waiting' | 'game' | 'done' | 'error'>('connecting');
   const [teams,      setTeams]      = useState<string[]>([]);
@@ -679,9 +663,12 @@ export const SupermarketPlayerView: React.FC = () => {
   const [myTeam,     setMyTeam]     = useState('');
   const [products,   setProducts]   = useState<Product[]>([]);
   const [productIdx, setProductIdx] = useState(-1);
+  const [cycle,      setCycle]      = useState(0);
   const [feedback,   setFeedback]   = useState<{ id: string; correct: boolean } | null>(null);
   const [score,      setScore]      = useState(0);
   const [answered,   setAnswered]   = useState(false);
+
+  useEffect(() => { productsRef.current = products; }, [products]);
 
   const send = useCallback((msg: Msg) => { try { connRef.current?.send(msg); } catch {} }, []);
 
@@ -696,12 +683,33 @@ export const SupermarketPlayerView: React.FC = () => {
       conn.on('data', (raw: unknown) => {
         const msg = raw as Msg;
         if (msg.type === 'TEAMS')    { setTeams(msg.teams); }
-        if (msg.type === 'PRODUCTS') { setProducts(msg.products); }
+        if (msg.type === 'PRODUCTS') {
+          setProducts(msg.products);
+          setProductIdx(0);
+          setCycle(0);
+          setAnswered(false);
+          setFeedback(null);
+          setStatus('game');
+        }
+        // Backward compatibility (older host)
         if (msg.type === 'PRODUCT')  { setProductIdx(msg.productIndex); setAnswered(false); setFeedback(null); setStatus('game'); }
         if (msg.type === 'RESULT')   {
           setFeedback({ id: msg.correctId, correct: msg.correct });
           if (msg.correct) setScore(s => s + 1);
-          setTimeout(() => { setFeedback(null); setAnswered(false); }, 1800);
+          setTimeout(() => {
+            setFeedback(null);
+            setAnswered(false);
+            const len = productsRef.current.length;
+            if (len <= 0) return;
+            setProductIdx(idx => {
+              const next = idx + 1;
+              if (next >= len) {
+                setCycle(c => c + 1);
+                return 0;
+              }
+              return next;
+            });
+          }, 900);
         }
         if (msg.type === 'DONE')     { setStatus('done'); }
       });
@@ -721,7 +729,8 @@ export const SupermarketPlayerView: React.FC = () => {
   const answer = (monopolyId: string) => {
     if (answered) return;
     setAnswered(true);
-    send({ type: 'ANSWER', name: myName, team: myTeam, monopolyId });
+    playTapSfx();
+    send({ type: 'ANSWER', name: myName, team: myTeam, monopolyId, productIndex: productIdx, cycle });
   };
 
   const currentProduct = productIdx >= 0 && productIdx < products.length ? products[productIdx] : null;
