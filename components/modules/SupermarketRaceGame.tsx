@@ -281,6 +281,19 @@ const CartRace: React.FC<{ teams: TeamScore[]; maxScore: number; floats: FloatAn
 
 // ─── Study Phase ───────────────────────────────────────────────────────────────
 
+function copyLinksToClipboard() {
+  const text = MONOPOLIES.map(m => `${m.name}: ${m.website}`).join('\n');
+  navigator.clipboard.writeText(text).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+}
+
 function downloadLinksPDF() {
   const rows = MONOPOLIES.map(m => `
     <tr>
@@ -319,35 +332,69 @@ function downloadLinksPDF() {
 }
 
 const StudyPhase: React.FC<{ onDone: () => void }> = ({ onDone }) => {
-  const [secs, setSecs] = useState(600);
+  const [totalSecs, setTotalSecs] = useState(600);
+  const [secs,      setSecs]      = useState<number | null>(null); // null = not started
+  const [copied,    setCopied]    = useState(false);
+
   useEffect(() => {
-    if (secs <= 0) return;
-    const t = setTimeout(() => setSecs(s => s - 1), 1000);
+    if (secs === null || secs <= 0) return;
+    const t = setTimeout(() => setSecs(s => (s ?? 1) - 1), 1000);
     return () => clearTimeout(t);
   }, [secs]);
-  const mm = Math.floor(secs / 60).toString().padStart(2, '0');
-  const ss = (secs % 60).toString().padStart(2, '0');
+
+  const running = secs !== null;
+  const display = secs ?? totalSecs;
+  const mm = Math.floor(display / 60).toString().padStart(2, '0');
+  const ss = (display % 60).toString().padStart(2, '0');
+
+  const handleCopy = () => {
+    copyLinksToClipboard();
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h3 className="text-2xl font-bold text-brand-dark-blue">שלב 1: מחקר — 10 דקות</h3>
+          <h3 className="text-2xl font-bold text-brand-dark-blue">שלב 1: מחקר</h3>
           <p className="text-brand-dark-blue/70">סרקו את ברקודי האתרים ולמדו אילו מוצרים שייכים לאיזה מונופול</p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="text-5xl font-black font-mono rounded-2xl px-6 py-3" style={{ background: secs < 60 ? '#fee2e2' : '#f0fdf4', color: secs < 60 ? '#dc2626' : '#15803d' }}>
-            {mm}:{ss}
-          </div>
+        <div className="flex flex-col items-end gap-3">
+          {/* Timer display */}
           <div className="flex items-center gap-2">
-            <button
-              onClick={downloadLinksPDF}
-              title="הורד PDF עם הקישורים"
-              className="px-4 py-3 bg-white border-2 border-gray-300 text-brand-dark-blue font-bold rounded-full hover:border-brand-teal hover:text-brand-teal text-sm flex items-center gap-1"
-            >
+            {!running && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-brand-dark-blue/70">זמן:</span>
+                {[3, 5, 7, 10, 15].map(min => (
+                  <button key={min} onClick={() => { setTotalSecs(min * 60); setSecs(null); }}
+                    className={`px-3 py-1 rounded-full text-sm font-bold border-2 transition ${
+                      totalSecs === min * 60 ? 'bg-brand-teal text-white border-brand-teal' : 'bg-white border-gray-300 hover:border-brand-teal text-brand-dark-blue'
+                    }`}>
+                    {min}′
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="text-4xl font-black font-mono rounded-2xl px-5 py-2" style={{ background: secs !== null && secs < 60 ? '#fee2e2' : '#f0fdf4', color: secs !== null && secs < 60 ? '#dc2626' : '#15803d' }}>
+              {mm}:{ss}
+            </div>
+            {!running
+              ? <button onClick={() => setSecs(totalSecs)} className="px-5 py-2 bg-green-600 text-white font-bold rounded-full hover:bg-green-700 text-sm">▶ הפעל</button>
+              : <button onClick={() => setSecs(null)} className="px-5 py-2 bg-gray-200 text-gray-700 font-bold rounded-full hover:bg-gray-300 text-sm">⏸ עצור</button>
+            }
+          </div>
+          {/* Action buttons */}
+          <div className="flex items-center gap-2">
+            <button onClick={handleCopy}
+              className="px-4 py-2 bg-white border-2 border-gray-300 text-brand-dark-blue font-bold rounded-full hover:border-brand-teal hover:text-brand-teal text-sm flex items-center gap-1 transition">
+              {copied ? '✅ הועתק!' : '📋 העתק קישורים'}
+            </button>
+            <button onClick={downloadLinksPDF}
+              className="px-4 py-2 bg-white border-2 border-gray-300 text-brand-dark-blue font-bold rounded-full hover:border-brand-teal hover:text-brand-teal text-sm flex items-center gap-1">
               📄 הדפס קישורים
             </button>
-            <button onClick={onDone} className="px-6 py-3 bg-brand-teal text-white font-bold rounded-full hover:bg-teal-700">
+            <button onClick={onDone} className="px-6 py-2 bg-brand-teal text-white font-bold rounded-full hover:bg-teal-700">
               המשך למשחק ←
             </button>
           </div>
@@ -858,11 +905,47 @@ export const SupermarketPlayerView: React.FC = () => {
     setStatus('waiting');
   };
 
+  const handleLocalResult = useCallback((monopolyId: string, product: Product) => {
+    const correct = product.monopolyId === monopolyId;
+    const correctId = product.monopolyId;
+    if (!correct) wrongIdxsRef.current.add(productIdxRef.current);
+    setFeedback({ id: correctId, correct });
+    if (correct) setScore(s => s + 1);
+    setTimeout(() => {
+      setFeedback(null);
+      setAnswered(false);
+      const prods = productsRef.current;
+      if (prods.length <= 0) return;
+      const next = productIdxRef.current + 1;
+      if (next >= prods.length) {
+        const wrongs = wrongIdxsRef.current;
+        if (wrongs.size === 0) {
+          setStatus('perfect');
+        } else {
+          const wrongProds = prods.filter((_, i) => wrongs.has(i));
+          wrongIdxsRef.current = new Set();
+          productsRef.current = wrongProds;
+          setProducts(wrongProds);
+          setCycle(c => c + 1);
+          setProductIdx(0);
+        }
+      } else {
+        setProductIdx(next);
+      }
+    }, 900);
+  }, []);
+
   const answer = (monopolyId: string) => {
     if (answered) return;
     setAnswered(true);
     playTapSfx();
-    send({ type: 'ANSWER', name: myName, team: myTeam, monopolyId, productIndex: productIdx, cycle });
+    if (cycle > 0) {
+      // Retry rounds: validate locally — host's index mapping is no longer valid
+      const prod = productsRef.current[productIdxRef.current];
+      if (prod) handleLocalResult(monopolyId, prod);
+    } else {
+      send({ type: 'ANSWER', name: myName, team: myTeam, monopolyId, productIndex: productIdx, cycle });
+    }
   };
 
   const currentProduct = productIdx >= 0 && productIdx < products.length ? products[productIdx] : null;
