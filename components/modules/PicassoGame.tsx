@@ -3,24 +3,32 @@ import Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
 
 // ─── Word Bank ────────────────────────────────────────────────────────────────
-const WORDS: string[] = [
-  // חינוך פיננסי בלבד — מושגים שימושיים
-  'תקציב', 'הכנסות', 'הוצאות', 'תזרים מזומנים', 'ניהול כסף',
-  'צרכים ורצונות', 'השוואת מחירים', 'תכנון קניות', 'קנייה אימפולסיבית', 'דמי משלוח',
-  'חשבון בנק', 'עובר ושב', 'כרטיס חיוב', 'כרטיס אשראי', 'מסגרת אשראי',
-  'מינוס', 'עמלה', 'ריבית', 'ריבית דריבית',
-  'חיסכון', 'קרן חירום', 'מטרת חיסכון',
-  'הלוואה', 'החזר חודשי', 'לוח סילוקין', 'חוב',
-  'משכנתא',
-  'ביטוח', 'השתתפות עצמית',
-  'פנסיה', 'קופת גמל', 'קרן השתלמות',
-  'השקעה', 'סיכון', 'תשואה', 'פיזור השקעות',
-  'מניה', 'אגרת חוב', 'מדד', 'קרן סל',
-  'שכר', 'שכר מינימום', 'תלוש שכר', 'מס הכנסה',
-  'מע"מ',
-  'רווח', 'הפסד', 'יזמות', 'תוכנית עסקית',
-  'מיקוח',
+// ─── Difficulty Word Banks ────────────────────────────────────────────────
+const EASY_WORDS: string[] = [
+  'תקציב', 'הכנסות', 'הוצאות', 'חיסכון', 'שכר', 'ביטוח', 'רווח', 'הפסד', 'צרכים ורצונות', 'חשבון בנק',
 ];
+const MEDIUM_WORDS: string[] = [
+  'תזרים מזומנים', 'ניהול כסף', 'השוואת מחירים', 'תכנון קניות', 'קנייה אימפולסיבית', 'דמי משלוח',
+  'עובר ושב', 'כרטיס חיוב', 'כרטיס אשראי', 'מסגרת אשראי', 'מינוס', 'עמלה', 'ריבית', 'ריבית דריבית',
+  'קרן חירום', 'מטרת חיסכון', 'הלוואה', 'החזר חודשי', 'לוח סילוקין', 'חוב', 'משכנתא',
+  'השתתפות עצמית', 'פנסיה', 'קופת גמל', 'קרן השתלמות', 'השקעה', 'סיכון', 'תשואה', 'פיזור השקעות',
+  'מניה', 'אגרת חוב', 'מדד', 'קרן סל', 'שכר מינימום', 'תלוש שכר', 'מס הכנסה', 'מע"מ', 'יזמות', 'תוכנית עסקית',
+];
+const HARD_WORDS: string[] = [
+  'קנייה אימפולסיבית', 'תזרים מזומנים', 'ריבית דריבית', 'פיזור השקעות', 'לוח סילוקין', 'קרן חירום',
+  'משכנתא', 'השתתפות עצמית', 'קרן השתלמות', 'מדד', 'קרן סל', 'תשואה', 'יזמות', 'תוכנית עסקית', 'מיקוח',
+];
+const WORDS: string[] = [...EASY_WORDS, ...MEDIUM_WORDS, ...HARD_WORDS];
+
+type Difficulty = 'easy' | 'medium' | 'hard';
+
+function getWordsByDifficulty(difficulty: Difficulty): string[] {
+  if (difficulty === 'easy') return EASY_WORDS;
+  if (difficulty === 'medium') return MEDIUM_WORDS;
+  return HARD_WORDS;
+}
+    // Difficulty state for host
+    const [difficulty, setDifficulty] = useState<Difficulty>('easy');
 
 const makeWordHint = (word: string): string => {
   const parts = word.trim().split(/\s+/).filter(Boolean);
@@ -578,12 +586,13 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
   // ── Round management ───────────────────────────────────────────────────────
   const pickWord = useCallback(() => {
-    const available = WORDS.filter(w => !usedWordsRef.current.has(w));
-    if (available.length === 0) { usedWordsRef.current.clear(); return WORDS[Math.floor(Math.random() * WORDS.length)]; }
+    const wordList = getWordsByDifficulty(difficulty);
+    const available = wordList.filter(w => !usedWordsRef.current.has(w));
+    if (available.length === 0) { usedWordsRef.current.clear(); return wordList[Math.floor(Math.random() * wordList.length)]; }
     const w = available[Math.floor(Math.random() * available.length)];
     usedWordsRef.current.add(w);
     return w;
-  }, []);
+  }, [difficulty]);
 
   const endRound = useCallback((evt: string) => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -823,6 +832,21 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Difficulty selector */}
+          <div>
+            <p style={{ color:'#a5b4fc', fontSize:13, fontWeight:700, margin:'12px 0 8px' }}>🎯 רמת קושי</p>
+            <div style={{ display:'flex', gap:6 }}>
+              <button onClick={() => setDifficulty('easy')} style={{ flex:1, padding:'7px 0', borderRadius:10, border:'none', cursor:'pointer', fontWeight:900, fontSize:14, background: difficulty==='easy' ? '#4ade80' : 'rgba(255,255,255,0.1)', color: difficulty==='easy' ? '#fff' : '#a5b4fc' }}>קל</button>
+              <button onClick={() => setDifficulty('medium')} style={{ flex:1, padding:'7px 0', borderRadius:10, border:'none', cursor:'pointer', fontWeight:900, fontSize:14, background: difficulty==='medium' ? '#f59e42' : 'rgba(255,255,255,0.1)', color: difficulty==='medium' ? '#fff' : '#a5b4fc' }}>בינוני</button>
+              <button onClick={() => setDifficulty('hard')} style={{ flex:1, padding:'7px 0', borderRadius:10, border:'none', cursor:'pointer', fontWeight:900, fontSize:14, background: difficulty==='hard' ? '#ef4444' : 'rgba(255,255,255,0.1)', color: difficulty==='hard' ? '#fff' : '#a5b4fc' }}>קשה</button>
+            </div>
+            <p style={{ color:'#a5b4fc', fontSize:12, margin:'6px 0 0' }}>
+              {difficulty==='easy' && 'מושגים בסיסיים וברורים'}
+              {difficulty==='medium' && 'מושגים מתקדמים, חלקם מופשטים'}
+              {difficulty==='hard' && 'מושגים קשים, מופשטים או מורכבים'}
+            </p>
           </div>
 
           {/* Players */}
