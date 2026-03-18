@@ -2,25 +2,38 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
 
-// ─── Word Bank ────────────────────────────────────────────────────────────────
-const WORDS: string[] = [
-  // חינוך פיננסי בלבד — מושגים שימושיים
-  'תקציב', 'הכנסות', 'הוצאות', 'תזרים מזומנים', 'ניהול כסף',
-  'צרכים ורצונות', 'השוואת מחירים', 'תכנון קניות', 'קנייה אימפולסיבית', 'דמי משלוח',
-  'חשבון בנק', 'עובר ושב', 'כרטיס חיוב', 'כרטיס אשראי', 'מסגרת אשראי',
-  'מינוס', 'עמלה', 'ריבית', 'ריבית דריבית',
-  'חיסכון', 'קרן חירום', 'מטרת חיסכון',
-  'הלוואה', 'החזר חודשי', 'לוח סילוקין', 'חוב',
-  'משכנתא',
-  'ביטוח', 'השתתפות עצמית',
-  'פנסיה', 'קופת גמל', 'קרן השתלמות',
-  'השקעה', 'סיכון', 'תשואה', 'פיזור השקעות',
-  'מניה', 'אגרת חוב', 'מדד', 'קרן סל',
-  'שכר', 'שכר מינימום', 'תלוש שכר', 'מס הכנסה',
-  'מע"מ',
-  'רווח', 'הפסד', 'יזמות', 'תוכנית עסקית',
-  'מיקוח',
+// ─── Word Banks by Difficulty ────────────────────────────────────────────────
+const EASY_WORDS: string[] = [
+  // רמה קלה: מילים בודדות, עד 5 אותיות, קלות לציור
+  'כסף', 'חיסכון', 'שכר', 'בנק', 'קופה', 'חוב', 'רווח', 'הפסד', 'קניה', 'מכירה',
+  'שוק', 'קופה', 'משכנתא', 'פנסיה', 'ביטוח', 'מניה', 'סיכון', 'יזמות', 'עמלה', 'ריבית',
+  'תקציב', 'הוצאה', 'הכנסה', 'קניה', 'חיסכון',
 ];
+
+const MEDIUM_WORDS: string[] = [
+  // רמה בינונית: מילים עד 7 אותיות, מושגים פיננסיים נפוצים
+  'השקעה', 'הכנסות', 'הוצאות', 'תזרים', 'ניהול כסף', 'תכנון קניות', 'כרטיס אשראי',
+  'מסגרת אשראי', 'עובר ושב', 'דמי משלוח', 'קרן חירום', 'החזר חודשי', 'לוח סילוקין',
+  'קרן השתלמות', 'קופת גמל', 'קרן סל', 'שכר מינימום', 'תלוש שכר', 'מס הכנסה',
+  'פיזור השקעות', 'מדד', 'יזמות', 'תוכנית עסקית', 'מיקוח',
+];
+
+const HARD_WORDS: string[] = [
+  // רמה קשה: מילים ארוכות, צירופי סמיכות, מושגים מאתגרים
+  'תזרים מזומנים', 'קנייה אימפולסיבית', 'השוואת מחירים', 'ניהול תקציב משפחתי',
+  'ריבית דריבית', 'מטרת חיסכון', 'הלוואה בנקאית', 'השתתפות עצמית',
+  'פנסיה תקציבית', 'משכנתא הפוכה', 'החזר חודשי קבוע', 'סיכון השקעה',
+  'פיזור סיכונים', 'קרן השתלמות', 'קופת גמל להשקעה', 'מדד מניות',
+  'הון עצמי', 'הון זר', 'הכנסה פאסיבית', 'הוצאה קבועה', 'הוצאה משתנה',
+];
+
+const WORD_BANKS = {
+  easy: EASY_WORDS,
+  medium: MEDIUM_WORDS,
+  hard: HARD_WORDS,
+};
+
+type Difficulty = 'easy' | 'medium' | 'hard';
 
 const makeWordHint = (word: string): string => {
   const parts = word.trim().split(/\s+/).filter(Boolean);
@@ -502,6 +515,7 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [wordRevealed, setWordRevealed] = useState('');
   const [roundSeconds, setRoundSeconds] = useState(60);
   const [currentWord, setCurrentWord]   = useState('');
+  const [difficulty, setDifficulty] = useState<Difficulty>('easy');
 
   const syncPlayers = useCallback(() => {
     setPlayers([...playersRef.current.values()]);
@@ -578,12 +592,13 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
   // ── Round management ───────────────────────────────────────────────────────
   const pickWord = useCallback(() => {
-    const available = WORDS.filter(w => !usedWordsRef.current.has(w));
-    if (available.length === 0) { usedWordsRef.current.clear(); return WORDS[Math.floor(Math.random() * WORDS.length)]; }
+    const bank = WORD_BANKS[difficulty];
+    const available = bank.filter(w => !usedWordsRef.current.has(w));
+    if (available.length === 0) { usedWordsRef.current.clear(); return bank[Math.floor(Math.random() * bank.length)]; }
     const w = available[Math.floor(Math.random() * available.length)];
     usedWordsRef.current.add(w);
     return w;
-  }, []);
+  }, [difficulty]);
 
   const endRound = useCallback((evt: string) => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -810,6 +825,15 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             )}
           </div>
 
+          {/* Difficulty picker */}
+          <div style={{ marginBottom: 16 }}>
+            <p style={{ color:'#a5b4fc', fontSize:13, fontWeight:700, margin:'0 0 8px' }}>🎯 רמת קושי</p>
+            <div style={{ display:'flex', gap:6 }}>
+              <button onClick={() => setDifficulty('easy')} style={{ flex:1, padding:'7px 0', borderRadius:10, border:'none', cursor:'pointer', fontWeight:900, fontSize:14, background: difficulty==='easy' ? '#a855f7' : 'rgba(255,255,255,0.1)', color: difficulty==='easy' ? '#fff' : '#a5b4fc' }}>קלה</button>
+              <button onClick={() => setDifficulty('medium')} style={{ flex:1, padding:'7px 0', borderRadius:10, border:'none', cursor:'pointer', fontWeight:900, fontSize:14, background: difficulty==='medium' ? '#a855f7' : 'rgba(255,255,255,0.1)', color: difficulty==='medium' ? '#fff' : '#a5b4fc' }}>בינונית</button>
+              <button onClick={() => setDifficulty('hard')} style={{ flex:1, padding:'7px 0', borderRadius:10, border:'none', cursor:'pointer', fontWeight:900, fontSize:14, background: difficulty==='hard' ? '#a855f7' : 'rgba(255,255,255,0.1)', color: difficulty==='hard' ? '#fff' : '#a5b4fc' }}>קשה</button>
+            </div>
+          </div>
           {/* Duration picker */}
           <div>
             <p style={{ color:'#a5b4fc', fontSize:13, fontWeight:700, margin:'0 0 8px' }}>⏱ משך כל סיבוב</p>

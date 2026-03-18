@@ -2241,18 +2241,18 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                   חזרה לחלון המשחקים
                 </button>
               </div>
-              {activeActivity === 'מאיפה בא הכסף?' && <WhereMoneyComesFromModule onBack={() => setActiveSubActivity(null)} title="מאיפה בא הכסף?" />}
-              {activeActivity === 'צרכים ורצונות' && <NeedsVsWantsModule onBack={() => setActiveSubActivity(null)} title="צרכים ורצונות" />}
-              {activeActivity === 'הרפתקת חיסכון' && <SavingsAdventureModule onBack={() => setActiveSubActivity(null)} title="הרפתקת חיסכון" />}
-              {activeActivity === 'חנות הקסמים' && <MagicStoreModule onBack={() => setActiveSubActivity(null)} title="חנות הקסמים" />}
-              {activeActivity === 'בנק הקופות' && <JarBankModule onBack={() => setActiveSubActivity(null)} title="בנק הקופות" />}
-              {activeActivity === 'סיור עולמי' && <WorldTourModule onBack={() => setActiveSubActivity(null)} title="סיור עולמי" />}
-              {activeActivity === 'סודות הפרסום' && <AdSecretsModule onBack={() => setActiveSubActivity(null)} title="סודות הפרסום" />}
-              {activeActivity === 'משימות הרווחה' && <KisonimEarningMissions onBack={() => setActiveSubActivity(null)} title="משימות הרווחה" />}
-              {activeActivity === 'שוק צבעוני' && <ColorfulMarketModule onBack={() => setActiveSubActivity(null)} title="שוק צבעוני" />}
-              {activeActivity === 'מטבעות ושטרות' && <CoinsVsBillsModule onBack={() => setActiveSubActivity(null)} title="מטבעות ושטרות" />}
-              {activeActivity === 'כוח הנתינה' && <PowerOfGivingModule onBack={() => setActiveSubActivity(null)} title="כוח הנתינה" />}
-              {activeActivity === 'החלטות קטנות' && <SmallDecisionsModule onBack={() => setActiveSubActivity(null)} title="החלטות קטנות" />}
+              {activeActivity === 'מאיפה בא הכסף?' && <WhereMoneyComesFromModule onBack={() => setActiveSubActivity(null)} onComplete={() => {}} title="מאיפה בא הכסף?" />}
+              {activeActivity === 'צרכים ורצונות' && <NeedsVsWantsModule onBack={() => setActiveSubActivity(null)} onComplete={() => {}} title="צרכים ורצונות" />}
+              {activeActivity === 'הרפתקת חיסכון' && <SavingsAdventureModule onBack={() => setActiveSubActivity(null)} onComplete={() => {}} title="הרפתקת חיסכון" />}
+              {activeActivity === 'חנות הקסמים' && <MagicStoreModule onBack={() => setActiveSubActivity(null)} onComplete={() => {}} title="חנות הקסמים" />}
+              {activeActivity === 'בנק הקופות' && <JarBankModule onBack={() => setActiveSubActivity(null)} onComplete={() => {}} title="בנק הקופות" />}
+              {activeActivity === 'סיור עולמי' && <WorldTourModule onBack={() => setActiveSubActivity(null)} onComplete={() => {}} title="סיור עולמי" />}
+              {activeActivity === 'סודות הפרסום' && <AdSecretsModule onBack={() => setActiveSubActivity(null)} onComplete={() => {}} title="סודות הפרסום" />}
+              {activeActivity === 'משימות הרווחה' && <KisonimEarningMissions onBack={() => setActiveSubActivity(null)} onComplete={() => {}} title="משימות הרווחה" />}
+              {activeActivity === 'שוק צבעוני' && <ColorfulMarketModule onBack={() => setActiveSubActivity(null)} onComplete={() => {}} title="שוק צבעוני" />}
+              {activeActivity === 'מטבעות ושטרות' && <CoinsVsBillsModule onBack={() => setActiveSubActivity(null)} onComplete={() => {}} title="מטבעות ושטרות" />}
+              {activeActivity === 'כוח הנתינה' && <PowerOfGivingModule onBack={() => setActiveSubActivity(null)} onComplete={() => {}} title="כוח הנתינה" />}
+              {activeActivity === 'החלטות קטנות' && <SmallDecisionsModule onBack={() => setActiveSubActivity(null)} onComplete={() => {}} title="החלטות קטנות" />}
             </div>
           ) : activeModule === 'פעילויות ומשחקים' && activeProgram === "'כיסונים פיננסים'" && activeSubActivity === 'BLOOKET' ? (
             <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
