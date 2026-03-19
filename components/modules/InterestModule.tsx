@@ -12,13 +12,13 @@ interface InterestModuleProps {
 }
 
 const steps = [
-  "מהי השקעה?",
-    "היצע וביקוש",
-  "סוגי השקעות",
-  "כוחה של ריבית דריבית",
-    "תשואה מול סיכון",
-  "נסו בעצמכם!",
-  "בוחן ידע"
+    { label: "מהי השקעה?", icon: "💰" },
+    { label: "היצע וביקוש", icon: "📈" },
+    { label: "סוגי השקעות", icon: "🏦" },
+    { label: "כוחה של ריבית דריבית", icon: "🔄" },
+    { label: "תשואה מול סיכון", icon: "⚖️" },
+    { label: "נסו בעצמכם!", icon: "🛠️" },
+    { label: "בוחן ידע", icon: "🧠" },
 ];
 
 // Custom Icons
@@ -860,9 +860,9 @@ const InterestModule: React.FC<InterestModuleProps> = ({ onBack, title, onComple
                         <React.Fragment key={index}>
                             <div className="flex flex-col items-center flex-1">
                                 <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 text-2xl ${currentStep >= index ? 'bg-brand-teal border-brand-teal text-white' : 'bg-white/50 border-gray-300'}`}>
-                                    {index + 1}
+                                    {currentStep > index ? '✓' : <span className="text-2xl">{step.icon}</span>}
                                 </div>
-                                <p className={`mt-2 text-lg text-center font-bold ${currentStep >= index ? 'text-brand-teal' : 'text-gray-500'}`}>{step}</p>
+                                <p className={`mt-2 text-lg text-center font-bold ${currentStep >= index ? 'text-brand-teal' : 'text-gray-500'}`}>{step.label}</p>
                             </div>
                             {index < steps.length - 1 && <div className={`flex-1 h-1 mx-2 ${currentStep > index ? 'bg-brand-teal' : 'bg-gray-300'}`}></div>}
                         </React.Fragment>

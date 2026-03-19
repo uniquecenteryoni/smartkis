@@ -191,7 +191,7 @@ function drawTree(ctx2d: CanvasRenderingContext2D, x: number, y: number, label: 
     ctx2d.beginPath(); ctx2d.moveTo(-w/2*sc,yw); ctx2d.lineTo(w/2*sc,yw); ctx2d.lineTo(0,(yOff-h*0.3)*sc); ctx2d.closePath(); ctx2d.fill();
   });
   // label pill above tree
-  ctx2d.font = 'bold 12px sans-serif'; ctx2d.textAlign = 'center';
+  ctx2d.font = 'bold 16px sans-serif'; ctx2d.textAlign = 'center';
   const lw = ctx2d.measureText(label).width + 14;
   ctx2d.fillStyle = 'rgba(25,130,55,0.93)'; ctx2d.beginPath(); ctx2d.roundRect(-lw/2,-82*sc-18,lw,20,5); ctx2d.fill();
   ctx2d.fillStyle = '#fff'; ctx2d.fillText(label, 0, -82*sc-3);
@@ -222,7 +222,7 @@ function drawSnowman(ctx2d: CanvasRenderingContext2D, x: number, y: number, labe
   // scarf
   ctx2d.fillStyle='#E53E3E'; ctx2d.fillRect(-14*sc,-42*sc,28*sc,5*sc);
   // label pill
-  ctx2d.font = 'bold 12px sans-serif'; ctx2d.textAlign = 'center';
+  ctx2d.font = 'bold 16px sans-serif'; ctx2d.textAlign = 'center';
   const lw = ctx2d.measureText(label).width + 14;
   ctx2d.fillStyle = 'rgba(180,25,25,0.92)'; ctx2d.beginPath(); ctx2d.roundRect(-lw/2,-100*sc-18,lw,20,5); ctx2d.fill();
   ctx2d.fillStyle = '#fff'; ctx2d.fillText(label, 0, -100*sc-3);
@@ -542,8 +542,8 @@ const SnowballGame: React.FC<Props> = ({ onBack }) => {
 
       // Downhill arrow indicator
       ctx2d.fillStyle='rgba(255,255,255,0.7)'; ctx2d.beginPath(); ctx2d.roundRect(CW/2-65,CH-40,130,28,8); ctx2d.fill();
-      ctx2d.fillStyle='#223'; ctx2d.font='bold 13px sans-serif'; ctx2d.textAlign='center';
-      ctx2d.fillText('↓ מתגלגל במורד ↓', CW/2, CH-21);
+      ctx2d.fillStyle='#223'; ctx2d.font='bold 16px sans-serif'; ctx2d.textAlign='center';
+      ctx2d.fillText('הכדור מתגלגל במורד ההר — התחמקו מהאלמנטים!', CW/2, CH-21);
     }
 
     rafRef.current = requestAnimationFrame(gameLoop);

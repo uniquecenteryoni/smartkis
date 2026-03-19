@@ -385,11 +385,20 @@ const ExpensesModule: React.FC<ExpensesModuleProps> = ({ onBack, title, onComple
         const duration = 700;
         const startTime = performance.now();
 
+        // בליסטיקה משופרת: מסלול קשת, סיבוב, קפיצה על הסל, אפקטים
+        let hitSoundPlayed = false;
         const animateFlight = (now: number) => {
             const t = Math.min((now - startTime) / duration, 1);
-            const x = (1 - t) * (1 - t) * COURT.player.x + 2 * (1 - t) * t * controlPoint.x + t * t * endX;
-            const y = (1 - t) * (1 - t) * COURT.player.y + 2 * (1 - t) * t * controlPoint.y + t * t * endY;
-            setBallPosition({ x, y });
+            // מסלול קשת עם "קפיצה" קלה על הסל
+            let x = (1 - t) * (1 - t) * COURT.player.x + 2 * (1 - t) * t * controlPoint.x + t * t * endX;
+            let y = (1 - t) * (1 - t) * COURT.player.y + 2 * (1 - t) * t * controlPoint.y + t * t * endY;
+            // קפיצה קלה אם פוגע בסל
+            if (madeBasket && t > 0.92 && t < 0.98) y -= 2.5 * Math.sin((t-0.92)*Math.PI*7);
+            // סיבוב הכדור (עבור אנימציה)
+            setBallPosition({ x, y, spin: t });
+
+            // אפקט קול פגיעה בסל/טבעת
+            if (madeBasket && !hitSoundPlayed && t > 0.93) { playArcadeSound('finish'); hitSoundPlayed = true; }
 
             if (t < 1) {
                 flightRafRef.current = requestAnimationFrame(animateFlight);
@@ -704,22 +713,38 @@ const ExpensesModule: React.FC<ExpensesModuleProps> = ({ onBack, title, onComple
                             </div>
                             <p className="text-lg font-bold text-brand-dark-blue/80 mb-3">עוצמה: {Math.round(shotPower)}%</p>
 
-                            <div className="text-9xl transition-transform duration-100" style={{ transform: aimDirection === 'left' ? 'scaleX(1)' : 'scaleX(-1)' }}>⛹️</div>
-                            <p className="text-2xl font-bold mb-2">{aimDirection === 'left' ? '⬅️ משתנות' : '➡️ קבועות'}</p>
+                                                        {/* שם ההוצאה יוצג מעל הדמות */}
+                                                        {currentArcadeItem && !isBallFlying && (
+                                                            <div className="text-2xl font-bold text-orange-900 mb-2 text-center" style={{minHeight:32}}>
+                                                                {currentArcadeItem.name}
+                                                            </div>
+                                                        )}
+                                                        <div className="text-9xl transition-transform duration-100 mb-2" style={{ transform: aimDirection === 'left' ? 'scaleX(1)' : 'scaleX(-1)', position:'relative', bottom:0 }}>
+                                                            ⛹️
+                                                        </div>
+                                                        <p className="text-2xl font-bold mb-2">{aimDirection === 'left' ? '⬅️ משתנות' : '➡️ קבועות'}</p>
 
-                            {currentArcadeItem ? (
-                                <>
-                                    {!isBallFlying && (
-                                        <div className="bg-gradient-to-br from-orange-200 to-orange-300 border-4 border-orange-500 rounded-full w-52 h-52 flex items-center justify-center text-center p-4 shadow-xl -mt-2">
-                                            <div className="text-2xl font-bold text-orange-900">🏀<br />{currentArcadeItem.name}</div>
-                                        </div>
-                                    )}
-                                    {isBallFlying && ballPosition && (
+                                                        {currentArcadeItem ? (
+                                                                <>
+                                                                        {/* הכדור מוצג רק כאשר לא זורקים */}
+                                                                        {!isBallFlying && (
+                                                                                <div className="bg-gradient-to-br from-orange-200 to-orange-300 border-4 border-orange-500 rounded-full w-52 h-52 flex items-center justify-center text-center p-4 shadow-xl -mt-2">
+                                                                                        <div className="text-2xl font-bold text-orange-900">🏀</div>
+                                                                                </div>
+                                                                        )}
+                                                                        {isBallFlying && ballPosition && (
                                         <div
                                             className="absolute w-24 h-24 rounded-full border-4 border-orange-500 bg-gradient-to-br from-orange-200 to-orange-400 flex items-center justify-center text-3xl font-bold text-orange-900 shadow-xl"
-                                            style={{ left: `${ballPosition.x}%`, top: `${ballPosition.y}%`, transform: 'translate(-50%, -50%)' }}
+                                            style={{
+                                                left: `${ballPosition.x}%`,
+                                                top: `${ballPosition.y}%`,
+                                                transform: `translate(-50%, -50%) rotate(${(ballPosition.spin||0)*720}deg)`,
+                                                boxShadow: '0 16px 32px 0 rgba(0,0,0,0.18)',
+                                                transition: 'box-shadow 0.2s',
+                                            }}
                                         >
-                                            🏀
+                                            <span style={{filter:'drop-shadow(0 2px 8px #eab308)'}}>🏀</span>
+                                            <span style={{position:'absolute',left:0,right:0,bottom:-18,opacity:0.18,fontSize:60,filter:'blur(2.5px)'}}>⬤</span>
                                         </div>
                                     )}
                                 </>

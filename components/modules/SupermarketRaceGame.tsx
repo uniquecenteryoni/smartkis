@@ -520,8 +520,13 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           setTimeout(() => setFloats(prev => prev.filter(f => f.id !== fid)), 1400);
           // Update score
           if (correct) {
+            // Proportional scoring: 1 point divided by team size
             setTeams(prev => {
-              const next = prev.map(t => t.name === msg.team ? { ...t, score: t.score + 1 } : t);
+              // Find team size
+              const teamPlayers = playersRef.current.filter(p => p.team === msg.team);
+              const teamSize = teamPlayers.length || 1; // Avoid division by zero
+              const increment = 1 / teamSize;
+              const next = prev.map(t => t.name === msg.team ? { ...t, score: +(t.score + increment).toFixed(2) } : t);
               broadcast({ type: 'SCORE', teams: next });
               return next;
             });
