@@ -484,7 +484,15 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   // Init PeerJS
   useEffect(() => {
     if (phase !== 'waiting' && phase !== 'setup') return;
-    const peer = new Peer(undefined as any, { debug: 0 });
+    const peer = new Peer(undefined as any, {
+      debug: 0,
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:global.stun.twilio.com:3478?transport=udp' },
+        ]
+      }
+    });
     peerRef.current = peer;
     peer.on('open', id => setPeerId(id));
     peer.on('connection', (conn: DataConnection) => {
@@ -842,7 +850,15 @@ export const SupermarketPlayerView: React.FC = () => {
 
   useEffect(() => {
     if (!hostId) { setStatus('error'); return; }
-    const peer = new Peer(undefined as any, { debug: 0 });
+    const peer = new Peer(undefined as any, {
+      debug: 0,
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:global.stun.twilio.com:3478?transport=udp' },
+        ]
+      }
+    });
     peerRef2.current = peer;
     peer.on('open', () => {
       const conn = peer.connect(hostId, { reliable: true });
