@@ -215,15 +215,7 @@ export const PicassoPlayerView: React.FC = () => {
     };
 
     const setupPeer = () => {
-      const peer = new Peer({
-        config: {
-          iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:global.stun.twilio.com:3478?transport=udp' },
-            // TURN servers can be added here if available
-          ]
-        }
-      });
+      const peer = new Peer();
       peerRef.current = peer;
 
       peer.on('open', () => {
@@ -512,13 +504,6 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const roundSecondsRef  = useRef<number>(60);
 
   const [hostPeerId, setHostPeerId] = useState<string | null>(null);
-
-  // Always try to get hostPeerId from peerRef if missing
-  useEffect(() => {
-    if (!hostPeerId && peerRef.current && peerRef.current.id && peerRef.current.id !== 'undefined') {
-      setHostPeerId(peerRef.current.id);
-    }
-  }, [hostPeerId]);
   const [peerErr, setPeerErr]       = useState<string | null>(null);
   const [phase, setPhase]           = useState<GamePhase>('lobby');
   const [players, setPlayers]       = useState<Player[]>([]);
@@ -749,15 +734,7 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
   // ── PeerJS init ────────────────────────────────────────────────────────────
   useEffect(() => {
-    const peer = new Peer({
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:global.stun.twilio.com:3478?transport=udp' },
-        ]
-      }
-    });
-    peerRef.current = peer;
+    const peer = new Peer(); peerRef.current = peer;
     peer.on('open', id => setHostPeerId(id));
     peer.on('error', e => setPeerErr(String(e)));
     peer.on('disconnected', () => {
@@ -807,9 +784,7 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     if (ctx) { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
   }, [phase]);
 
-  // Fallback: if hostPeerId is missing, try peerRef.current.id
-  const effectiveHostPeerId = hostPeerId || (peerRef.current && peerRef.current.id && peerRef.current.id !== 'undefined' ? peerRef.current.id : null);
-  const playerUrl = effectiveHostPeerId ? `${window.location.origin}${window.location.pathname}#picasso-player-${effectiveHostPeerId}` : '';
+  const playerUrl = hostPeerId ? `${window.location.origin}${window.location.pathname}#picasso-player-${hostPeerId}` : '';
   const qrUrl = playerUrl ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(playerUrl)}` : '';
 
   // ── Lobby ──────────────────────────────────────────────────────────────────
@@ -930,22 +905,8 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         {lastEvent && <p style={{ color:'#a5b4fc', fontSize:14, textAlign:'center', margin:0 }}>{lastEvent}</p>}
       </div>
 
-      {/* Sidebar: QR + scoreboard */}
+      {/* Sidebar */}
       <div dir="rtl" style={{ width:240, background:'#1e1b4b', padding:16, display:'flex', flexDirection:'column', gap:12, borderRight:'1px solid rgba(255,255,255,0.1)', overflowY:'auto', flexShrink:0 }}>
-        {/* QR */}
-        <div style={{ background:'rgba(255,255,255,0.05)', borderRadius:12, padding:10, textAlign:'center', border:'1px solid rgba(255,255,255,0.1)', marginBottom:10 }}>
-          <p style={{ color:'#a5b4fc', fontSize:13, margin:'0 0 8px', fontWeight:700 }}>📱 סרקו להצטרף</p>
-          {peerErr ? (
-            <p style={{ color:'#f87171', fontSize:13 }}>שגיאה: {peerErr}</p>
-          ) : hostPeerId ? (
-            <img src={qrUrl} alt="QR" style={{ borderRadius:10, width:120, height:120 }} />
-          ) : (
-            <div style={{ width:120, height:120, display:'flex', alignItems:'center', justifyContent:'center', background:'#fff', borderRadius:10, margin:'0 auto' }}>
-              <div style={{ width:28, height:28, border:'4px solid #312e81', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
-              <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-            </div>
-          )}
-        </div>
         <p style={{ color:'#a5b4fc', fontSize:14, fontWeight:700, margin:0 }}>לוח ניקוד</p>
         {[...players].sort((a,b) => b.score - a.score).map((p, i) => (
           <div key={p.connId} style={{ background: p.connId === drawerIdRef.current ? 'rgba(168,85,247,0.2)' : 'rgba(255,255,255,0.05)', borderRadius:12, padding:'10px 12px', border: p.connId === drawerIdRef.current ? '1px solid #a855f7' : '1px solid transparent' }}>
@@ -964,61 +925,44 @@ const PicassoGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
   // ── Round End ──────────────────────────────────────────────────────────────
   if (phase === 'roundEnd' || phase === 'gameOver') return (
-    <div dir="rtl" style={{ background:'linear-gradient(135deg,#1e1b4b,#0f172a)', minHeight:'100vh', display:'flex', flexDirection:'row', alignItems:'center', justifyContent:'center', gap:0, padding:24 }}>
-      {/* Sidebar: QR code */}
-      <div style={{ width:260, background:'#1e1b4b', padding:20, borderRadius:18, marginLeft:32, display:'flex', flexDirection:'column', alignItems:'center', gap:18, border:'1px solid rgba(255,255,255,0.08)' }}>
-        <p style={{ color:'#a5b4fc', fontSize:15, fontWeight:700, margin:0 }}>📱 סרקו להצטרף</p>
-        {peerErr ? (
-          <p style={{ color:'#f87171', fontSize:13 }}>שגיאה: {peerErr}</p>
-        ) : hostPeerId ? (
-          <img src={qrUrl} alt="QR" style={{ borderRadius:10, width:140, height:140 }} />
-        ) : (
-          <div style={{ width:140, height:140, display:'flex', alignItems:'center', justifyContent:'center', background:'#fff', borderRadius:10, margin:'0 auto' }}>
-            <div style={{ width:32, height:32, border:'4px solid #312e81', borderTopColor:'transparent', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
-            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    <div dir="rtl" style={{ background:'linear-gradient(135deg,#1e1b4b,#0f172a)', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:20, padding:24 }}>
+      <p style={{ fontSize:64, margin:0 }}>{phase === 'gameOver' ? '🏆' : '⏱'}</p>
+      <h2 style={{ color:'#fff', fontSize:26, fontWeight:900, textAlign:'center', margin:0 }}>
+        {phase === 'gameOver' ? 'המשחק הסתיים!' : 'הסיבוב הסתיים!'}
+      </h2>
+      {wordRevealed && (
+        <div style={{ background:'rgba(255,215,0,0.15)', borderRadius:16, padding:'12px 24px', border:'2px solid #ffd700' }}>
+          <p style={{ color:'#ffd700', fontSize:20, margin:0, textAlign:'center' }}>המילה הייתה: <strong>{wordRevealed}</strong></p>
+        </div>
+      )}
+      <p style={{ color:'#a5b4fc', fontSize:15, textAlign:'center', margin:0 }}>{lastEvent}</p>
+
+      {/* Scoreboard */}
+      <div style={{ display:'flex', flexDirection:'column', gap:10, width:'100%', maxWidth:400 }}>
+        {[...players].sort((a,b) => b.score - a.score).map((p, i) => (
+          <div key={p.connId} style={{ background:'rgba(255,255,255,0.08)', borderRadius:14, padding:'12px 20px', display:'flex', justifyContent:'space-between', alignItems:'center', gap:10 }}>
+            <span style={{ color:'#fff', fontSize:17, fontWeight:700, flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{i===0?'🥇':i===1?'🥈':i===2?'🥉':'▸'} {p.name}</span>
+            <span style={{ color:'#ffd700', fontSize:18, fontWeight:900 }}>{p.score} ₪</span>
+            <button onClick={() => removePlayer(p.connId)}
+              style={{ background:'rgba(239,68,68,0.25)', color:'#f87171', border:'none', borderRadius:8, cursor:'pointer', fontSize:14, fontWeight:900, padding:'4px 10px', flexShrink:0 }}>✕</button>
           </div>
-        )}
+        ))}
       </div>
-      {/* Main content */}
-      <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:20 }}>
-        <p style={{ fontSize:64, margin:0 }}>{phase === 'gameOver' ? '🏆' : '⏱'}</p>
-        <h2 style={{ color:'#fff', fontSize:26, fontWeight:900, textAlign:'center', margin:0 }}>
-          {phase === 'gameOver' ? 'המשחק הסתיים!' : 'הסיבוב הסתיים!'}
-        </h2>
-        {wordRevealed && (
-          <div style={{ background:'rgba(255,215,0,0.15)', borderRadius:16, padding:'12px 24px', border:'2px solid #ffd700' }}>
-            <p style={{ color:'#ffd700', fontSize:20, margin:0, textAlign:'center' }}>המילה הייתה: <strong>{wordRevealed}</strong></p>
-          </div>
-        )}
-        <p style={{ color:'#a5b4fc', fontSize:15, textAlign:'center', margin:0 }}>{lastEvent}</p>
 
-        {/* Scoreboard */}
-        <div style={{ display:'flex', flexDirection:'column', gap:10, width:'100%', maxWidth:400 }}>
-          {[...players].sort((a,b) => b.score - a.score).map((p, i) => (
-            <div key={p.connId} style={{ background:'rgba(255,255,255,0.08)', borderRadius:14, padding:'12px 20px', display:'flex', justifyContent:'space-between', alignItems:'center', gap:10 }}>
-              <span style={{ color:'#fff', fontSize:17, fontWeight:700, flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{i===0?'🥇':i===1?'🥈':i===2?'🥉':'▸'} {p.name}</span>
-              <span style={{ color:'#ffd700', fontSize:18, fontWeight:900 }}>{p.score} ₪</span>
-              <button onClick={() => removePlayer(p.connId)}
-                style={{ background:'rgba(239,68,68,0.25)', color:'#f87171', border:'none', borderRadius:8, cursor:'pointer', fontSize:14, fontWeight:900, padding:'4px 10px', flexShrink:0 }}>✕</button>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ display:'flex', gap:12, flexWrap:'wrap', justifyContent:'center' }}>
-          {phase === 'roundEnd' && drawerQueueRef.current.length > 0 && (
-            <button onClick={nextRound} style={{ background:'#a855f7', color:'#fff', fontSize:18, fontWeight:900, padding:'14px 32px', borderRadius:14, border:'none', cursor:'pointer' }}>
-              ▶ לסיבוב הבא
-            </button>
-          )}
-          {phase === 'roundEnd' && drawerQueueRef.current.length === 0 && (
-            <button onClick={nextRound} style={{ background:'#a855f7', color:'#fff', fontSize:18, fontWeight:900, padding:'14px 32px', borderRadius:14, border:'none', cursor:'pointer' }}>
-              ▶ סיים משחק
-            </button>
-          )}
-          <button onClick={onBack} style={{ background:'rgba(255,255,255,0.1)', color:'#fff', fontSize:18, fontWeight:700, padding:'14px 32px', borderRadius:14, border:'1px solid rgba(255,255,255,0.2)', cursor:'pointer' }}>
-            ← חזרה
+      <div style={{ display:'flex', gap:12, flexWrap:'wrap', justifyContent:'center' }}>
+        {phase === 'roundEnd' && drawerQueueRef.current.length > 0 && (
+          <button onClick={nextRound} style={{ background:'#a855f7', color:'#fff', fontSize:18, fontWeight:900, padding:'14px 32px', borderRadius:14, border:'none', cursor:'pointer' }}>
+            ▶ לסיבוב הבא
           </button>
-        </div>
+        )}
+        {phase === 'roundEnd' && drawerQueueRef.current.length === 0 && (
+          <button onClick={nextRound} style={{ background:'#a855f7', color:'#fff', fontSize:18, fontWeight:900, padding:'14px 32px', borderRadius:14, border:'none', cursor:'pointer' }}>
+            ▶ סיים משחק
+          </button>
+        )}
+        <button onClick={onBack} style={{ background:'rgba(255,255,255,0.1)', color:'#fff', fontSize:18, fontWeight:700, padding:'14px 32px', borderRadius:14, border:'1px solid rgba(255,255,255,0.2)', cursor:'pointer' }}>
+          ← חזרה
+        </button>
       </div>
     </div>
   );

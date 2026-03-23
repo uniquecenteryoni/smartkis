@@ -353,9 +353,7 @@ const App: React.FC = () => {
   const [isBullseyePlayer, setIsBullseyePlayer] = useState(() => window.location.hash.startsWith('#bullseye-player-'));
   const [isPicassoPlayer, setIsPicassoPlayer] = useState(() => window.location.hash.startsWith('#picasso-player-'));
   const [isCarRacePlayer, setIsCarRacePlayer] = useState(() => window.location.hash.startsWith('#carrace-player-'));
-  const [isSupermarketPlayer, setIsSupermarketPlayer] = useState(() =>
-    window.location.hash.startsWith('#supermarket-player-') || window.location.hash.startsWith('#supermarket-join-')
-  );
+  const [isSupermarketPlayer, setIsSupermarketPlayer] = useState(() => window.location.hash.startsWith('#supermarket-player-'));
   const [appState, setAppState] = useState<AppState>('user_selection');
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [visitedModules, setVisitedModules] = useState<Set<string>>(new Set());
@@ -369,9 +367,7 @@ const App: React.FC = () => {
       setIsBullseyePlayer(window.location.hash.startsWith('#bullseye-player-'));
       setIsPicassoPlayer(window.location.hash.startsWith('#picasso-player-'));
       setIsCarRacePlayer(window.location.hash.startsWith('#carrace-player-'));
-      setIsSupermarketPlayer(
-        window.location.hash.startsWith('#supermarket-player-') || window.location.hash.startsWith('#supermarket-join-')
-      );
+      setIsSupermarketPlayer(window.location.hash.startsWith('#supermarket-player-'));
     };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);

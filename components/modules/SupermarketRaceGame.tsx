@@ -227,13 +227,6 @@ const MonopolyBadge: React.FC<{ m: Monopoly; size?: 'sm' | 'md' | 'lg'; onClick?
 const CART_EMOJIS = ['🛒', '🛒', '🛒', '🛒', '🛒', '🛒'];
 const TEAM_COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899'];
 
-const STUN_ICE = {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:global.stun.twilio.com:3478?transport=udp' },
-  ]
-};
-
 const CartRace: React.FC<{ teams: TeamScore[]; maxScore: number; floats: FloatAnim[]; }> = ({ teams, maxScore, floats }) => {
   const total = Math.max(maxScore, 1);
   return (
@@ -488,16 +481,12 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     return () => stopBgMusic();
   }, [stopBgMusic]);
 
-  // Init PeerJS — created once on mount so peerId stays constant across all phases
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Init PeerJS
   useEffect(() => {
-    const peer = new Peer(undefined as any, { debug: 0, config: STUN_ICE });
+    if (phase !== 'waiting' && phase !== 'setup') return;
+    const peer = new Peer(undefined as any, { debug: 0 });
     peerRef.current = peer;
     peer.on('open', id => setPeerId(id));
-    peer.on('disconnected', () => {
-      // Keep signaling alive for late joiners during long sessions.
-      try { if (typeof (peer as any).reconnect === 'function') (peer as any).reconnect(); } catch {}
-    });
     peer.on('connection', (conn: DataConnection) => {
       const connId = conn.peer;
       connectionsRef.current.set(connId, conn);
@@ -555,11 +544,9 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       conn.on('close',  () => { connectionsRef.current.delete(connId); setPlayers(prev => prev.filter(p => p.connId !== connId)); });
       conn.on('error',  () => { connectionsRef.current.delete(connId); });
     });
-    return () => {
-      peer.destroy();
-      peerRef.current = null;
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    return () => { peer.destroy(); peerRef.current = null; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase === 'waiting' || phase === 'race']);
 
   // When teams list is ready, send on any new join
   useEffect(() => {
@@ -721,19 +708,8 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         const mm = Math.floor(timeLeft / 60).toString().padStart(2, '0');
         const ss = (timeLeft % 60).toString().padStart(2, '0');
         const urgent = timeLeft <= 30;
-        // QR code for joining mid-game (same hash format used by player view)
-        const joinUrl = peerId ? `${baseUrl}#supermarket-player-${peerId}` : '';
         return (
           <div className="space-y-6">
-            {/* QR code for joining */}
-            {peerId && (
-              <div className="flex flex-col items-center mb-2">
-                <div style={{ background:'#fff', borderRadius:16, padding:8, boxShadow:'0 2px 8px #0001', marginBottom:8 }}>
-                  <QRCodeSVG value={joinUrl} size={120} />
-                </div>
-                <div className="text-sm font-bold text-brand-dark-blue/80">להצטרפות: סרקו את הברקוד</div>
-              </div>
-            )}
             {/* Timer + players bar */}
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div
@@ -839,8 +815,7 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 // ─── PLAYER COMPONENT ──────────────────────────────────────────────────────────
 
 export const SupermarketPlayerView: React.FC = () => {
-  // Support both hash formats for backward compatibility.
-  const hm        = window.location.hash.match(/#supermarket-(?:player|join)-(.+)/);
+  const hm        = window.location.hash.match(/#supermarket-player-(.+)/);
   const hostId    = hm ? hm[1] : null;
   const connRef   = useRef<DataConnection | null>(null);
   const peerRef2  = useRef<InstanceType<typeof Peer> | null>(null);
@@ -867,9 +842,8 @@ export const SupermarketPlayerView: React.FC = () => {
 
   useEffect(() => {
     if (!hostId) { setStatus('error'); return; }
-    const peer = new Peer(undefined as any, { debug: 0, config: STUN_ICE });
+    const peer = new Peer(undefined as any, { debug: 0 });
     peerRef2.current = peer;
-    setStatus('connecting');
     peer.on('open', () => {
       const conn = peer.connect(hostId, { reliable: true });
       connRef.current = conn;
