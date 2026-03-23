@@ -227,6 +227,20 @@ const MonopolyBadge: React.FC<{ m: Monopoly; size?: 'sm' | 'md' | 'lg'; onClick?
 const CART_EMOJIS = ['🛒', '🛒', '🛒', '🛒', '🛒', '🛒'];
 const TEAM_COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899'];
 
+const PEER_OPTIONS = {
+  host: '0.peerjs.com',
+  port: 443,
+  secure: true,
+  path: '/',
+  debug: 0,
+  config: {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:global.stun.twilio.com:3478?transport=udp' },
+    ]
+  }
+} as const;
+
 const CartRace: React.FC<{ teams: TeamScore[]; maxScore: number; floats: FloatAnim[]; }> = ({ teams, maxScore, floats }) => {
   const total = Math.max(maxScore, 1);
   return (
@@ -428,6 +442,7 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [teams, setTeams]               = useState<TeamScore[]>([]);
   const [players, setPlayers]           = useState<PlayerEntry[]>([]);
   const [peerId, setPeerId]             = useState<string | null>(null);
+  const [hostPeerEpoch, setHostPeerEpoch] = useState(0);
   const [products, setProducts]         = useState<Product[]>([]);
   const [floats, setFloats]             = useState<FloatAnim[]>([]);
   const peerRef        = useRef<InstanceType<typeof Peer> | null>(null);
@@ -483,16 +498,9 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
   // Init PeerJS
   useEffect(() => {
-    if (phase !== 'waiting' && phase !== 'setup') return;
-    const peer = new Peer(undefined as any, {
-      debug: 0,
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:global.stun.twilio.com:3478?transport=udp' },
-        ]
-      }
-    });
+    if (phase !== 'waiting' && phase !== 'race') return;
+    let disposed = false;
+    const peer = new Peer(undefined as any, PEER_OPTIONS as any);
     peerRef.current = peer;
     peer.on('open', id => setPeerId(id));
     peer.on('disconnected', () => {
@@ -500,11 +508,26 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       try {
         if (typeof (peer as any).reconnect === 'function') (peer as any).reconnect();
       } catch {}
+      // If reconnect fails, recreate peer instance.
+      setTimeout(() => {
+        if (disposed) return;
+        try {
+          if ((peer as any).disconnected) {
+            setPeerId(null);
+            setHostPeerEpoch(e => e + 1);
+          }
+        } catch {}
+      }, 1800);
     });
     peer.on('error', () => {
       try {
         if ((peer as any).disconnected && typeof (peer as any).reconnect === 'function') (peer as any).reconnect();
       } catch {}
+    });
+    peer.on('close', () => {
+      if (disposed) return;
+      setPeerId(null);
+      setHostPeerEpoch(e => e + 1);
     });
     peer.on('connection', (conn: DataConnection) => {
       const connId = conn.peer;
@@ -563,9 +586,13 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       conn.on('close',  () => { connectionsRef.current.delete(connId); setPlayers(prev => prev.filter(p => p.connId !== connId)); });
       conn.on('error',  () => { connectionsRef.current.delete(connId); });
     });
-    return () => { peer.destroy(); peerRef.current = null; };
+    return () => {
+      disposed = true;
+      peer.destroy();
+      peerRef.current = null;
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase === 'waiting' || phase === 'race']);
+  }, [phase === 'waiting' || phase === 'race', hostPeerEpoch]);
 
   // When teams list is ready, send on any new join
   useEffect(() => {
@@ -885,15 +912,7 @@ export const SupermarketPlayerView: React.FC = () => {
       }, ms);
     };
 
-    const peer = new Peer(undefined as any, {
-      debug: 0,
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:global.stun.twilio.com:3478?transport=udp' },
-        ]
-      }
-    });
+    const peer = new Peer(undefined as any, PEER_OPTIONS as any);
     peerRef2.current = peer;
     setStatus('connecting');
 
