@@ -227,19 +227,12 @@ const MonopolyBadge: React.FC<{ m: Monopoly; size?: 'sm' | 'md' | 'lg'; onClick?
 const CART_EMOJIS = ['🛒', '🛒', '🛒', '🛒', '🛒', '🛒'];
 const TEAM_COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899'];
 
-const PEER_OPTIONS = {
-  host: '0.peerjs.com',
-  port: 443,
-  secure: true,
-  path: '/',
-  debug: 0,
-  config: {
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:global.stun.twilio.com:3478?transport=udp' },
-    ]
-  }
-} as const;
+const STUN_ICE = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:global.stun.twilio.com:3478?transport=udp' },
+  ]
+};
 
 const CartRace: React.FC<{ teams: TeamScore[]; maxScore: number; floats: FloatAnim[]; }> = ({ teams, maxScore, floats }) => {
   const total = Math.max(maxScore, 1);
@@ -442,7 +435,6 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [teams, setTeams]               = useState<TeamScore[]>([]);
   const [players, setPlayers]           = useState<PlayerEntry[]>([]);
   const [peerId, setPeerId]             = useState<string | null>(null);
-  const [hostPeerEpoch, setHostPeerEpoch] = useState(0);
   const [products, setProducts]         = useState<Product[]>([]);
   const [floats, setFloats]             = useState<FloatAnim[]>([]);
   const peerRef        = useRef<InstanceType<typeof Peer> | null>(null);
@@ -496,38 +488,15 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     return () => stopBgMusic();
   }, [stopBgMusic]);
 
-  // Init PeerJS
+  // Init PeerJS — created once on mount so peerId stays constant across all phases
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (phase !== 'waiting' && phase !== 'race') return;
-    let disposed = false;
-    const peer = new Peer(undefined as any, PEER_OPTIONS as any);
+    const peer = new Peer(undefined as any, { debug: 0, config: STUN_ICE });
     peerRef.current = peer;
     peer.on('open', id => setPeerId(id));
     peer.on('disconnected', () => {
       // Keep signaling alive for late joiners during long sessions.
-      try {
-        if (typeof (peer as any).reconnect === 'function') (peer as any).reconnect();
-      } catch {}
-      // If reconnect fails, recreate peer instance.
-      setTimeout(() => {
-        if (disposed) return;
-        try {
-          if ((peer as any).disconnected) {
-            setPeerId(null);
-            setHostPeerEpoch(e => e + 1);
-          }
-        } catch {}
-      }, 1800);
-    });
-    peer.on('error', () => {
-      try {
-        if ((peer as any).disconnected && typeof (peer as any).reconnect === 'function') (peer as any).reconnect();
-      } catch {}
-    });
-    peer.on('close', () => {
-      if (disposed) return;
-      setPeerId(null);
-      setHostPeerEpoch(e => e + 1);
+      try { if (typeof (peer as any).reconnect === 'function') (peer as any).reconnect(); } catch {}
     });
     peer.on('connection', (conn: DataConnection) => {
       const connId = conn.peer;
@@ -587,12 +556,10 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       conn.on('error',  () => { connectionsRef.current.delete(connId); });
     });
     return () => {
-      disposed = true;
       peer.destroy();
       peerRef.current = null;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase === 'waiting' || phase === 'race', hostPeerEpoch]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // When teams list is ready, send on any new join
   useEffect(() => {
@@ -889,7 +856,6 @@ export const SupermarketPlayerView: React.FC = () => {
   const [feedback,   setFeedback]   = useState<{ id: string; correct: boolean } | null>(null);
   const [score,      setScore]      = useState(0);
   const [answered,   setAnswered]   = useState(false);
-  const [connectAttempt, setConnectAttempt] = useState(0);
 
   const wrongIdxsRef  = useRef<Set<number>>(new Set());
   const productIdxRef = useRef(-1);
@@ -901,39 +867,13 @@ export const SupermarketPlayerView: React.FC = () => {
 
   useEffect(() => {
     if (!hostId) { setStatus('error'); return; }
-    let disposed = false;
-    let opened = false;
-    let connOpened = false;
-    const retryAfter = (ms: number) => {
-      if (disposed) return;
-      setTimeout(() => {
-        if (disposed) return;
-        setConnectAttempt(a => a + 1);
-      }, ms);
-    };
-
-    const peer = new Peer(undefined as any, PEER_OPTIONS as any);
+    const peer = new Peer(undefined as any, { debug: 0, config: STUN_ICE });
     peerRef2.current = peer;
     setStatus('connecting');
-
-    const connectTimeout = setTimeout(() => {
-      if (disposed || connOpened) return;
-      try { peer.destroy(); } catch {}
-      if (connectAttempt < 5) {
-        retryAfter(500);
-      } else {
-        setStatus('error');
-      }
-    }, 12000);
-
     peer.on('open', () => {
-      opened = true;
       const conn = peer.connect(hostId, { reliable: true });
       connRef.current = conn;
-      conn.on('open', () => {
-        connOpened = true;
-        setStatus('join');
-      });
+      conn.on('open', () => setStatus('join'));
       conn.on('data', (raw: unknown) => {
         const msg = raw as Msg;
         if (msg.type === 'TEAMS')    { setTeams(msg.teams); }
@@ -983,49 +923,12 @@ export const SupermarketPlayerView: React.FC = () => {
         }
         if (msg.type === 'DONE')     { setStatus('done'); }
       });
-      conn.on('close', () => {
-        if (disposed) return;
-        if (connectAttempt < 5) {
-          setStatus('connecting');
-          retryAfter(300);
-        } else {
-          setStatus('error');
-        }
-      });
-      conn.on('error', () => {
-        if (disposed) return;
-        if (connectAttempt < 5) {
-          setStatus('connecting');
-          retryAfter(300);
-        } else {
-          setStatus('error');
-        }
-      });
+      conn.on('close', () => setStatus('error'));
+      conn.on('error', () => setStatus('error'));
     });
-    peer.on('disconnected', () => {
-      if (disposed) return;
-      try {
-        if (typeof (peer as any).reconnect === 'function') (peer as any).reconnect();
-      } catch {}
-      if (!connOpened && connectAttempt < 5) retryAfter(300);
-    });
-    peer.on('error', () => {
-      if (disposed) return;
-      // If no channel opened yet, retry; otherwise keep current game state.
-      if (!connOpened) {
-        if (connectAttempt < 5) {
-          retryAfter(300);
-        } else {
-          setStatus('error');
-        }
-      }
-    });
-    return () => {
-      disposed = true;
-      clearTimeout(connectTimeout);
-      try { peer.destroy(); } catch {}
-    };
-  }, [hostId, connectAttempt]);
+    peer.on('error', () => setStatus('error'));
+    return () => { peer.destroy(); };
+  }, [hostId]);
 
   const join = () => {
     if (!myName.trim() || !myTeam) return;
