@@ -428,6 +428,7 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [teams, setTeams]               = useState<TeamScore[]>([]);
   const [players, setPlayers]           = useState<PlayerEntry[]>([]);
   const [peerId, setPeerId]             = useState<string | null>(null);
+  const [hostPeerError, setHostPeerError] = useState<string | null>(null);
   const [products, setProducts]         = useState<Product[]>([]);
   const [floats, setFloats]             = useState<FloatAnim[]>([]);
   const peerRef        = useRef<InstanceType<typeof Peer> | null>(null);
@@ -444,7 +445,7 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   useEffect(() => { playersRef.current = players; }, [players]);
   useEffect(() => { productsRef.current = products; }, [products]);
 
-  const baseUrl = window.location.href.split('#')[0];
+  const baseUrl = `${window.location.origin}${window.location.pathname}`;
 
   // Broadcast to all connected players
   const broadcast = useCallback((msg: Msg) => {
@@ -487,6 +488,7 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     const peer = new Peer(undefined as any, { debug: 0 });
     peerRef.current = peer;
     peer.on('open', id => setPeerId(id));
+    peer.on('error', e => setHostPeerError(String(e)));
     peer.on('connection', (conn: DataConnection) => {
       const connId = conn.peer;
       connectionsRef.current.set(connId, conn);
@@ -664,6 +666,11 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       {/* ── WAITING ───────────────────────────────────────────────────── */}
       {phase === 'waiting' && (
         <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-6 space-y-6">
+          {hostPeerError && (
+            <div className="rounded-xl border border-red-200 bg-red-50 text-red-700 px-4 py-3 text-sm font-bold">
+              שגיאת חיבור מארח: {hostPeerError}
+            </div>
+          )}
           <div className="grid md:grid-cols-2 gap-6">
             {/* QR Panel */}
             <div className="flex flex-col items-center gap-4 p-6 rounded-2xl" style={{ background: '#f8fafc', border: '2px dashed #cbd5e1' }}>
@@ -831,6 +838,7 @@ export const SupermarketPlayerView: React.FC = () => {
   const [feedback,   setFeedback]   = useState<{ id: string; correct: boolean } | null>(null);
   const [score,      setScore]      = useState(0);
   const [answered,   setAnswered]   = useState(false);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
 
   const wrongIdxsRef  = useRef<Set<number>>(new Set());
   const productIdxRef = useRef(-1);
@@ -845,7 +853,7 @@ export const SupermarketPlayerView: React.FC = () => {
     const peer = new Peer(undefined as any, { debug: 0 });
     peerRef2.current = peer;
     peer.on('open', () => {
-      const conn = peer.connect(hostId, { reliable: true });
+      const conn = peer.connect(hostId);
       connRef.current = conn;
       conn.on('open', () => setStatus('join'));
       conn.on('data', (raw: unknown) => {
@@ -898,9 +906,9 @@ export const SupermarketPlayerView: React.FC = () => {
         if (msg.type === 'DONE')     { setStatus('done'); }
       });
       conn.on('close', () => setStatus('error'));
-      conn.on('error', () => setStatus('error'));
+      conn.on('error', (e) => { setErrorDetail(String(e)); setStatus('error'); });
     });
-    peer.on('error', () => setStatus('error'));
+    peer.on('error', (e) => { setErrorDetail(String(e)); setStatus('error'); });
     return () => { peer.destroy(); };
   }, [hostId]);
 
@@ -1105,6 +1113,7 @@ export const SupermarketPlayerView: React.FC = () => {
           <div className="text-center space-y-3">
             <p className="text-4xl">⚠️</p>
             <p className="text-xl font-bold text-gray-700">שגיאת חיבור — סרקו מחדש</p>
+            {errorDetail && <p className="text-xs text-gray-500 max-w-xs break-words">{errorDetail}</p>}
           </div>
         </div>
       )}
