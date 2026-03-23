@@ -495,6 +495,17 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     });
     peerRef.current = peer;
     peer.on('open', id => setPeerId(id));
+    peer.on('disconnected', () => {
+      // Keep signaling alive for late joiners during long sessions.
+      try {
+        if (typeof (peer as any).reconnect === 'function') (peer as any).reconnect();
+      } catch {}
+    });
+    peer.on('error', () => {
+      try {
+        if ((peer as any).disconnected && typeof (peer as any).reconnect === 'function') (peer as any).reconnect();
+      } catch {}
+    });
     peer.on('connection', (conn: DataConnection) => {
       const connId = conn.peer;
       connectionsRef.current.set(connId, conn);
@@ -851,6 +862,7 @@ export const SupermarketPlayerView: React.FC = () => {
   const [feedback,   setFeedback]   = useState<{ id: string; correct: boolean } | null>(null);
   const [score,      setScore]      = useState(0);
   const [answered,   setAnswered]   = useState(false);
+  const [connectAttempt, setConnectAttempt] = useState(0);
 
   const wrongIdxsRef  = useRef<Set<number>>(new Set());
   const productIdxRef = useRef(-1);
@@ -862,6 +874,17 @@ export const SupermarketPlayerView: React.FC = () => {
 
   useEffect(() => {
     if (!hostId) { setStatus('error'); return; }
+    let disposed = false;
+    let opened = false;
+    let connOpened = false;
+    const retryAfter = (ms: number) => {
+      if (disposed) return;
+      setTimeout(() => {
+        if (disposed) return;
+        setConnectAttempt(a => a + 1);
+      }, ms);
+    };
+
     const peer = new Peer(undefined as any, {
       debug: 0,
       config: {
@@ -872,10 +895,26 @@ export const SupermarketPlayerView: React.FC = () => {
       }
     });
     peerRef2.current = peer;
+    setStatus('connecting');
+
+    const connectTimeout = setTimeout(() => {
+      if (disposed || connOpened) return;
+      try { peer.destroy(); } catch {}
+      if (connectAttempt < 5) {
+        retryAfter(500);
+      } else {
+        setStatus('error');
+      }
+    }, 12000);
+
     peer.on('open', () => {
+      opened = true;
       const conn = peer.connect(hostId, { reliable: true });
       connRef.current = conn;
-      conn.on('open', () => setStatus('join'));
+      conn.on('open', () => {
+        connOpened = true;
+        setStatus('join');
+      });
       conn.on('data', (raw: unknown) => {
         const msg = raw as Msg;
         if (msg.type === 'TEAMS')    { setTeams(msg.teams); }
@@ -925,12 +964,49 @@ export const SupermarketPlayerView: React.FC = () => {
         }
         if (msg.type === 'DONE')     { setStatus('done'); }
       });
-      conn.on('close', () => setStatus('error'));
-      conn.on('error', () => setStatus('error'));
+      conn.on('close', () => {
+        if (disposed) return;
+        if (connectAttempt < 5) {
+          setStatus('connecting');
+          retryAfter(300);
+        } else {
+          setStatus('error');
+        }
+      });
+      conn.on('error', () => {
+        if (disposed) return;
+        if (connectAttempt < 5) {
+          setStatus('connecting');
+          retryAfter(300);
+        } else {
+          setStatus('error');
+        }
+      });
     });
-    peer.on('error', () => setStatus('error'));
-    return () => { peer.destroy(); };
-  }, [hostId]);
+    peer.on('disconnected', () => {
+      if (disposed) return;
+      try {
+        if (typeof (peer as any).reconnect === 'function') (peer as any).reconnect();
+      } catch {}
+      if (!connOpened && connectAttempt < 5) retryAfter(300);
+    });
+    peer.on('error', () => {
+      if (disposed) return;
+      // If no channel opened yet, retry; otherwise keep current game state.
+      if (!connOpened) {
+        if (connectAttempt < 5) {
+          retryAfter(300);
+        } else {
+          setStatus('error');
+        }
+      }
+    });
+    return () => {
+      disposed = true;
+      clearTimeout(connectTimeout);
+      try { peer.destroy(); } catch {}
+    };
+  }, [hostId, connectAttempt]);
 
   const join = () => {
     if (!myName.trim() || !myTeam) return;
