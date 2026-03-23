@@ -716,8 +716,19 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         const mm = Math.floor(timeLeft / 60).toString().padStart(2, '0');
         const ss = (timeLeft % 60).toString().padStart(2, '0');
         const urgent = timeLeft <= 30;
+        // QR code for joining mid-game (same hash format used by player view)
+        const joinUrl = peerId ? `${baseUrl}#supermarket-player-${peerId}` : '';
         return (
           <div className="space-y-6">
+            {/* QR code for joining */}
+            {peerId && (
+              <div className="flex flex-col items-center mb-2">
+                <div style={{ background:'#fff', borderRadius:16, padding:8, boxShadow:'0 2px 8px #0001', marginBottom:8 }}>
+                  <QRCodeSVG value={joinUrl} size={120} />
+                </div>
+                <div className="text-sm font-bold text-brand-dark-blue/80">להצטרפות: סרקו את הברקוד</div>
+              </div>
+            )}
             {/* Timer + players bar */}
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div
@@ -823,7 +834,8 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 // ─── PLAYER COMPONENT ──────────────────────────────────────────────────────────
 
 export const SupermarketPlayerView: React.FC = () => {
-  const hm        = window.location.hash.match(/#supermarket-player-(.+)/);
+  // Support both hash formats for backward compatibility.
+  const hm        = window.location.hash.match(/#supermarket-(?:player|join)-(.+)/);
   const hostId    = hm ? hm[1] : null;
   const connRef   = useRef<DataConnection | null>(null);
   const peerRef2  = useRef<InstanceType<typeof Peer> | null>(null);
