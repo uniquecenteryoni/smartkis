@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import AliasGame from './modules/AliasGame';
 import JeopardyModule from './modules/JeopardyModule';
 import BullseyeGame from './modules/BullseyeGame';
@@ -7,11 +7,12 @@ import SupermarketRaceGame from './modules/SupermarketRaceGame';
 import PicassoGame from './modules/PicassoGame';
 import CarRaceGame from './modules/CarRaceGame';
 import WorkerRightsParcelGame from './modules/WorkerRightsParcelGame';
-import ParcelGame, { expensesItems, overdraftItems, paystubItems, employmentItems, savingsInvestItems, storyItems, personalItems, costsItems, monopolyItems, consumerItems, relationshipsItems, earnItems, timeItems, publicSpeakingItems, businessItems, mahBakisMixedItems, chachamBakisMixedItems } from './modules/ParcelGame';
+import ParcelGame, { expensesItems, overdraftItems, paystubItems, employmentItems, savingsInvestItems, storyItems, personalItems, costsItems, monopolyItems, consumerItems, relationshipsItems, earnItems, timeItems, publicSpeakingItems, businessItems, mahBakisMixedItems, chachamBakisMixedItems, salaryDeductionItems } from './modules/ParcelGame';
 import { HatsarStep } from './modules/HowMuchCostModule';
 import { FutureManagersChallengeContent } from './modules/FutureManagersChallengeModule';
 import { jeopardyChachamBanks } from './modules/jeopardyChachamBanks';
 import SnowballGame from './modules/SnowballGame';
+import { WordCloudHost } from './modules/WordCloudGame';
 import InterviewerCardsModule from './modules/InterviewerCardsModule';
 import WhereMoneyComesFromModule from './modules/kisonim/WhereMoneyComesFromModule';
 import NeedsVsWantsModule from './modules/kisonim/NeedsVsWantsModule';
@@ -22,6 +23,7 @@ import WorldTourModule from './modules/kisonim/WorldTourModule';
 import AdSecretsModule from './modules/kisonim/AdSecretsModule';
 import KisonimEarningMissions from './modules/kisonim/EarningMissionsModule';
 import ColorfulMarketModule from './modules/kisonim/ColorfulMarketModule';
+import ProgressiveTaxSimulator from './modules/ProgressiveTaxSimulator';
 import CoinsVsBillsModule from './modules/kisonim/CoinsVsBillsModule';
 import PowerOfGivingModule from './modules/kisonim/PowerOfGivingModule';
 import SmallDecisionsModule from './modules/kisonim/SmallDecisionsModule';
@@ -37,6 +39,24 @@ interface ActionCardProps {
   description: string;
   icon: React.ComponentType<{ className?: string }>;
   onSelect?: () => void;
+}
+
+interface ProgramCardConfig {
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  onSelect?: () => void;
+}
+
+interface GlobalSearchResult {
+  id: string;
+  title: string;
+  description: string;
+  kind: 'program' | 'activity' | 'module' | 'video' | 'aid' | 'tool';
+  program?: string;
+  activity?: string;
+  module?: string;
+  subActivity?: string;
 }
 
 const ActionCard: React.FC<ActionCardProps> = ({ title, description, icon: Icon, onSelect }) => (
@@ -60,6 +80,7 @@ const PROGRAM_ACTIVITY_MODULES: Record<string, string[]> = {
     'הסכנה שבמינוס',
     'זכויות עובדים',
     'פענוח תלוש שכר',
+    'ניכויי שכר',
     'שכירים ועצמאיים',
     'חיסכון והשקעות',
     'משימת למידת חקר',
@@ -126,6 +147,7 @@ const MODULE_SUMMARIES: Record<string, string> = {
   'הסכנה שבמינוס': 'הבנת ריבית מינוס וסיכוני חריגה בחשבון.',
   'זכויות עובדים': 'היכרות עם זכויות בסיסיות ובירור מקרים אמיתיים.',
   'פענוח תלוש שכר': 'קריאה והבנה של רכיבי תלוש השכר.',
+  'ניכויי שכר': 'הבנת מס הכנסה, ביטוח לאומי, דמי בריאות ופנסיה באמצעות סימולטורים מעודכנים.',
   'שכירים ועצמאיים': 'הבדלים בין שכיר לעצמאי וניהול תרחישים עסקיים.',
   'חיסכון והשקעות': 'היכרות עם ריבית דריבית וכלים לחיסכון והשקעה.',
   'משימת למידת חקר': 'תרגול חקר אינפלציה והשפעתה על יוקר המחיה.',
@@ -157,6 +179,219 @@ const MODULE_SUMMARIES: Record<string, string> = {
   'כוח הנתינה': 'השפעת תרומה ונתינה כלכלית.',
   'החלטות קטנות': 'השפעת החלטות יומיומיות על כסף וחיסכון.',
 };
+
+interface VideoItem {
+  title: string;
+  url: string;
+  youtubeId?: string;
+  thumbnailUrl?: string;
+  description?: string;
+}
+
+const VIDEO_LIBRARY: Record<string, Array<VideoItem>> = {
+  'ניהול התקציב הראשון שלי': [
+    {
+      title: 'ניהול התקציב הראשון שלי',
+      url: 'https://www.youtube.com/watch?v=IFut3x9eENA',
+      youtubeId: 'IFut3x9eENA',
+      description: 'סרטון הדרכה לתרגול בניית תקציב ראשון וקבלת החלטות פיננסיות.',
+    },
+  ],
+  'ניכויי שכר': [
+    {
+      title: 'ביטוח לאומי ודמי בריאות',
+      url: 'https://www.youtube.com/watch?v=QcPnUSlNffs',
+      youtubeId: 'QcPnUSlNffs',
+      description: 'הסבר על ביטוח לאומי ודמי בריאות: שיעורי הניכוי, היתרונות, ודרך החישוב.',
+    },
+    {
+      title: 'מס הכנסה',
+      url: 'https://www.youtube.com/watch?v=s2KRKDfVxMQ',
+      youtubeId: 's2KRKDfVxMQ',
+      description: 'סרטון הסברה על מסי הכנסה: מדרגות מס, שיעורים, וחישוב המס השנתי.',
+    },
+    {
+      title: 'החזרי מס',
+      url: 'https://www.youtube.com/watch?v=GchuesQVXig',
+      youtubeId: 'GchuesQVXig',
+      description: 'איך להגיש בקשה להחזר מס והסרטון על זיכוי לעובדים בעלי מס עודף.',
+    },
+    {
+      title: 'פנסיה',
+      url: 'https://www.youtube.com/watch?v=9g3CmmzXQlM',
+      youtubeId: '9g3CmmzXQlM',
+      description: 'סרטון על פנסיה בישראל: קרן הפנסיה, שיעורי הניכוי, ההצטברות, וההנאה בפרישה.',
+    },
+  ],
+  'צרכנות נבונה': [
+    {
+      title: 'צרכנות נבונה 1',
+      url: 'https://www.youtube.com/watch?v=U_rYXTwn4rc&t=20s',
+      youtubeId: 'U_rYXTwn4rc',
+      description: 'סרטון פתיחה על חשיבה צרכנית ובחירות קנייה חכמות.',
+    },
+    {
+      title: 'צרכנות נבונה 2',
+      url: 'https://www.youtube.com/watch?v=X285zJJjRyc',
+      youtubeId: 'X285zJJjRyc',
+      description: 'סרטון המשך על שיקולים צרכניים ומודעות לקנייה נבונה.',
+    },
+  ],
+};
+
+function extractYouTubeId(url?: string) {
+  if (!url) return null;
+  const watch = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  if (watch?.[1]) return watch[1];
+  const short = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+  if (short?.[1]) return short[1];
+  const embed = url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
+  if (embed?.[1]) return embed[1];
+  return null;
+}
+
+function extractDriveFileId(url?: string) {
+  if (!url) return null;
+  const filePath = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (filePath?.[1]) return filePath[1];
+  const openParam = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (openParam?.[1]) return openParam[1];
+  return null;
+}
+
+function getDriveThumbnail(fileId?: string | null) {
+  if (!fileId) return null;
+  return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+}
+
+function getVideoThumbnail(video: VideoItem) {
+  if (video.thumbnailUrl) return video.thumbnailUrl;
+  const youtubeId = video.youtubeId || extractYouTubeId(video.url);
+  if (youtubeId) return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+  const driveId = extractDriveFileId(video.url);
+  if (driveId) return getDriveThumbnail(driveId);
+  return null;
+}
+
+interface Aid {
+  title: string;
+  url: string;
+  fileId?: string;
+  fileIcon?: string;
+  description?: string;
+}
+
+const AIDS_LIBRARY: Record<string, Array<Aid>> = {
+  'ניהול התקציב הראשון שלי': [
+    {
+      title: 'תלוש שכר לדוגמא',
+      url: 'https://drive.google.com/file/d/1CSZIJ6X52bBW2WZGrigtpWusrBCYh4uu/view?usp=sharing',
+      fileId: '1CSZIJ6X52bBW2WZGrigtpWusrBCYh4uu',
+      fileIcon: '📋',
+      description: 'דוגמא של תלוש שכר לאנליזה',
+    },
+    {
+      title: 'חוזה שכירות - דוגמא',
+      url: 'https://drive.google.com/file/d/1gkPH2bOvaGt6LgXdzsvW9g2gNUajcUsI/view?usp=drive_link',
+      fileId: '1gkPH2bOvaGt6LgXdzsvW9g2gNUajcUsI',
+      fileIcon: '📄',
+      description: 'חוזה שכירות לדוגמא לסטודנטים',
+    },
+    {
+      title: 'כרטיסי דמויות',
+      url: 'https://drive.google.com/file/d/1wa1wxnD2uTTNhbB9sTwGdjOPOLDGXOhU/view?usp=drive_link',
+      fileId: '1wa1wxnD2uTTNhbB9sTwGdjOPOLDGXOhU',
+      fileIcon: '🎭',
+      description: 'דמויות לתרגול בניית תקציב',
+    },
+    {
+      title: 'דף עזר הוצאות ביגוד',
+      url: 'https://drive.google.com/file/d/1WUW1eLQ7LXbJ1N0c63Utr097_yGnt9pH/view?usp=sharing',
+      fileId: '1WUW1eLQ7LXbJ1N0c63Utr097_yGnt9pH',
+      fileIcon: '👕',
+      description: 'דף עזר לניתוח הוצאות ביגוד',
+    },
+    {
+      title: 'כרטיסיות לחישוב בילויים',
+      url: 'https://drive.google.com/file/d/1iSk_rwqqudU-aTDWqHRGViHJyRsz5R-8/view?usp=sharing',
+      fileId: '1iSk_rwqqudU-aTDWqHRGViHJyRsz5R-8',
+      fileIcon: '🎮',
+      description: 'כרטיסיות לתרגול חישוב בילויים',
+    },
+    {
+      title: 'דף עזר לרשימת קניות',
+      url: 'https://drive.google.com/file/d/1n_0Dda08Q6lu3tcfK3FLjexhilK9iwDQ/view?usp=drive_link',
+      fileId: '1n_0Dda08Q6lu3tcfK3FLjexhilK9iwDQ',
+      fileIcon: '🛒',
+      description: 'תבנית לרשימת קניות מתוכננת',
+    },
+    {
+      title: 'דף ניהול הוצאות',
+      url: 'https://drive.google.com/file/d/1ux0z8ugD6DTPHQu54EZAbF4XNufwEeBv/view?usp=sharing',
+      fileId: '1ux0z8ugD6DTPHQu54EZAbF4XNufwEeBv',
+      fileIcon: '📊',
+      description: 'דף עזר לניהול וניתוח הוצאות יומיומיות',
+    },
+    {
+      title: 'כרטיסיות ניתוח תקציב',
+      url: 'https://drive.google.com/file/d/1jWNJvdFLnaDIBAfnrBDdmB2lcEPXtiYm/view?usp=sharing',
+      fileId: '1jWNJvdFLnaDIBAfnrBDdmB2lcEPXtiYm',
+      fileIcon: '💳',
+      description: 'כרטיסיות לתרגול ניתוח תקציבי',
+    },
+    {
+      title: 'תלוש שכר 2 לדוגמא',
+      url: 'https://drive.google.com/file/d/1a-8bYdhvIH-0XJMNxx-lwwUXs3qSQui3/view?usp=sharing',
+      fileId: '1a-8bYdhvIH-0XJMNxx-lwwUXs3qSQui3',
+      fileIcon: '📋',
+      description: 'דוגמא נוספת של תלוש שכר',
+    },
+    {
+      title: 'דף עזר ניתוח תדפיס עו"ש',
+      url: 'https://drive.google.com/file/d/1JoCxv0FC4kIOzwPRF9Px0rVeD1t4B1nH/view?usp=sharing',
+      fileId: '1JoCxv0FC4kIOzwPRF9Px0rVeD1t4B1nH',
+      fileIcon: '💰',
+      description: 'הנחיות לניתוח עמוד חשבון בנק',
+    },
+  ],
+  'פענוח תלוש שכר': [
+    {
+      title: 'תלוש שכר ריק לתרגול',
+      url: 'https://drive.google.com/file/d/1InUsxYhtzsokJ6-wearY0zSwjofyBDRJ/view?usp=sharing',
+      fileId: '1InUsxYhtzsokJ6-wearY0zSwjofyBDRJ',
+      fileIcon: '📝',
+      description: 'תלוש שכר טמפלט לתרגול',
+    },
+    {
+      title: 'תרגיל תלוש שכר הפוך',
+      url: 'https://drive.google.com/file/d/1wkOdqEnkmkNz742UciFsY0m9a-4NQOXN/view?usp=sharing',
+      fileId: '1wkOdqEnkmkNz742UciFsY0m9a-4NQOXN',
+      fileIcon: '🔍',
+      description: 'תרגיל הפוך למציאת קודמים בתלוש',
+    },
+  ],
+  'זכויות עובדים': [
+    {
+      title: 'טופס 101',
+      url: 'https://drive.google.com/file/d/1s0lSUi2Og8TxWbAKsFE0iJ8C_rz1Hamn/view?usp=sharing',
+      fileId: '1s0lSUi2Og8TxWbAKsFE0iJ8C_rz1Hamn',
+      fileIcon: '📋',
+      description: 'טופס 101 - בקשה להשבת שכר',
+    },
+    {
+      title: 'דף מעקב שעות עבודה',
+      url: 'https://drive.google.com/file/d/1M8weOLwKROpStPdiYrNZ1pSS5-2YVPzK/view?usp=sharing',
+      fileId: '1M8weOLwKROpStPdiYrNZ1pSS5-2YVPzK',
+      fileIcon: '⏱️',
+      description: 'דף מעקב לשעות עבודה חודשיות',
+    },
+  ],
+};
+
+function getAidThumbnail(aid: Aid) {
+  const driveId = aid.fileId || extractDriveFileId(aid.url);
+  return getDriveThumbnail(driveId);
+}
 
 const getSummary = (name: string) => MODULE_SUMMARIES[name] || 'תוכן יתווסף בהמשך עבור מודול זה.';
 
@@ -310,6 +545,144 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
   const [activeModule, setActiveModule] = useState<string | null>(null);
   const [activeActivity, setActiveActivity] = useState<string | null>(null);
   const [activeSubActivity, setActiveSubActivity] = useState<string | null>(null);
+  const [globalSearchTerm, setGlobalSearchTerm] = useState('');
+
+  const rootCards: ProgramCardConfig[] = [
+    {
+      title: "תוכנית 'חכם בכיס'",
+      description: 'גישה למערכי שיעור, עזרים וסרטונים',
+      icon: SalaryIcon,
+      onSelect: () => { setActiveProgram("'חכם בכיס'"); setActiveModule(null); setActiveActivity(null); setActiveSubActivity(null); },
+    },
+    {
+      title: "תוכנית 'מה בכיס'",
+      description: 'גישה למערכי שיעור, עזרים וסרטונים',
+      icon: BusinessIcon,
+      onSelect: () => { setActiveProgram("'מה בכיס'"); setActiveModule(null); setActiveActivity(null); setActiveSubActivity(null); },
+    },
+    {
+      title: "תוכנית 'כיסונים פיננסים'",
+      description: 'גישה למערכי שיעור, עזרים וסרטונים',
+      icon: PiggyBankIcon,
+      onSelect: () => { setActiveProgram("'כיסונים פיננסים'"); setActiveModule(null); setActiveActivity(null); setActiveSubActivity(null); },
+    },
+    {
+      title: 'מעקב אחר קבוצות למידה',
+      description: 'ניהול התקדמות התלמידים וצפייה בתוצרים',
+      icon: PodiumIcon,
+    },
+  ];
+
+  const findProgramsForActivity = (activityName: string) =>
+    Object.entries(PROGRAM_ACTIVITY_MODULES)
+      .filter(([, activities]) => activities.includes(activityName))
+      .map(([program]) => program);
+
+  const globalSearchIndex = useMemo<GlobalSearchResult[]>(() => {
+    const results: GlobalSearchResult[] = [];
+
+    Object.keys(PROGRAM_ACTIVITY_MODULES).forEach((program) => {
+      results.push({
+        id: `program-${program}`,
+        title: `תוכנית ${program}`,
+        description: 'תוכנית לימוד במרחב המדריכים',
+        kind: 'program',
+        program,
+      });
+    });
+
+    Object.entries(PROGRAM_ACTIVITY_MODULES).forEach(([program, activities]) => {
+      activities.forEach((activity) => {
+        results.push({
+          id: `activity-${program}-${activity}`,
+          title: activity,
+          description: getSummary(activity),
+          kind: 'activity',
+          program,
+          activity,
+        });
+
+        PROGRAM_MODULES.forEach((moduleName) => {
+          results.push({
+            id: `module-${program}-${activity}-${moduleName}`,
+            title: `${activity} / ${moduleName}`,
+            description: `כניסה ל-${moduleName} עבור ${activity}`,
+            kind: 'module',
+            program,
+            activity,
+            module: moduleName,
+          });
+        });
+      });
+    });
+
+    Object.entries(VIDEO_LIBRARY).forEach(([activity, videos]) => {
+      const programs = findProgramsForActivity(activity);
+      programs.forEach((program) => {
+        videos.forEach((video) => {
+          results.push({
+            id: `video-${program}-${activity}-${video.title}`,
+            title: video.title,
+            description: `${activity} · סרטון`,
+            kind: 'video',
+            program,
+            activity,
+            module: 'סרטונים',
+          });
+        });
+      });
+    });
+
+    Object.entries(AIDS_LIBRARY).forEach(([activity, aids]) => {
+      const programs = findProgramsForActivity(activity);
+      programs.forEach((program) => {
+        aids.forEach((aid) => {
+          results.push({
+            id: `aid-${program}-${activity}-${aid.title}`,
+            title: aid.title,
+            description: `${activity} · עזר/נספח`,
+            kind: 'aid',
+            program,
+            activity,
+            module: 'עזרים ונספחים',
+          });
+        });
+      });
+    });
+
+    results.push({
+      id: 'tool-learning-groups',
+      title: 'מעקב אחר קבוצות למידה',
+      description: 'ניהול התקדמות התלמידים וצפייה בתוצרים',
+      kind: 'tool',
+    });
+
+    return results;
+  }, []);
+
+  const normalizedGlobalSearchTerm = globalSearchTerm.trim().toLowerCase();
+  const globalSearchResults = normalizedGlobalSearchTerm
+    ? globalSearchIndex.filter((entry) =>
+        `${entry.title} ${entry.description} ${entry.program || ''} ${entry.activity || ''} ${entry.module || ''}`
+          .toLowerCase()
+          .includes(normalizedGlobalSearchTerm),
+      )
+    : [];
+
+  const openSearchResult = (result: GlobalSearchResult) => {
+    if (result.kind === 'tool') {
+      setActiveProgram(null);
+      setActiveActivity(null);
+      setActiveModule(null);
+      setActiveSubActivity(null);
+      return;
+    }
+
+    setActiveProgram(result.program || null);
+    setActiveActivity(result.activity || null);
+    setActiveModule(result.module || null);
+    setActiveSubActivity(result.subActivity || null);
+  };
 
   return (
     <div className="animate-fade-in container mx-auto px-4 py-8">
@@ -334,35 +707,62 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
           {!activeProgram && 'כאן תוכלו למצוא את כל הכלים הדרושים לכם להדרכה מוצלחת.'}
         </p>
       </div>
+
+      <div className="max-w-4xl mx-auto mb-8 space-y-3">
+        <label className="block text-right text-brand-dark-blue font-bold text-xl">חיפוש גלובלי במרחב המדריכים</label>
+        <input
+          type="text"
+          value={globalSearchTerm}
+          onChange={(e) => setGlobalSearchTerm(e.target.value)}
+          placeholder="חיפוש תוכנית, מודול, משחק, סרטון או נספח..."
+          className="w-full rounded-2xl border-2 border-gray-300 bg-white/95 px-5 py-4 text-xl text-brand-dark-blue placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-brand-teal"
+        />
+
+        {normalizedGlobalSearchTerm && (
+          <div className="bg-white/95 rounded-2xl border border-gray-200 shadow-lg p-3 max-h-[28rem] overflow-auto">
+            {globalSearchResults.length > 0 ? (
+              <div className="space-y-2">
+                {globalSearchResults.slice(0, 60).map((result) => (
+                  <button
+                    key={result.id}
+                    onClick={() => openSearchResult(result)}
+                    className="w-full text-right rounded-xl border border-gray-200 px-4 py-3 hover:bg-gray-50 transition"
+                  >
+                    <p className="text-lg font-bold text-brand-dark-blue">{result.title}</p>
+                    <p className="text-sm text-brand-dark-blue/70">{result.description}</p>
+                    <p className="text-xs text-brand-dark-blue/60 mt-1">
+                      {result.program || 'כללי'}
+                      {result.activity ? ` / ${result.activity}` : ''}
+                      {result.module ? ` / ${result.module}` : ''}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-brand-dark-blue/70 py-4">לא נמצאו תוצאות עבור החיפוש.</p>
+            )}
+          </div>
+        )}
+      </div>
+
       {!activeProgram ? (
-        <main className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-          <ActionCard 
-              title="תוכנית 'חכם בכיס'"
-              description="גישה למערכי שיעור, עזרים וסרטונים"
-              icon={SalaryIcon}
-                onSelect={() => { setActiveProgram("'חכם בכיס'"); setActiveModule(null); setActiveActivity(null); setActiveSubActivity(null); }}
-          />
-          <ActionCard 
-              title="תוכנית 'מה בכיס'"
-              description="גישה למערכי שיעור, עזרים וסרטונים"
-              icon={BusinessIcon}
-                onSelect={() => { setActiveProgram("'מה בכיס'"); setActiveModule(null); setActiveActivity(null); setActiveSubActivity(null); }}
-          />
-          <ActionCard 
-              title="תוכנית 'כיסונים פיננסים'"
-              description="גישה למערכי שיעור, עזרים וסרטונים"
-              icon={PiggyBankIcon}
-              onSelect={() => { setActiveProgram("'כיסונים פיננסים'"); setActiveModule(null); setActiveActivity(null); setActiveSubActivity(null); }}
-          />
-          <ActionCard 
-              title="מעקב אחר קבוצות למידה"
-              description="ניהול התקדמות התלמידים וצפייה בתוצרים"
-              icon={PodiumIcon}
-          />
+        <main className="mt-12 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+            {rootCards.map((card) => (
+              <ActionCard
+                key={card.title}
+                title={card.title}
+                description={card.description}
+                icon={card.icon}
+                onSelect={card.onSelect}
+              />
+            ))}
+          </div>
         </main>
       ) : !activeActivity ? (
         /* Step 2: pick a module name */
-        <main className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+        <main className="mt-12 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
           {(PROGRAM_ACTIVITY_MODULES[activeProgram || ''] || []).map(moduleName => (
             <button
               key={moduleName}
@@ -388,6 +788,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
             >
               חזרה לרשימת התוכניות
             </button>
+          </div>
           </div>
         </main>
       ) : !activeModule ? (
@@ -1252,7 +1653,17 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 <p className="text-2xl font-bold text-brand-dark-blue">פיקאסו פיננסי</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק פיקשיונרי פיננסי בזמן אמת — צייר, נחש, קבל ניקוד!</p>
               </button>
+              <button
+                onClick={() => setActiveActivity('פעילות סיכום')}
+                className="rounded-3xl border-2 border-dashed border-brand-teal bg-teal-50 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">☁️</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">פעילות סיכום</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">ענן מילים חי לרפלקציה קבוצתית — משתתפים שולחים מילים דרך QR</p>
+              </button>
             </div>
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'פעילות סיכום' ? (
+            <WordCloudHost onBack={() => setActiveActivity('רב תחומי')} />
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'פיקאסו פיננסי' ? (
             <PicassoGame onBack={() => setActiveActivity('רב תחומי')} />
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'בול פגיעה' && (activeProgram === "'מה בכיס'" || activeProgram === "'חכם בכיס'") ? (
@@ -1869,19 +2280,136 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
             <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
               <p className="text-brand-dark-blue/70 text-center py-10">פעילות חבילה עוברת בנושא {activeActivity} תתווסף בקרוב.</p>
             </div>
-          ) : activeModule === 'עזרים ונספחים' && activeProgram === "'חכם בכיס'" && !activeActivity ? (
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'ניכויי שכר' && activeProgram === "'חכם בכיס'" && !activeSubActivity ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {(PROGRAM_ACTIVITY_MODULES["'חכם בכיס'"] || []).map((moduleName) => (
+              <button
+                onClick={() => setActiveSubActivity('BLOOKET')}
+                className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">🎮</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">BLOOKET</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Blooket למודול זה.</p>
+              </button>
+              <button
+                onClick={() => setActiveSubActivity('KAHOOT')}
+                className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">🎵</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">KAHOOT</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Kahoot למודול זה.</p>
+              </button>
+              <button
+                onClick={() => setActiveSubActivity('WORDWALL')}
+                className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">📝</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">WORDWALL</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">חידוני Wordwall למודול זה.</p>
+              </button>
+              <button
+                onClick={() => setActiveSubActivity('חבילה עוברת')}
+                className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">📦</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">גרסה מודולרית לחבילה עוברת.</p>
+              </button>
+              <button
+                onClick={() => setActiveSubActivity('אל תפילו את המיליון')}
+                className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">💰</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק ישראלי לוויזיה על ניכויי שכר.</p>
+              </button>
+              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-8 text-center text-brand-dark-blue/50 min-h-[14rem] flex flex-col items-center justify-center">
+                <p className="text-2xl font-bold">משחק נוסף</p>
+                <p className="text-lg mt-2">בקרוב יתווסף משחק תומך.</p>
+              </div>
+            </div>
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'ניכויי שכר' && activeProgram === "'חכם בכיס'" && activeSubActivity === 'אל תפילו את המיליון' ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">פעילות</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">אל תפילו את המיליון</h3>
+                  <p className="text-brand-dark-blue/60">משחק על ניכויי שכר: מס הכנסה, ביטוח לאומי, דמי בריאות ופנסיה.</p>
+                </div>
                 <button
-                  key={moduleName}
-                  onClick={() => setActiveActivity(moduleName)}
+                  onClick={() => setActiveSubActivity(null)}
+                  className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                >
+                  חזרה לחלון המשחקים
+                </button>
+              </div>
+              <MillionDropGame onBack={() => setActiveSubActivity(null)} topic="salaryDeductions" />
+            </div>
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'ניכויי שכר' && activeProgram === "'חכם בכיס'" && activeSubActivity === 'חבילה עוברת' ? (
+            <ParcelGame
+              items={salaryDeductionItems}
+              moduleTitle="ניכויי שכר"
+              moduleSubtitle="כל סיבוב נעצר בזמן אקראי"
+              musicUrl="/havila.mp3"
+            />
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'ניכויי שכר' && activeProgram === "'חכם בכיס'" && (activeSubActivity === 'BLOOKET' || activeSubActivity === 'KAHOOT' || activeSubActivity === 'WORDWALL') ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">פעילויות ומשחקים</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">{activeSubActivity} — ניכויי שכר</h3>
+                  <p className="text-brand-dark-blue/60">חידוני {activeSubActivity} למודול זה. הוסיפו לינקים רלוונטיים כשיהיו מוכנים.</p>
+                </div>
+                <button
+                  onClick={() => setActiveSubActivity(null)}
+                  className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                >
+                  חזרה לחלון המשחקים
+                </button>
+              </div>
+              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/80 p-6 text-center text-brand-dark-blue/70 min-h-[12rem] flex flex-col items-center justify-center">
+                <p className="text-2xl font-bold">חידוני {activeSubActivity}</p>
+                <p className="text-lg mt-2">הוסיפו כאן לינקים ל{activeSubActivity} בנושא ניכויי שכר.</p>
+              </div>
+            </div>
+          ) : activeModule === 'עזרים ונספחים' && activeProgram === "'חכם בכיס'" && (!activeActivity || activeActivity === 'ניכויי שכר') ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">עזרים ונספחים</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">ניכויי שכר</h3>
+                  <p className="text-brand-dark-blue/60">בחרו עזר מתוך החלוניות.</p>
+                </div>
+                <button
+                  onClick={() => setActiveActivity(null)}
+                  className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                >
+                  חזרה לחומרי העזר
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <button
+                  onClick={() => setActiveActivity('סימולטור מס הכנסה')}
                   className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
                 >
-                  <p className="text-2xl font-bold text-brand-dark-blue">{moduleName}</p>
-                  <p className="text-brand-dark-blue/60 mt-3 text-lg">{getSummary(moduleName)}</p>
+                  <p className="text-4xl mb-3">📊</p>
+                  <p className="text-2xl font-bold text-brand-dark-blue">סימולטור מס הכנסה</p>
+                  <p className="text-brand-dark-blue/60 mt-3 text-lg">נקודות זיכוי וסימולטור מדרגות מס הכנסה.</p>
                 </button>
-              ))}
+                {!activeActivity && (PROGRAM_ACTIVITY_MODULES["'חכם בכיס'"] || []).map((moduleName) => (
+                  <button
+                    key={moduleName}
+                    onClick={() => setActiveActivity(moduleName)}
+                    className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+                  >
+                    <p className="text-2xl font-bold text-brand-dark-blue">{moduleName}</p>
+                    <p className="text-brand-dark-blue/60 mt-3 text-lg">{getSummary(moduleName)}</p>
+                  </button>
+                ))}
+              </div>
             </div>
+          ) : activeModule === 'עזרים ונספחים' && activeProgram === "'חכם בכיס'" && activeActivity === 'סימולטור מס הכנסה' ? (
+            <ProgressiveTaxSimulator onBack={() => setActiveActivity(null)} />
           ) : activeModule === 'עזרים ונספחים' && activeProgram === "'חכם בכיס'" && activeActivity === 'ניהול התקציב הראשון שלי' ? (
             <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
               <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -1898,96 +2426,37 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 </button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <a
-                  href="https://drive.google.com/file/d/1CSZIJ6X52bBW2WZGrigtpWusrBCYh4uu/view?usp=sharing"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-6 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col items-center justify-center"
-                >
-                  <p className="text-2xl font-bold text-brand-dark-blue">תלוש שכר לדוגמא</p>
-                  <p className="text-brand-dark-blue/60 mt-2 text-lg">פתיחה בחלון חדש</p>
-                </a>
-                <a
-                  href="https://drive.google.com/file/d/1gkPH2bOvaGt6LgXdzsvW9g2gNUajcUsI/view?usp=drive_link"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-6 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col items-center justify-center"
-                >
-                  <p className="text-2xl font-bold text-brand-dark-blue">חוזה שכירות - דוגמא</p>
-                  <p className="text-brand-dark-blue/60 mt-2 text-lg">פתיחה בחלון חדש</p>
-                </a>
-                <a
-                  href="https://drive.google.com/file/d/1wa1wxnD2uTTNhbB9sTwGdjOPOLDGXOhU/view?usp=drive_link"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-6 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col items-center justify-center"
-                >
-                  <p className="text-2xl font-bold text-brand-dark-blue">כרטיסי דמויות</p>
-                  <p className="text-brand-dark-blue/60 mt-2 text-lg">פתיחה בחלון חדש</p>
-                </a>
-                <a
-                  href="https://drive.google.com/file/d/1WUW1eLQ7LXbJ1N0c63Utr097_yGnt9pH/view?usp=sharing"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-6 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col items-center justify-center"
-                >
-                  <p className="text-2xl font-bold text-brand-dark-blue">דף עזר הוצאות ביגוד</p>
-                  <p className="text-brand-dark-blue/60 mt-2 text-lg">פתיחה בחלון חדש</p>
-                </a>
-                <a
-                  href="https://drive.google.com/file/d/1iSk_rwqqudU-aTDWqHRGViHJyRsz5R-8/view?usp=sharing"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-6 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col items-center justify-center"
-                >
-                  <p className="text-2xl font-bold text-brand-dark-blue">כרטיסיות לחישוב בילויים</p>
-                  <p className="text-brand-dark-blue/60 mt-2 text-lg">פתיחה בחלון חדש</p>
-                </a>
-                <a
-                  href="https://drive.google.com/file/d/1n_0Dda08Q6lu3tcfK3FLjexhilK9iwDQ/view?usp=drive_link"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-6 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col items-center justify-center"
-                >
-                  <p className="text-2xl font-bold text-brand-dark-blue">דף עזר לרשימת קניות</p>
-                  <p className="text-brand-dark-blue/60 mt-2 text-lg">פתיחה בחלון חדש</p>
-                </a>
-                <a
-                  href="https://drive.google.com/file/d/1ux0z8ugD6DTPHQu54EZAbF4XNufwEeBv/view?usp=sharing"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-6 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col items-center justify-center"
-                >
-                  <p className="text-2xl font-bold text-brand-dark-blue">דף ניהול הוצאות</p>
-                  <p className="text-brand-dark-blue/60 mt-2 text-lg">פתיחה בחלון חדש</p>
-                </a>
-                <a
-                  href="https://drive.google.com/file/d/1jWNJvdFLnaDIBAfnrBDdmB2lcEPXtiYm/view?usp=sharing"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-6 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col items-center justify-center"
-                >
-                  <p className="text-2xl font-bold text-brand-dark-blue">כרטיסיות ניתוח תקציב</p>
-                  <p className="text-brand-dark-blue/60 mt-2 text-lg">פתיחה בחלון חדש</p>
-                </a>
-                <a
-                  href="https://drive.google.com/file/d/1a-8bYdhvIH-0XJMNxx-lwwUXs3qSQui3/view?usp=sharing"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-6 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col items-center justify-center"
-                >
-                  <p className="text-2xl font-bold text-brand-dark-blue">תלוש שכר 2 לדוגמא</p>
-                  <p className="text-brand-dark-blue/60 mt-2 text-lg">פתיחה בחלון חדש</p>
-                </a>
-                <a
-                  href="https://drive.google.com/file/d/1JoCxv0FC4kIOzwPRF9Px0rVeD1t4B1nH/view?usp=sharing"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-6 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col items-center justify-center"
-                >
-                  <p className="text-2xl font-bold text-brand-dark-blue">דף עזר ניתוח תדפיס עו"ש</p>
-                  <p className="text-brand-dark-blue/60 mt-2 text-lg">פתיחה בחלון חדש</p>
-                </a>
+                {(AIDS_LIBRARY['ניהול התקציב הראשון שלי'] || []).map((aid) => {
+                  const thumb = getAidThumbnail(aid);
+                  return (
+                    <a
+                      key={aid.fileId}
+                      href={aid.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-3xl overflow-hidden border-2 border-dashed border-gray-300 bg-white/90 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col"
+                    >
+                      <div className="relative h-40 bg-gradient-to-br from-blue-100 to-teal-100 border-b-2 border-gray-200 overflow-hidden">
+                        <div className="absolute inset-0 flex items-center justify-center text-6xl">{aid.fileIcon || '📄'}</div>
+                        {thumb ? (
+                          <img
+                            src={thumb}
+                            alt={`תצוגה מקדימה: ${aid.title}`}
+                            className="relative z-10 w-full h-full object-cover"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        ) : null}
+                      </div>
+                      <div className="p-5 flex-1 flex flex-col items-center justify-center">
+                        <p className="text-xl font-bold text-brand-dark-blue">{aid.title}</p>
+                        <p className="text-brand-dark-blue/60 mt-2 text-sm">{aid.description}</p>
+                      </div>
+                    </a>
+                  );
+                })}
               </div>
             </div>
           ) : activeModule === 'עזרים ונספחים' && activeProgram === "'חכם בכיס'" && activeActivity === 'פענוח תלוש שכר' ? (
@@ -2006,24 +2475,37 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 </button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <a
-                  href="https://drive.google.com/file/d/1InUsxYhtzsokJ6-wearY0zSwjofyBDRJ/view?usp=sharing"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-6 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col items-center justify-center"
-                >
-                  <p className="text-2xl font-bold text-brand-dark-blue">תלוש שכר ריק לתרגול</p>
-                  <p className="text-brand-dark-blue/60 mt-2 text-lg">פתיחה בחלון חדש</p>
-                </a>
-                <a
-                  href="https://drive.google.com/file/d/1wkOdqEnkmkNz742UciFsY0m9a-4NQOXN/view?usp=sharing"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-6 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col items-center justify-center"
-                >
-                  <p className="text-2xl font-bold text-brand-dark-blue">תרגיל תלוש שכר הפוך</p>
-                  <p className="text-brand-dark-blue/60 mt-2 text-lg">פתיחה בחלון חדש</p>
-                </a>
+                {(AIDS_LIBRARY['פענוח תלוש שכר'] || []).map((aid) => {
+                  const thumb = getAidThumbnail(aid);
+                  return (
+                    <a
+                      key={aid.fileId}
+                      href={aid.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-3xl overflow-hidden border-2 border-dashed border-gray-300 bg-white/90 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col"
+                    >
+                      <div className="relative h-40 bg-gradient-to-br from-orange-100 to-amber-100 border-b-2 border-gray-200 overflow-hidden">
+                        <div className="absolute inset-0 flex items-center justify-center text-6xl">{aid.fileIcon || '📄'}</div>
+                        {thumb ? (
+                          <img
+                            src={thumb}
+                            alt={`תצוגה מקדימה: ${aid.title}`}
+                            className="relative z-10 w-full h-full object-cover"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        ) : null}
+                      </div>
+                      <div className="p-5 flex-1 flex flex-col items-center justify-center">
+                        <p className="text-xl font-bold text-brand-dark-blue">{aid.title}</p>
+                        <p className="text-brand-dark-blue/60 mt-2 text-sm">{aid.description}</p>
+                      </div>
+                    </a>
+                  );
+                })}
               </div>
             </div>
           ) : activeModule === 'עזרים ונספחים' && activeProgram === "'חכם בכיס'" && activeActivity === 'זכויות עובדים' ? (
@@ -2042,24 +2524,37 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 </button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <a
-                  href="https://drive.google.com/file/d/1s0lSUi2Og8TxWbAKsFE0iJ8C_rz1Hamn/view?usp=sharing"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-6 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col items-center justify-center"
-                >
-                  <p className="text-2xl font-bold text-brand-dark-blue">טופס 101</p>
-                  <p className="text-brand-dark-blue/60 mt-2 text-lg">פתיחה בחלון חדש</p>
-                </a>
-                <a
-                  href="https://drive.google.com/file/d/1M8weOLwKROpStPdiYrNZ1pSS5-2YVPzK/view?usp=sharing"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-6 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col items-center justify-center"
-                >
-                  <p className="text-2xl font-bold text-brand-dark-blue">דף מעקב שעות עבודה</p>
-                  <p className="text-brand-dark-blue/60 mt-2 text-lg">פתיחה בחלון חדש</p>
-                </a>
+                {(AIDS_LIBRARY['זכויות עובדים'] || []).map((aid) => {
+                  const thumb = getAidThumbnail(aid);
+                  return (
+                    <a
+                      key={aid.fileId}
+                      href={aid.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-3xl overflow-hidden border-2 border-dashed border-gray-300 bg-white/90 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col"
+                    >
+                      <div className="relative h-40 bg-gradient-to-br from-purple-100 to-pink-100 border-b-2 border-gray-200 overflow-hidden">
+                        <div className="absolute inset-0 flex items-center justify-center text-6xl">{aid.fileIcon || '📄'}</div>
+                        {thumb ? (
+                          <img
+                            src={thumb}
+                            alt={`תצוגה מקדימה: ${aid.title}`}
+                            className="relative z-10 w-full h-full object-cover"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        ) : null}
+                      </div>
+                      <div className="p-5 flex-1 flex flex-col items-center justify-center">
+                        <p className="text-xl font-bold text-brand-dark-blue">{aid.title}</p>
+                        <p className="text-brand-dark-blue/60 mt-2 text-sm">{aid.description}</p>
+                      </div>
+                    </a>
+                  );
+                })}
               </div>
             </div>
           ) : activeModule === 'עזרים ונספחים' && activeProgram === "'חכם בכיס'" && activeActivity ? (
@@ -2077,11 +2572,47 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                   חזרה לחומרי העזר
                 </button>
               </div>
-              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-10 text-center text-brand-dark-blue/50 flex flex-col items-center justify-center min-h-[12rem]">
-                <p className="text-5xl mb-4">📂</p>
-                <p className="text-xl font-bold text-brand-dark-blue">חומרים לנושא זה יתווספו בקרוב</p>
-                <p className="text-base mt-2 text-brand-dark-blue/60">דפי עבודה, קבצים והדפסות עבור "{activeActivity}" יועלו להמשך.</p>
-              </div>
+              {(AIDS_LIBRARY[activeActivity || ''] || []).length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {(AIDS_LIBRARY[activeActivity || ''] || []).map((aid) => {
+                    const thumb = getAidThumbnail(aid);
+                    return (
+                      <a
+                        key={aid.fileId || aid.url}
+                        href={aid.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-3xl overflow-hidden border-2 border-dashed border-gray-300 bg-white/90 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col"
+                      >
+                        <div className="relative h-40 bg-gradient-to-br from-blue-100 to-teal-100 border-b-2 border-gray-200 overflow-hidden">
+                          <div className="absolute inset-0 flex items-center justify-center text-6xl">{aid.fileIcon || '📄'}</div>
+                          {thumb ? (
+                            <img
+                              src={thumb}
+                              alt={`תצוגה מקדימה: ${aid.title}`}
+                              className="relative z-10 w-full h-full object-cover"
+                              loading="lazy"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          ) : null}
+                        </div>
+                        <div className="p-5 flex-1 flex flex-col items-center justify-center">
+                          <p className="text-xl font-bold text-brand-dark-blue">{aid.title}</p>
+                          <p className="text-brand-dark-blue/60 mt-2 text-sm">{aid.description}</p>
+                        </div>
+                      </a>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-10 text-center text-brand-dark-blue/50 flex flex-col items-center justify-center min-h-[12rem]">
+                  <p className="text-5xl mb-4">📂</p>
+                  <p className="text-xl font-bold text-brand-dark-blue">חומרים לנושא זה יתווספו בקרוב</p>
+                  <p className="text-base mt-2 text-brand-dark-blue/60">דפי עבודה, קבצים והדפסות עבור "{activeActivity}" יועלו להמשך.</p>
+                </div>
+              )}
             </div>
           ) : activeModule === 'סרטונים' && activeProgram === "'חכם בכיס'" && !activeActivity ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -2124,22 +2655,43 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                   חזרה לרשימת הנושאים
                 </button>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* הוסיפו כאן כרטיסיות סרטון עם href לקישור */}
-                {/* דוגמה:
-                <a href="https://..." target="_blank" rel="noopener noreferrer"
-                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-6 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col items-center justify-center">
-                  <p className="text-4xl mb-3">🎬</p>
-                  <p className="text-2xl font-bold text-brand-dark-blue">שם הסרטון</p>
-                  <p className="text-brand-dark-blue/60 mt-2 text-lg">פתיחה בחלון חדש</p>
-                </a>
-                */}
-              </div>
-              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-10 text-center text-brand-dark-blue/50 flex flex-col items-center justify-center min-h-[12rem]">
-                <p className="text-5xl mb-4">🎬</p>
-                <p className="text-xl font-bold text-brand-dark-blue">סרטונים לנושא זה יתווספו בקרוב</p>
-                <p className="text-base mt-2 text-brand-dark-blue/60">סרטוני הדרכה עבור &quot;{activeActivity}&quot; יועלו להמשך.</p>
-              </div>
+              {(VIDEO_LIBRARY[activeActivity || ''] || []).length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {(VIDEO_LIBRARY[activeActivity || ''] || []).map((video) => {
+                    const thumb = getVideoThumbnail(video);
+                    return (
+                      <a
+                        key={video.url}
+                        href={video.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-3xl overflow-hidden border-2 border-dashed border-gray-300 bg-white/90 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col"
+                      >
+                        {thumb ? (
+                          <div className="relative">
+                            <img src={thumb} alt={video.title} className="w-full h-44 object-cover" />
+                            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                              <div className="w-16 h-16 rounded-full bg-white/90 text-red-600 text-3xl flex items-center justify-center shadow-lg">▶</div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="h-44 bg-slate-100 flex items-center justify-center text-5xl">🎬</div>
+                        )}
+                        <div className="p-5 flex-1 flex flex-col items-center justify-center">
+                          <p className="text-2xl font-bold text-brand-dark-blue">{video.title}</p>
+                          <p className="text-brand-dark-blue/60 mt-2 text-base">{video.description || 'פתיחה בחלון חדש'}</p>
+                        </div>
+                      </a>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-10 text-center text-brand-dark-blue/50 flex flex-col items-center justify-center min-h-[12rem]">
+                  <p className="text-5xl mb-4">🎬</p>
+                  <p className="text-xl font-bold text-brand-dark-blue">סרטונים לנושא זה יתווספו בקרוב</p>
+                  <p className="text-base mt-2 text-brand-dark-blue/60">סרטוני הדרכה עבור &quot;{activeActivity}&quot; יועלו להמשך.</p>
+                </div>
+              )}
             </div>
           ) : activeModule === 'עזרים ונספחים' && !activeActivity ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -2169,21 +2721,47 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                   חזרה לרשימת הנושאים
                 </button>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {/* הוסיפו כאן כרטיסיות קובץ עם href לקישור גוגל דרייב */}
-                {/* דוגמה:
-                <a href="https://drive.google.com/..." target="_blank" rel="noopener noreferrer"
-                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-6 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col items-center justify-center">
-                  <p className="text-2xl font-bold text-brand-dark-blue">שם הקובץ</p>
-                  <p className="text-brand-dark-blue/60 mt-2 text-lg">פתיחה בחלון חדש</p>
-                </a>
-                */}
-              </div>
-              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-10 text-center text-brand-dark-blue/50 flex flex-col items-center justify-center min-h-[12rem]">
-                <p className="text-5xl mb-4">📂</p>
-                <p className="text-xl font-bold text-brand-dark-blue">חומרים לנושא זה יתווספו בקרוב</p>
-                <p className="text-base mt-2 text-brand-dark-blue/60">דפי עבודה, קבצים והדפסות עבור &quot;{activeActivity}&quot; יועלו להמשך.</p>
-              </div>
+              {(AIDS_LIBRARY[activeActivity || ''] || []).length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {(AIDS_LIBRARY[activeActivity || ''] || []).map((aid) => {
+                    const thumb = getAidThumbnail(aid);
+                    return (
+                      <a
+                        key={aid.fileId || aid.url}
+                        href={aid.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-3xl overflow-hidden border-2 border-dashed border-gray-300 bg-white/90 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col"
+                      >
+                        <div className="relative h-40 bg-gradient-to-br from-slate-100 to-sky-100 border-b-2 border-gray-200 overflow-hidden">
+                          <div className="absolute inset-0 flex items-center justify-center text-6xl">{aid.fileIcon || '📄'}</div>
+                          {thumb ? (
+                            <img
+                              src={thumb}
+                              alt={`תצוגה מקדימה: ${aid.title}`}
+                              className="relative z-10 w-full h-full object-cover"
+                              loading="lazy"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          ) : null}
+                        </div>
+                        <div className="p-5 flex-1 flex flex-col items-center justify-center">
+                          <p className="text-xl font-bold text-brand-dark-blue">{aid.title}</p>
+                          <p className="text-brand-dark-blue/60 mt-2 text-sm">{aid.description}</p>
+                        </div>
+                      </a>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-10 text-center text-brand-dark-blue/50 flex flex-col items-center justify-center min-h-[12rem]">
+                  <p className="text-5xl mb-4">📂</p>
+                  <p className="text-xl font-bold text-brand-dark-blue">חומרים לנושא זה יתווספו בקרוב</p>
+                  <p className="text-base mt-2 text-brand-dark-blue/60">דפי עבודה, קבצים והדפסות עבור &quot;{activeActivity}&quot; יועלו להמשך.</p>
+                </div>
+              )}
             </div>
           ) : activeModule === 'פעילויות ומשחקים' && activeProgram === "'כיסונים פיננסים'" && !activeSubActivity ? (
             /* Kisonim: game selection grid with icon + BLOOKET/KAHOOT/WORDWALL */

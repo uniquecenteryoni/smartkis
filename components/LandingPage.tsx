@@ -6,6 +6,7 @@ interface LandingPageProps {
   onSelectProgram: (programId: string) => void;
   onBack: () => void;
     onOpenQuiz: () => void;
+    searchPanel?: React.ReactNode;
 }
 
 interface ProgramData {
@@ -64,7 +65,7 @@ const programs: { [key: string]: ProgramData } = {
 };
 
 
-const LandingPage: React.FC<LandingPageProps> = ({ onSelectProgram, onBack, onOpenQuiz }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onSelectProgram, onBack, onOpenQuiz, searchPanel }) => {
   return (
     <div className="animate-fade-in">
         <button 
@@ -78,12 +79,15 @@ const LandingPage: React.FC<LandingPageProps> = ({ onSelectProgram, onBack, onOp
         </button>
 
         <Header />
-         <div className="text-center my-8 max-w-3xl mx-auto">
+        <div className="text-center my-8 max-w-3xl mx-auto">
             <h2 className="text-2xl sm:text-4xl font-bold font-display text-brand-dark-blue mb-2">ברוכים הבאים למרחב הלמידה החוויתי של "חכם בכיס"</h2>
             <p className="text-lg sm:text-2xl text-brand-dark-blue/90">
                 ביחרו את התוכנית שלם והתחילו במסע הלמידה
             </p>
         </div>
+
+        {searchPanel}
+
         <main className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
             <ProgramCard 
                 {...programs.hachamBakis}

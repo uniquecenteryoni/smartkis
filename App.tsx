@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { AliasPlayerView } from './components/modules/AliasGame';
 import { BullseyePlayerView } from './components/modules/BullseyeGame';
 import { PicassoPlayerView } from './components/modules/PicassoGame';
 import { CarRacePlayerView } from './components/modules/CarRaceGame';
 import { SupermarketPlayerView } from './components/modules/SupermarketRaceGame';
+import { WordCloudPlayerView } from './components/modules/WordCloudGame';
 import Header from './components/Header';
 import ModuleCard from './components/ModuleCard';
 import { Module } from './types';
 import BudgetModule from './components/modules/BudgetModule';
 import SalaryModule from './components/modules/SalaryModule';
+import SalaryDeductionsModule from './components/modules/SalaryDeductionsModule';
 import RightsModule from './components/modules/RightsModule';
 import InterestModule from './components/modules/InterestModule';
 import OverdraftModule from './components/modules/OverdraftModule';
@@ -105,6 +107,14 @@ const hachamBakisModules: Module[] = [
     icon: SalaryIcon,
     component: SalaryModule,
     completionGoal: 'יש להשיג ציון של 80% ומעלה בבוחן המסכם.'
+  },
+  {
+    id: 'salary-deductions',
+    title: 'ניכויי שכר',
+    description: 'למדו על ניכויי שכר בישראל! חקרו מס הכנסה, ביטוח לאומי, דמי בריאות ופנסיה דרך 5 פרקים אינטראקטיביים וקחו בחינה.',
+    icon: SalaryIcon,
+    component: SalaryDeductionsModule,
+    completionGoal: 'השלמת כל חמשת הפרקים והצלחה בבדיקה.'
   },
   {
     id: 'selfEmployed',
@@ -348,18 +358,71 @@ const programModules: Record<string, Module[]> = {
 
 type AppState = 'user_selection' | 'student_login' | 'instructor_login' | 'parent_login' | 'program_selection' | 'program_quiz' | 'instructors_page' | 'parents_page';
 
+type StudentSearchResult = {
+  id: string;
+  kind: 'program' | 'module';
+  title: string;
+  description: string;
+  programId: string;
+  moduleId?: string;
+};
+
 const App: React.FC = () => {
   const [isAliasPlayer, setIsAliasPlayer] = useState(() => window.location.hash === '#alias-player');
   const [isBullseyePlayer, setIsBullseyePlayer] = useState(() => window.location.hash.startsWith('#bullseye-player-'));
   const [isPicassoPlayer, setIsPicassoPlayer] = useState(() => window.location.hash.startsWith('#picasso-player-'));
   const [isCarRacePlayer, setIsCarRacePlayer] = useState(() => window.location.hash.startsWith('#carrace-player-'));
   const [isSupermarketPlayer, setIsSupermarketPlayer] = useState(() => window.location.hash.startsWith('#supermarket-player-'));
+  const [isWordCloudPlayer,    setIsWordCloudPlayer]    = useState(() => window.location.hash.startsWith('#wordcloud-player-') || window.location.hash.startsWith('#pros-player-'));
   const [appState, setAppState] = useState<AppState>('user_selection');
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [visitedModules, setVisitedModules] = useState<Set<string>>(new Set());
   const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
   const [unlockedPrograms, setUnlockedPrograms] = useState<Set<string>>(new Set());
   const [navHistory, setNavHistory] = useState<Array<{appState: AppState; selectedProgram: string | null; selectedModule: Module | null}>>([]);
+  const [studentGlobalSearchTerm, setStudentGlobalSearchTerm] = useState('');
+
+  const studentProgramTitles: Record<string, string> = {
+    'hacham-bakis': 'חכם בכיס',
+    'ma-bakis': 'מה בכיס',
+    'kisonim': 'כיסונים פיננסים',
+  };
+
+  const studentSearchIndex = useMemo<StudentSearchResult[]>(() => {
+    const results: StudentSearchResult[] = [];
+
+    Object.entries(programModules).forEach(([programId, modules]) => {
+      results.push({
+        id: `student-program-${programId}`,
+        kind: 'program',
+        title: studentProgramTitles[programId] || programId,
+        description: 'תוכנית לימוד במרחב התלמידים',
+        programId,
+      });
+
+      modules.forEach((module) => {
+        results.push({
+          id: `student-module-${programId}-${module.id}`,
+          kind: 'module',
+          title: module.title,
+          description: module.description,
+          programId,
+          moduleId: module.id,
+        });
+      });
+    });
+
+    return results;
+  }, []);
+
+  const normalizedStudentSearchTerm = studentGlobalSearchTerm.trim().toLowerCase();
+  const studentSearchResults = normalizedStudentSearchTerm
+    ? studentSearchIndex.filter((entry) =>
+        `${entry.title} ${entry.description} ${studentProgramTitles[entry.programId] || ''}`
+          .toLowerCase()
+          .includes(normalizedStudentSearchTerm),
+      )
+    : [];
 
   useEffect(() => {
     const onHash = () => {
@@ -368,6 +431,7 @@ const App: React.FC = () => {
       setIsPicassoPlayer(window.location.hash.startsWith('#picasso-player-'));
       setIsCarRacePlayer(window.location.hash.startsWith('#carrace-player-'));
       setIsSupermarketPlayer(window.location.hash.startsWith('#supermarket-player-'));
+      setIsWordCloudPlayer(window.location.hash.startsWith('#wordcloud-player-') || window.location.hash.startsWith('#pros-player-'));
     };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
@@ -459,13 +523,64 @@ const App: React.FC = () => {
     });
   };
 
+  const openStudentSearchResult = (result: StudentSearchResult) => {
+    pushHistory();
+    setAppState('program_selection');
+    setSelectedProgram(result.programId);
+
+    if (result.kind === 'module' && result.moduleId) {
+      const targetModule = (programModules[result.programId] || []).find((module) => module.id === result.moduleId) || null;
+      setSelectedModule(targetModule);
+      return;
+    }
+
+    setSelectedModule(null);
+  };
+
+  const renderStudentSearchPanel = () => (
+    <div className="max-w-4xl mx-auto mb-8 space-y-3">
+      <label className="block text-right text-brand-dark-blue font-bold text-xl">חיפוש גלובלי במרחב התלמידים</label>
+      <input
+        type="text"
+        value={studentGlobalSearchTerm}
+        onChange={(e) => setStudentGlobalSearchTerm(e.target.value)}
+        placeholder="חיפוש תוכנית, מודול או נושא לימוד..."
+        className="w-full rounded-2xl border-2 border-gray-300 bg-white/95 px-5 py-4 text-xl text-brand-dark-blue placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-brand-teal"
+      />
+
+      {normalizedStudentSearchTerm && (
+        <div className="bg-white/95 rounded-2xl border border-gray-200 shadow-lg p-3 max-h-[28rem] overflow-auto">
+          {studentSearchResults.length > 0 ? (
+            <div className="space-y-2">
+              {studentSearchResults.slice(0, 60).map((result) => (
+                <button
+                  key={result.id}
+                  onClick={() => openStudentSearchResult(result)}
+                  className="w-full text-right rounded-xl border border-gray-200 px-4 py-3 hover:bg-gray-50 transition"
+                >
+                  <p className="text-lg font-bold text-brand-dark-blue">{result.title}</p>
+                  <p className="text-sm text-brand-dark-blue/70">{result.description}</p>
+                  <p className="text-xs text-brand-dark-blue/60 mt-1">
+                    {studentProgramTitles[result.programId] || result.programId}
+                  </p>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-brand-dark-blue/70 py-4">לא נמצאו תוצאות עבור החיפוש.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
   const renderContent = () => {
     // If a program is selected, show its modules
     if (selectedProgram) {
          const currentProgramModules = programModules[selectedProgram] || [];
          const requiredModules = currentProgramModules.filter(m => m.completionGoal);
         const sequentialMap: Record<string, string[]> = {
-          'hacham-bakis': ['budget', 'expenses', 'overdraft', 'rights', 'salary', 'selfEmployed', 'interest', 'research'],
+          'hacham-bakis': ['budget', 'expenses', 'overdraft', 'rights', 'salary', 'salary-deductions', 'selfEmployed', 'interest', 'research'],
           'ma-bakis': ['story-of-money', 'money-and-me', 'how-much-cost', 'hatsar-model', 'future-managers-5000', 'monopolies', 'smart-consumerism', 'relationships-money', 'how-to-earn', 'time-management', 'public-speaking', 'build-business', 'jeopardy'],
           'kisonim': ['where-money-comes-from', 'needs-vs-wants', 'savings-adventure', 'magic-store', 'jar-bank', 'world-tour', 'ad-secrets', 'earning-missions', 'colorful-market', 'coins-vs-bills', 'power-of-giving', 'small-decisions'],
         };
@@ -527,6 +642,7 @@ const App: React.FC = () => {
                     </svg>
                   חזרה
                 </button>
+                {renderStudentSearchPanel()}
                   {requiredModules.length > 0 && (
                     <div className="mb-6 card-surface glow-ring p-5 rounded-2xl">
                         <h4 className="font-bold text-3xl text-center mb-2">חכם בכיס: סרגל ההתקדמות שלך</h4>
@@ -628,8 +744,9 @@ const App: React.FC = () => {
              return (
                 <LandingPage 
                     onSelectProgram={handleSelectProgram} 
-              onBack={goBack}
-              onOpenQuiz={handleOpenProgramQuiz}
+                    onBack={goBack}
+                    onOpenQuiz={handleOpenProgramQuiz}
+                    searchPanel={renderStudentSearchPanel()}
                 />
             );
         case 'program_quiz':
@@ -654,11 +771,12 @@ const App: React.FC = () => {
   };
   
   return (
-    isSupermarketPlayer ? <SupermarketPlayerView /> :
-    isCarRacePlayer ? <CarRacePlayerView /> :
-    isPicassoPlayer ? <PicassoPlayerView /> :
-    isBullseyePlayer ? <BullseyePlayerView /> :
-    isAliasPlayer ? <AliasPlayerView /> :
+    (appState === 'user_selection' && isSupermarketPlayer) ? <SupermarketPlayerView /> :
+    (appState === 'user_selection' && isWordCloudPlayer)    ? <WordCloudPlayerView /> :
+    (appState === 'user_selection' && isCarRacePlayer) ? <CarRacePlayerView /> :
+    (appState === 'user_selection' && isPicassoPlayer) ? <PicassoPlayerView /> :
+    (appState === 'user_selection' && isBullseyePlayer) ? <BullseyePlayerView /> :
+    (appState === 'user_selection' && isAliasPlayer) ? <AliasPlayerView /> :
     <div className="app-shell floating-coins">
       <div className="financial-backdrop"></div>
       <div className="financial-grid"></div>

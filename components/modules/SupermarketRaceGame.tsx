@@ -445,7 +445,8 @@ const SupermarketRaceGame: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   useEffect(() => { playersRef.current = players; }, [players]);
   useEffect(() => { productsRef.current = products; }, [products]);
 
-  const baseUrl = `${window.location.origin}${window.location.pathname}`;
+  const normalizedBasePath = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/');
+  const baseUrl = `${window.location.origin}${normalizedBasePath}`;
 
   // Broadcast to all connected players
   const broadcast = useCallback((msg: Msg) => {

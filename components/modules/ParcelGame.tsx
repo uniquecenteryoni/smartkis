@@ -610,6 +610,24 @@ export const mahBakisMixedItems: ParcelItem[] = [
   { id: 'mb_t5', kind: 'task', title: 'מונופול בחיים', prompt: 'מצאו דוגמה לחברה ישראלית בעלת כוח שוק גדול. מה ההשפעה שלה על הצרכן ועל המחיר?', difficulty: 'אתגרי', points: 40 },
 ];
 
+export const salaryDeductionItems: ParcelItem[] = [
+  { id: 'q1', kind: 'question', title: 'ברוטו מול נטו', prompt: 'מהו ההבדל בין שכר ברוטו לשכר נטו? למה הם תמיד שונים?', difficulty: 'קל', points: 10 },
+  { id: 'q2', kind: 'question', title: 'מס הכנסה', prompt: 'מהי מדרגת מס? מדוע מי שמרוויח יותר משלם אחוז גבוה יותר ממשכורתו?', difficulty: 'בינוני', points: 25 },
+  { id: 'q3', kind: 'question', title: 'ביטוח לאומי', prompt: 'מה תפקיד ביטוח לאומי? ציינו שני שירותים שממומנים על ידו.', difficulty: 'קל', points: 15 },
+  { id: 'q4', kind: 'question', title: 'נקודות זיכוי', prompt: 'מהי "נקודת זיכוי" ואיך היא מפחיתה את המס שמשלמים?', difficulty: 'בינוני', points: 20 },
+  { id: 'q5', kind: 'question', title: 'ניכוי פנסיה', prompt: 'מדוע ניכוי פנסיה מופיע בתלוש כ"הוצאה" אבל בעצם הוא חיסכון לטובתכם?', difficulty: 'בינוני', points: 20 },
+  { id: 'q6', kind: 'question', title: 'תאריך קבלת שכר', prompt: 'מה החוק אומר על מועד תשלום שכר? מה קורה אם המעסיק מאחר?', difficulty: 'קל', points: 10 },
+  { id: 'q7', kind: 'question', title: 'שעות נוספות', prompt: 'כיצד שעות נוספות אמורות להיראות בתלוש שכר? מה הפרשי השכר?', difficulty: 'בינוני', points: 25 },
+  { id: 'q8', kind: 'question', title: 'ניכויים חובה מול רשות', prompt: 'ציינו שני ניכויים שהמעסיק חייב לנכות ושניים שניכויים רק בהסכמה.', difficulty: 'אתגרי', points: 40 },
+  { id: 'q9', kind: 'question', title: 'תרגיל חישוב נטו', prompt: 'אם ברוטו 10,000 ש"ח ו-28% ניכויים — כמה נטו תקבלו? כמה ש"ח הולך לניכויים?', difficulty: 'בינוני', points: 25 },
+  { id: 'q10', kind: 'question', title: 'החזר מס', prompt: 'מהו "החזר מס"? מי זכאי לו ואיך מגישים בקשה?', difficulty: 'אתגרי', points: 40 },
+  { id: 't1', kind: 'task', title: 'פענוח תלוש', prompt: 'חלקו תלוש שכר לדוגמה. זהו יחד: ברוטו, נטו, כל ניכוי — ומה אחוזו מהשכר.', difficulty: 'בינוני', points: 30 },
+  { id: 't2', kind: 'task', title: 'הסבר לחבר', prompt: 'הסבירו לחבר שמקבל משכורת ראשונה: למה הנטו נמוך יותר מהברוטו שסוכם בחוזה?', difficulty: 'קל', points: 15 },
+  { id: 't3', kind: 'task', title: 'חישוב נטו', prompt: 'ברוטו 7,500 ש"ח. ניכויים: מס הכנסה 12%, ביטוח לאומי 5.5%, פנסיה 6%. חשבו את הנטו.', difficulty: 'אתגרי', points: 50 },
+  { id: 't4', kind: 'task', title: 'שגיאות בתלוש', prompt: 'מצאו 3 דברים שיכולים להיות שגויים בתלוש שכר ואיך בודקים/מתמודדים עם כל אחד.', difficulty: 'בינוני', points: 25 },
+  { id: 't5', kind: 'task', title: 'תוכנית פנסיה', prompt: 'אם מתחילים לחסוך לפנסיה ב-25 לעומת ב-35, מה ההפרש הצפוי בגיל 67? הסבירו את ההיגיון.', difficulty: 'אתגרי', points: 40 },
+];
+
 export const chachamBakisMixedItems: ParcelItem[] = [
   { id: 'cb_q1', kind: 'question', title: 'ניהול תקציב', prompt: 'מהו כלל 50-30-20? הסבירו מה כל קטגוריה מכסה ותנו דוגמה מחיי יומיום.', difficulty: 'קל', points: 15 },
   { id: 'cb_q2', kind: 'question', title: 'הוצאות', prompt: 'מהי "עלות הזדמנות"? כיצד כל שקל שמוציאים מוותר על שימוש אחר?', difficulty: 'בינוני', points: 20 },

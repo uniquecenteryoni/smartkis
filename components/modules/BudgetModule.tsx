@@ -2681,7 +2681,7 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
           .every(e => e.amount > 0);
   }, [userExpenses]);
 
-    const canMoveToSummaryChapter = areAllExpensesFilled && hasOpenedBudgetGame;
+    const canMoveToSummaryChapter = true;
 
     const openBudgetGame = () => {
         window.open('https://wordwall.net/resource/104754308', '_blank', 'noopener,noreferrer');
@@ -3405,7 +3405,7 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-40 h-40 my-2 text-brand-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="text-center mb-4">השלימו את כל משימות התקציב, שחקו במשחק החיצוני, ואז תוכלו לעבור לפרק הבא.</p>
+                <p className="text-center mb-4">אפשר לשחק במשחק החיצוני כהעשרה, אבל כפתור המעבר לפרק הבא זמין כעת בכל שלב.</p>
                 <button 
                     onClick={openBudgetGame}
                     title='פתח משחק חיצוני'
@@ -3414,9 +3414,7 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
                     מעבר למשחק
                 </button>
                 {hasOpenedBudgetGame && <p className="mt-3 text-green-700 font-bold text-xl">המשחק נפתח ✅</p>}
-                {!canMoveToSummaryChapter && (
-                    <p className="mt-2 text-center text-brand-dark-blue/80 text-lg">הכפתור יופעל אחרי השלמת כל משימות הטבלה והמשחק.</p>
-                )}
+                <p className="mt-2 text-center text-brand-dark-blue/80 text-lg">אפשר להמשיך לדוח הסיכום גם בלי להשלים את כל סעיפי ההוצאה.</p>
             </div>
         </div>
         {renderChapterNavigation()}
