@@ -539,7 +539,6 @@ const App: React.FC = () => {
 
   const renderStudentSearchPanel = () => (
     <div className="max-w-4xl mx-auto mb-8 space-y-3">
-      <label className="block text-right text-brand-dark-blue font-bold text-xl">חיפוש גלובלי במרחב התלמידים</label>
       <input
         type="text"
         value={studentGlobalSearchTerm}

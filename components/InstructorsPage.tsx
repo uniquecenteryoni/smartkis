@@ -85,7 +85,6 @@ const PROGRAM_ACTIVITY_MODULES: Record<string, string[]> = {
     'חיסכון והשקעות',
     'משימת למידת חקר',
     'רב תחומי',
-    'מסמכים וקישורים שימושיים',
   ],
   "'מה בכיס'": [
     'סיפורו של כסף',
@@ -195,6 +194,200 @@ const VIDEO_LIBRARY: Record<string, Array<VideoItem>> = {
       url: 'https://www.youtube.com/watch?v=IFut3x9eENA',
       youtubeId: 'IFut3x9eENA',
       description: 'סרטון הדרכה לתרגול בניית תקציב ראשון וקבלת החלטות פיננסיות.',
+    },
+  ],
+  'הסכנה שבמינוס': [
+    {
+      title: '"הארנק שלי ריק כל הזמן": שתי משכורות, שלושה ילדים - ומינוס ענק בבנק',
+      url: 'https://www.youtube.com/watch?v=JUl-f1CjD34',
+      youtubeId: 'JUl-f1CjD34',
+    },
+    {
+      title: 'ההלוואה הגרועה ביותר: מה זה מינוס וכמה הוא עולה לנו?',
+      url: 'https://www.youtube.com/watch?v=NNQSFU08pNk&t=1s',
+      youtubeId: 'NNQSFU08pNk',
+    },
+    {
+      title: 'מצמצמים דמי כיס לילדים ומכינים אוכל בבית - וסוגרים בקושי את החודש | "מחזיקים מעמד": עצמאים',
+      url: 'https://www.youtube.com/watch?v=V_N9saBwbnE',
+      youtubeId: 'V_N9saBwbnE',
+    },
+    {
+      title: 'עשירון 9 צריך לוותר על צהרון לילדים ועל פירות בסופר? "מחזיקים מעמד" - השכירים',
+      url: 'https://www.youtube.com/watch?v=LhLAwZ14ehU',
+      youtubeId: 'LhLAwZ14ehU',
+    },
+  ],
+  'איך מנהלים הוצאות?': [
+    {
+      title: 'נכנסים לכיס: משפחת בן ארוש לא מתביישת לחשוף כמה היא מוציאה בכל חודש',
+      url: 'https://www.youtube.com/watch?v=rYYeEc8-kNg',
+      youtubeId: 'rYYeEc8-kNg',
+    },
+    {
+      title: 'כך תתחילו לנהל תקציב ולחסוך כסף בקלות | כאן חסכנים',
+      url: 'https://www.youtube.com/watch?v=JHNIVwpfAVw&t=106s',
+      youtubeId: 'JHNIVwpfAVw',
+    },
+  ],
+  'שכירים ועצמאיים': [
+    {
+      title: 'עשירון 9 צריך לוותר על צהרון לילדים ועל פירות בסופר? "מחזיקים מעמד" - השכירים',
+      url: 'https://www.youtube.com/watch?v=LhLAwZ14ehU&t=361s',
+      youtubeId: 'LhLAwZ14ehU',
+    },
+    {
+      title: 'מצמצמים דמי כיס לילדים ומכינים אוכל בבית - וסוגרים בקושי את החודש | "מחזיקים מעמד": עצמאים',
+      url: 'https://www.youtube.com/watch?v=V_N9saBwbnE&t=13s',
+      youtubeId: 'V_N9saBwbnE',
+    },
+    {
+      title: 'למה כוס קפה עולה 17 שקל? האמת מאחורי בתי הקפה | עם הספל - פרק 4',
+      url: 'https://www.youtube.com/watch?v=QHYFmoRFPeY',
+      youtubeId: 'QHYFmoRFPeY',
+    },
+    {
+      title: 'למה עצמאים משלמים יותר לביטוח לאומי, ורק השכירים נהנים מדמי אבטלה?',
+      url: 'https://www.youtube.com/watch?v=w5Dr4IQTvbc',
+      youtubeId: 'w5Dr4IQTvbc',
+    },
+    {
+      title: 'כאן מכירים | להיות עצמאי בישראל',
+      url: 'https://www.youtube.com/watch?v=1rNtu9VHPgk',
+      youtubeId: '1rNtu9VHPgk',
+    },
+    {
+      title: 'חיות כיס | האם טענות העצמאים נכונות? 📝',
+      url: 'https://www.youtube.com/watch?v=BatkzC9f0C0',
+      youtubeId: 'BatkzC9f0C0',
+    },
+  ],
+  'חיסכון והשקעות': [
+    {
+      title: 'איך אפשר לחסוך את הכסף שלנו?',
+      url: 'https://www.youtube.com/watch?v=Wk5fp9g1PC8',
+      youtubeId: 'Wk5fp9g1PC8',
+    },
+    {
+      title: 'איך עובד המסחר בבורסה? | אליה מסביר דברים בעזרת צעצועים 🤖',
+      url: 'https://www.youtube.com/watch?v=TG7HL5PsMGw',
+      youtubeId: 'TG7HL5PsMGw',
+    },
+    {
+      title: 'הסיפור האמיתי מאחורי נעלי הטיקטוק שגילו את שוק ההון',
+      url: 'https://www.youtube.com/watch?v=ClBdg74maDQ',
+      youtubeId: 'ClBdg74maDQ',
+    },
+    {
+      title: 'איך חוסכים מאות שקלים - בשיחה אחת עם הבנק?',
+      url: 'https://www.youtube.com/watch?v=lKGeafj-nRg',
+      youtubeId: 'lKGeafj-nRg',
+    },
+    {
+      title: 'המדריך למשקיע הצעיר: איך חוסכים לילדים? | תיק לכל ילד - פרק 1',
+      url: 'https://www.youtube.com/watch?v=AJVVZpt0xfg',
+      youtubeId: 'AJVVZpt0xfg',
+    },
+    {
+      title: 'המדריך המלא לבני הנוער: איך להשקיע בלי ליפול בפח? | תיק לכל ילד - פרק 2',
+      url: 'https://www.youtube.com/watch?v=68I9OA9Ml-A&t=441s',
+      youtubeId: '68I9OA9Ml-A',
+    },
+    {
+      title: 'השקעות בבורסה - או הימורים? השיטה של אפליקציות המסחר לסחוף את הצעירים',
+      url: 'https://www.youtube.com/watch?v=MQqK1zQurnM',
+      youtubeId: 'MQqK1zQurnM',
+    },
+    {
+      title: 'מה זה שוק ההון ואיך הכסף שלנו מגיע לשם?',
+      url: 'https://www.youtube.com/watch?v=j_QFXaRRkyY',
+      youtubeId: 'j_QFXaRRkyY',
+    },
+    {
+      title: 'מה צריך לדעת לפני שמשקיעים בשוק ההון?',
+      url: 'https://www.youtube.com/watch?v=k7nZsI-bPH4',
+      youtubeId: 'k7nZsI-bPH4',
+    },
+  ],
+  'רב תחומי': [
+    {
+      title: 'חוזרים להורים, משקיעים במניות או קונים דירה: איך דור ה-Z שורד כלכלית?',
+      url: 'https://www.youtube.com/watch?v=NiGD4rl-nPk&t=7s',
+      youtubeId: 'NiGD4rl-nPk',
+    },
+    {
+      title: '12 שעות עבודה ביום - שישים ימים בשבוע: מודל העבודה הקיצוני הגיע לארה"ב',
+      url: 'https://www.youtube.com/watch?v=SU1S0UWMMvA',
+      youtubeId: 'SU1S0UWMMvA',
+    },
+    {
+      title: 'עבודה - על מה ולמה? הבנקים עושין עלינו קופה - הישראלים לא מתמקחים | דופקים קופה',
+      url: 'https://www.youtube.com/watch?v=ddV5PPivFjE',
+      youtubeId: 'ddV5PPivFjE',
+    },
+    {
+      title: 'הבנקים גלגלו מיליארדים - ואיפה בנק ישראל והמפקח על הבנקים? | דופקים קופה',
+      url: 'https://www.youtube.com/watch?v=9s4F-_BjB8w',
+      youtubeId: '9s4F-_BjB8w',
+    },
+    {
+      title: 'עוד יותר יקר: הגזירות הכלכליות ייכנסו ב-2026 - איך אפשר לחסוך בכל זאת?',
+      url: 'https://www.youtube.com/watch?v=f3V5mTpf6DU&t=10s',
+      youtubeId: 'f3V5mTpf6DU',
+    },
+    {
+      title: '"מדינה לעשירים": הזוגות הצעירים שמתרחקים מחלום הדירה',
+      url: 'https://www.youtube.com/watch?v=PoGnoldAxgg',
+      youtubeId: 'PoGnoldAxgg',
+    },
+  ],
+  'זכויות עובדים': [
+    {
+      title: 'מתחילים לעבוד בקיץ? כל הזכויות לבני הנוער במקום העבודה',
+      url: 'https://www.youtube.com/watch?v=D4llD6rwvJU',
+      youtubeId: 'D4llD6rwvJU',
+    },
+    {
+      title: 'חופש גדול? עלייה בכנסת תלמידים אל שוק העבודה בחודשי הקיץ',
+      url: 'https://www.youtube.com/watch?v=bX4gg63EuMo',
+      youtubeId: 'bX4gg63EuMo',
+    },
+    {
+      title: 'טיפים לבני נוער עובדים',
+      url: 'https://www.youtube.com/shorts/4J6gqWtLxsI',
+      youtubeId: '4J6gqWtLxsI',
+    },
+  ],
+  'פענוח תלוש שכר': [
+    {
+      title: 'גישה קלה לכלכלה: איך קוראים תלוש משכורת?',
+      url: 'https://www.youtube.com/watch?v=AlPSMOjh4BU',
+      youtubeId: 'AlPSMOjh4BU',
+    },
+    {
+      title: 'איך לקרוא את תלוש השכר?',
+      url: 'https://www.youtube.com/watch?v=G6M90wUXARk',
+      youtubeId: 'G6M90wUXARk',
+    },
+    {
+      title: 'מדריך תלוש שכר - חלק 1',
+      url: 'https://www.youtube.com/watch?v=Ru55W8nE0r0',
+      youtubeId: 'Ru55W8nE0r0',
+    },
+    {
+      title: 'מדריך תלוש שכר - חלק 2',
+      url: 'https://www.youtube.com/watch?v=Adcmd6cBCR0',
+      youtubeId: 'Adcmd6cBCR0',
+    },
+    {
+      title: 'מדריך תלוש שכר - חלק 3',
+      url: 'https://www.youtube.com/watch?v=Uk_Q5cKScrA',
+      youtubeId: 'Uk_Q5cKScrA',
+    },
+    {
+      title: 'מדריך תלוש שכר - חלק 4 ואחרון',
+      url: 'https://www.youtube.com/watch?v=7M1L462QTnU',
+      youtubeId: '7M1L462QTnU',
     },
   ],
   'ניכויי שכר': [
@@ -352,6 +545,14 @@ const AIDS_LIBRARY: Record<string, Array<Aid>> = {
       fileId: '1JoCxv0FC4kIOzwPRF9Px0rVeD1t4B1nH',
       fileIcon: '💰',
       description: 'הנחיות לניתוח עמוד חשבון בנק',
+    },
+  ],
+  'איך מנהלים הוצאות?': [
+    {
+      title: 'מודל החצ"ר - סימולטור',
+      url: '#hatsar-simulator',
+      fileIcon: '🧮',
+      description: 'סימולטור סדרי עדיפויות חייב/צריך/רוצה מתוך פרק 5 של "כמה זה עולה לי?".',
     },
   ],
   'פענוח תלוש שכר': [
@@ -709,7 +910,6 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
       </div>
 
       <div className="max-w-4xl mx-auto mb-8 space-y-3">
-        <label className="block text-right text-brand-dark-blue font-bold text-xl">חיפוש גלובלי במרחב המדריכים</label>
         <input
           type="text"
           value={globalSearchTerm}
@@ -2457,6 +2657,83 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                     </a>
                   );
                 })}
+              </div>
+            </div>
+          ) : activeModule === 'עזרים ונספחים' && activeProgram === "'חכם בכיס'" && activeActivity === 'איך מנהלים הוצאות?' && activeSubActivity === 'מודל החצ"ר' ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">עזרים ונספחים</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">מודל החצ"ר</h3>
+                  <p className="text-brand-dark-blue/60">סימולטור סדרי עדיפויות חייב/צריך/רוצה מתוך פרק 5 של "כמה זה עולה לי?".</p>
+                </div>
+                <button
+                  onClick={() => setActiveSubActivity(null)}
+                  className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                >
+                  חזרה לחלון העזרים
+                </button>
+              </div>
+              <HatsarStep />
+            </div>
+          ) : activeModule === 'עזרים ונספחים' && activeProgram === "'חכם בכיס'" && activeActivity === 'איך מנהלים הוצאות?' ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">עזרים ונספחים</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">איך מנהלים הוצאות?</h3>
+                  <p className="text-brand-dark-blue/60">בחרו חלונית עזר או הפעילו את סימולטור מודל החצ"ר.</p>
+                </div>
+                <button
+                  onClick={() => { setActiveActivity(null); setActiveSubActivity(null); }}
+                  className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                >
+                  חזרה לחומרי העזר
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <button
+                  onClick={() => setActiveSubActivity('מודל החצ"ר')}
+                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+                >
+                  <p className="text-4xl mb-3">🧮</p>
+                  <p className="text-2xl font-bold text-brand-dark-blue">מודל החצ"ר</p>
+                  <p className="text-brand-dark-blue/60 mt-3 text-lg">סימולטור סדרי עדיפויות חייב/צריך/רוצה בפרק "כמה זה עולה לי?".</p>
+                </button>
+                {(AIDS_LIBRARY['איך מנהלים הוצאות?'] || [])
+                  .filter((aid) => aid.url !== '#hatsar-simulator')
+                  .map((aid) => {
+                    const thumb = getAidThumbnail(aid);
+                    return (
+                      <a
+                        key={aid.fileId || aid.url}
+                        href={aid.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-3xl overflow-hidden border-2 border-dashed border-gray-300 bg-white/90 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col"
+                      >
+                        <div className="relative h-40 bg-gradient-to-br from-blue-100 to-teal-100 border-b-2 border-gray-200 overflow-hidden">
+                          <div className="absolute inset-0 flex items-center justify-center text-6xl">{aid.fileIcon || '📄'}</div>
+                          {thumb ? (
+                            <img
+                              src={thumb}
+                              alt={`תצוגה מקדימה: ${aid.title}`}
+                              className="relative z-10 w-full h-full object-cover"
+                              loading="lazy"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          ) : null}
+                        </div>
+                        <div className="p-5 flex-1 flex flex-col items-center justify-center">
+                          <p className="text-xl font-bold text-brand-dark-blue">{aid.title}</p>
+                          <p className="text-brand-dark-blue/60 mt-2 text-sm">{aid.description}</p>
+                        </div>
+                      </a>
+                    );
+                  })}
               </div>
             </div>
           ) : activeModule === 'עזרים ונספחים' && activeProgram === "'חכם בכיס'" && activeActivity === 'פענוח תלוש שכר' ? (
