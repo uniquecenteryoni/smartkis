@@ -12,6 +12,9 @@ import { HatsarStep } from './modules/HowMuchCostModule';
 import { FutureManagersChallengeContent } from './modules/FutureManagersChallengeModule';
 import { jeopardyChachamBanks } from './modules/jeopardyChachamBanks';
 import SnowballGame from './modules/SnowballGame';
+import { OverdraftSimulator } from './modules/OverdraftModule';
+import CompoundInterestCalculator from './modules/CompoundInterestCalculator';
+import InvestmentSimulator from './modules/InvestmentSimulator';
 import { WordCloudHost } from './modules/WordCloudGame';
 import InterviewerCardsModule from './modules/InterviewerCardsModule';
 import WhereMoneyComesFromModule from './modules/kisonim/WhereMoneyComesFromModule';
@@ -72,7 +75,7 @@ const ActionCard: React.FC<ActionCardProps> = ({ title, description, icon: Icon,
   </button>
 );
 
-const PROGRAM_MODULES = ['סרטונים', 'פעילויות ומשחקים', 'עזרים ונספחים'];
+const PROGRAM_MODULES = ['סרטונים', 'פעילויות ומשחקים', 'עזרים ונספחים', 'מצגת', 'מערך שיעור'];
 const PROGRAM_ACTIVITY_MODULES: Record<string, string[]> = {
   "'חכם בכיס'": [
     'ניהול התקציב הראשון שלי',
@@ -472,6 +475,7 @@ interface Aid {
   fileId?: string;
   fileIcon?: string;
   description?: string;
+  thumbnailUrl?: string;
 }
 
 const AIDS_LIBRARY: Record<string, Array<Aid>> = {
@@ -555,6 +559,38 @@ const AIDS_LIBRARY: Record<string, Array<Aid>> = {
       description: 'סימולטור סדרי עדיפויות חייב/צריך/רוצה מתוך פרק 5 של "כמה זה עולה לי?".',
     },
   ],
+  'הסכנה שבמינוס': [
+    {
+      title: 'סימולטור מינוס',
+      url: '#overdraft-simulator',
+      fileIcon: '📉',
+      description: 'אפקט כדור השלג: סימולטור מינוס מתוך הפרק השני של "הסכנה שבמינוס" במרחב התלמידים.',
+    },
+  ],
+  'חיסכון והשקעות': [
+    {
+      title: 'מחשבון ריבית דה-ריבית',
+      url: '#compound-interest',
+      fileIcon: '📈',
+      description: 'מחשבון לריבית דריבית עם הפקדה חודשית ומחזורים במהלך השנה.',
+    },
+    {
+      title: 'סימולטור השקעות',
+      url: '#investment-simulator',
+      fileIcon: '💹',
+      description: 'הדמיית תיק השקעות עם הפקדות חודשיות ותשואה שנתית צפויה.',
+    },
+  ],
+  'שכירים ועצמאיים': [
+    {
+      title: 'שכירים ועצמאיים — עזר הדרכה',
+      url: 'https://drive.google.com/file/d/1hzyUYsaFc-2NfrXyL9ZyPZjWWQli9DWi/view?usp=sharing',
+      fileId: '1hzyUYsaFc-2NfrXyL9ZyPZjWWQli9DWi',
+      thumbnailUrl: 'https://drive.google.com/uc?export=view&id=1hzyUYsaFc-2NfrXyL9ZyPZjWWQli9DWi',
+      fileIcon: '📄',
+      description: 'קובץ עזר למדריכים בנושא ההבדלים בין שכירים לעצמאים.',
+    },
+  ],
   'פענוח תלוש שכר': [
     {
       title: 'תלוש שכר ריק לתרגול',
@@ -590,6 +626,7 @@ const AIDS_LIBRARY: Record<string, Array<Aid>> = {
 };
 
 function getAidThumbnail(aid: Aid) {
+  if (aid.thumbnailUrl) return aid.thumbnailUrl;
   const driveId = aid.fileId || extractDriveFileId(aid.url);
   return getDriveThumbnail(driveId);
 }
@@ -871,6 +908,8 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
     : [];
 
   const openSearchResult = (result: GlobalSearchResult) => {
+    setGlobalSearchTerm('');
+
     if (result.kind === 'tool') {
       setActiveProgram(null);
       setActiveActivity(null);
@@ -1005,6 +1044,8 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 {module === 'סרטונים' && 'חומרים מצולמים לתמיכה בהדרכה'}
                 {module === 'פעילויות ומשחקים' && 'בנק משימות, משחקים ותרגולים למדריך'}
                 {module === 'עזרים ונספחים' && 'חומרי עזר, נספחים ודפי עבודה'}
+                {module === 'מצגת' && 'מצגת מוכנה להקרנה בכיתה'}
+                {module === 'מערך שיעור' && 'רצף שיעור, זמנים ומוקדי דגשים'}
               </p>
             </button>
           ))}
@@ -1025,7 +1066,77 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
         </main>
       ) : (
         <main className="mt-12">
-          {activeModule === 'פעילויות ומשחקים' && !activeActivity ? (
+          {activeModule === 'מצגת' ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">מצגת</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">{activeActivity || 'בחרו נושא'}</h3>
+                  <p className="text-brand-dark-blue/60">
+                    {activeActivity
+                      ? `כאן תופיע מצגת מוכנה למודול "${activeActivity}".`
+                      : 'בחרו נושא כדי לצפות במצגת המודול.'}
+                  </p>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    onClick={() => { setActiveModule(null); setActiveSubActivity(null); }}
+                    className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                  >
+                    חזרה לסוגי התוכן
+                  </button>
+                  <button
+                    onClick={() => { setActiveActivity(null); setActiveModule(null); setActiveSubActivity(null); }}
+                    className="px-4 py-2 rounded-full bg-brand-magenta text-white font-bold hover:bg-pink-700"
+                  >
+                    חזרה לרשימת המודולים
+                  </button>
+                </div>
+              </div>
+              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-10 text-center text-brand-dark-blue/70 flex flex-col items-center justify-center min-h-[12rem]">
+                <p className="text-5xl mb-4">🖥️</p>
+                <p className="text-xl font-bold text-brand-dark-blue">מצגת תעלה בקרוב</p>
+                <p className="text-base mt-2 text-brand-dark-blue/60">
+                  {activeActivity ? `נוסיף קישור או קובץ מצגת עבור "${activeActivity}".` : 'נציג כאן קבצי מצגות לפי הנושא הנבחר.'}
+                </p>
+              </div>
+            </div>
+          ) : activeModule === 'מערך שיעור' ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">מערך שיעור</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">{activeActivity || 'בחרו נושא'}</h3>
+                  <p className="text-brand-dark-blue/60">
+                    {activeActivity
+                      ? `כאן יופיע מערך שיעור מובנה עבור "${activeActivity}".`
+                      : 'בחרו נושא כדי לצפות במערך שיעור.'}
+                  </p>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    onClick={() => { setActiveModule(null); setActiveSubActivity(null); }}
+                    className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                  >
+                    חזרה לסוגי התוכן
+                  </button>
+                  <button
+                    onClick={() => { setActiveActivity(null); setActiveModule(null); setActiveSubActivity(null); }}
+                    className="px-4 py-2 rounded-full bg-brand-magenta text-white font-bold hover:bg-pink-700"
+                  >
+                    חזרה לרשימת המודולים
+                  </button>
+                </div>
+              </div>
+              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-10 text-center text-brand-dark-blue/70 flex flex-col items-center justify-center min-h-[12rem]">
+                <p className="text-5xl mb-4">📘</p>
+                <p className="text-xl font-bold text-brand-dark-blue">מערך שיעור יתווסף בקרוב</p>
+                <p className="text-base mt-2 text-brand-dark-blue/60">
+                  {activeActivity ? `נעלה כאן קובץ מערך שיעור וסדר יום עבור "${activeActivity}".` : 'כאן יוצגו מערכי שיעור בהתאם לנושא שתבחרו.'}
+                </p>
+              </div>
+            </div>
+          ) : activeModule === 'פעילויות ומשחקים' && !activeActivity ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {(PROGRAM_ACTIVITY_MODULES[activeProgram || ''] || []).map((moduleName) => (
                 <button
@@ -2637,15 +2748,18 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                       className="rounded-3xl overflow-hidden border-2 border-dashed border-gray-300 bg-white/90 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col"
                     >
                       <div className="relative h-40 bg-gradient-to-br from-blue-100 to-teal-100 border-b-2 border-gray-200 overflow-hidden">
-                        <div className="absolute inset-0 flex items-center justify-center text-6xl">{aid.fileIcon || '📄'}</div>
+                        <div className="absolute inset-0 flex items-center justify-center text-6xl" style={{ display: thumb ? 'none' : undefined }}>{aid.fileIcon || '📄'}</div>
                         {thumb ? (
                           <img
                             src={thumb}
                             alt={`תצוגה מקדימה: ${aid.title}`}
                             className="relative z-10 w-full h-full object-cover"
                             loading="lazy"
+                            referrerPolicy="no-referrer"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
+                              const icon = e.currentTarget.previousElementSibling as HTMLElement | null;
+                              if (icon) icon.style.display = 'flex';
                             }}
                           />
                         ) : null}
@@ -2714,7 +2828,87 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                         className="rounded-3xl overflow-hidden border-2 border-dashed border-gray-300 bg-white/90 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col"
                       >
                         <div className="relative h-40 bg-gradient-to-br from-blue-100 to-teal-100 border-b-2 border-gray-200 overflow-hidden">
-                          <div className="absolute inset-0 flex items-center justify-center text-6xl">{aid.fileIcon || '📄'}</div>
+                          <div className="absolute inset-0 flex items-center justify-center text-6xl" style={{ display: thumb ? 'none' : undefined }}>{aid.fileIcon || '📄'}</div>
+                          {thumb ? (
+                            <img
+                              src={thumb}
+                              alt={`תצוגה מקדימה: ${aid.title}`}
+                              className="relative z-10 w-full h-full object-cover"
+                              loading="lazy"
+                              referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                const icon = e.currentTarget.previousElementSibling as HTMLElement | null;
+                                if (icon) icon.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                        </div>
+                        <div className="p-5 flex-1 flex flex-col items-center justify-center">
+                          <p className="text-xl font-bold text-brand-dark-blue">{aid.title}</p>
+                          <p className="text-brand-dark-blue/60 mt-2 text-sm">{aid.description}</p>
+                        </div>
+                      </a>
+                    );
+                  })}
+              </div>
+            </div>
+          ) : activeModule === 'עזרים ונספחים' && activeProgram === "'חכם בכיס'" && activeActivity === 'הסכנה שבמינוס' && activeSubActivity === 'סימולטור מינוס' ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">עזרים ונספחים</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">סימולטור מינוס</h3>
+                  <p className="text-brand-dark-blue/60">אפקט כדור השלג מתוך פרק "הסכנה שבמינוס" במרחב התלמידים.</p>
+                </div>
+                <button
+                  onClick={() => setActiveSubActivity(null)}
+                  className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                >
+                  חזרה לחלון העזרים
+                </button>
+              </div>
+              <OverdraftSimulator />
+            </div>
+          ) : activeModule === 'עזרים ונספחים' && activeProgram === "'חכם בכיס'" && activeActivity === 'הסכנה שבמינוס' ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">עזרים ונספחים</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">הסכנה שבמינוס</h3>
+                  <p className="text-brand-dark-blue/60">בחרו חלונית עזר או הפעילו את סימולטור המינוס (אפקט כדור השלג).</p>
+                </div>
+                <button
+                  onClick={() => { setActiveActivity(null); setActiveSubActivity(null); }}
+                  className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                >
+                  חזרה לחומרי העזר
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <button
+                  onClick={() => setActiveSubActivity('סימולטור מינוס')}
+                  className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+                >
+                  <p className="text-4xl mb-3">📉</p>
+                  <p className="text-2xl font-bold text-brand-dark-blue">סימולטור מינוס</p>
+                  <p className="text-brand-dark-blue/60 mt-3 text-lg">הפעלה ישירה של אפקט כדור השלג מתוך מרחב התלמידים.</p>
+                </button>
+                {(AIDS_LIBRARY['הסכנה שבמינוס'] || [])
+                  .filter((aid) => aid.url !== '#overdraft-simulator')
+                  .map((aid) => {
+                    const thumb = getAidThumbnail(aid);
+                    return (
+                      <a
+                        key={aid.fileId || aid.url}
+                        href={aid.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-3xl overflow-hidden border-2 border-dashed border-gray-300 bg-white/90 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col"
+                      >
+                        <div className="relative h-40 bg-gradient-to-br from-rose-100 to-red-100 border-b-2 border-gray-200 overflow-hidden">
+                          <div className="absolute inset-0 flex items-center justify-center text-6xl" style={{ display: thumb ? 'none' : undefined }}>{aid.fileIcon || '📄'}</div>
                           {thumb ? (
                             <img
                               src={thumb}
@@ -2736,6 +2930,82 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                   })}
               </div>
             </div>
+          ) : activeModule === 'עזרים ונספחים' && activeProgram === "'חכם בכיס'" && activeActivity === 'חיסכון והשקעות' && activeSubActivity === 'מחשבון ריבית דה-ריבית' ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <CompoundInterestCalculator onBack={() => setActiveSubActivity(null)} />
+            </div>
+          ) : activeModule === 'עזרים ונספחים' && activeProgram === "'חכם בכיס'" && activeActivity === 'חיסכון והשקעות' && activeSubActivity === 'סימולטור השקעות' ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <InvestmentSimulator onBack={() => setActiveSubActivity(null)} />
+            </div>
+          ) : activeModule === 'עזרים ונספחים' && activeProgram === "'חכם בכיס'" && activeActivity === 'חיסכון והשקעות' ? (
+                <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div>
+                      <p className="text-brand-dark-blue/70">עזרים ונספחים</p>
+                      <h3 className="text-2xl font-bold text-brand-dark-blue">חיסכון והשקעות</h3>
+                      <p className="text-brand-dark-blue/60">בחרו חלונית עזר או הפעילו את מחשבון הריבית דה-ריבית.</p>
+                    </div>
+                    <button
+                      onClick={() => { setActiveActivity(null); setActiveSubActivity(null); }}
+                      className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                    >
+                      חזרה לחומרי העזר
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <button
+                      onClick={() => setActiveSubActivity('מחשבון ריבית דה-ריבית')}
+                      className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+                    >
+                      <p className="text-4xl mb-3">📈</p>
+                      <p className="text-2xl font-bold text-brand-dark-blue">מחשבון ריבית דה-ריבית</p>
+                      <p className="text-brand-dark-blue/60 mt-3 text-lg">חישוב צמיחת חיסכון עם ריבית דריבית והפקדות שוטפות.</p>
+                    </button>
+                    <button
+                      onClick={() => setActiveSubActivity('סימולטור השקעות')}
+                      className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+                    >
+                      <p className="text-4xl mb-3">💹</p>
+                      <p className="text-2xl font-bold text-brand-dark-blue">סימולטור השקעות</p>
+                      <p className="text-brand-dark-blue/60 mt-3 text-lg">הדמיית תיק עם תשואה שנתית צפויה והפקדות שוטפות.</p>
+                    </button>
+                    {(AIDS_LIBRARY['חיסכון והשקעות'] || [])
+                      .filter((aid) => !['#compound-interest', '#investment-simulator'].includes(aid.url))
+                      .map((aid) => {
+                        const thumb = getAidThumbnail(aid);
+                        return (
+                          <a
+                            key={aid.fileId || aid.url}
+                            href={aid.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded-3xl overflow-hidden border-2 border-dashed border-gray-300 bg-white/90 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col"
+                          >
+                            <div className="relative h-40 bg-gradient-to-br from-green-100 to-emerald-100 border-b-2 border-gray-200 overflow-hidden">
+                              <div className="absolute inset-0 flex items-center justify-center text-6xl" style={{ display: thumb ? 'none' : undefined }}>{aid.fileIcon || '📄'}</div>
+                              {thumb ? (
+                                <img
+                                  src={thumb}
+                                  alt={`תצוגה מקדימה: ${aid.title}`}
+                                  className="relative z-10 w-full h-full object-cover"
+                                  loading="lazy"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                  }}
+                                />
+                              ) : null}
+                            </div>
+                            <div className="p-5 flex-1 flex flex-col items-center justify-center">
+                              <p className="text-xl font-bold text-brand-dark-blue">{aid.title}</p>
+                              <p className="text-brand-dark-blue/60 mt-2 text-sm">{aid.description}</p>
+                            </div>
+                          </a>
+                        );
+                      })}
+                  </div>
+                </div>
           ) : activeModule === 'עזרים ונספחים' && activeProgram === "'חכם בכיס'" && activeActivity === 'פענוח תלוש שכר' ? (
             <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
               <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -2762,16 +3032,19 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                       rel="noopener noreferrer"
                       className="rounded-3xl overflow-hidden border-2 border-dashed border-gray-300 bg-white/90 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col"
                     >
-                      <div className="relative h-40 bg-gradient-to-br from-orange-100 to-amber-100 border-b-2 border-gray-200 overflow-hidden">
-                        <div className="absolute inset-0 flex items-center justify-center text-6xl">{aid.fileIcon || '📄'}</div>
+                        <div className="relative h-40 bg-gradient-to-br from-orange-100 to-amber-100 border-b-2 border-gray-200 overflow-hidden">
+                        <div className="absolute inset-0 flex items-center justify-center text-6xl" style={{ display: thumb ? 'none' : undefined }}>{aid.fileIcon || '📄'}</div>
                         {thumb ? (
                           <img
                             src={thumb}
                             alt={`תצוגה מקדימה: ${aid.title}`}
                             className="relative z-10 w-full h-full object-cover"
                             loading="lazy"
+                            referrerPolicy="no-referrer"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
+                              const icon = e.currentTarget.previousElementSibling as HTMLElement | null;
+                              if (icon) icon.style.display = 'flex';
                             }}
                           />
                         ) : null}
@@ -2811,16 +3084,19 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                       rel="noopener noreferrer"
                       className="rounded-3xl overflow-hidden border-2 border-dashed border-gray-300 bg-white/90 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col"
                     >
-                      <div className="relative h-40 bg-gradient-to-br from-purple-100 to-pink-100 border-b-2 border-gray-200 overflow-hidden">
-                        <div className="absolute inset-0 flex items-center justify-center text-6xl">{aid.fileIcon || '📄'}</div>
+                        <div className="relative h-40 bg-gradient-to-br from-purple-100 to-pink-100 border-b-2 border-gray-200 overflow-hidden">
+                        <div className="absolute inset-0 flex items-center justify-center text-6xl" style={{ display: thumb ? 'none' : undefined }}>{aid.fileIcon || '📄'}</div>
                         {thumb ? (
                           <img
                             src={thumb}
                             alt={`תצוגה מקדימה: ${aid.title}`}
                             className="relative z-10 w-full h-full object-cover"
                             loading="lazy"
+                            referrerPolicy="no-referrer"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
+                              const icon = e.currentTarget.previousElementSibling as HTMLElement | null;
+                              if (icon) icon.style.display = 'flex';
                             }}
                           />
                         ) : null}
@@ -2862,7 +3138,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                         className="rounded-3xl overflow-hidden border-2 border-dashed border-gray-300 bg-white/90 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col"
                       >
                         <div className="relative h-40 bg-gradient-to-br from-blue-100 to-teal-100 border-b-2 border-gray-200 overflow-hidden">
-                          <div className="absolute inset-0 flex items-center justify-center text-6xl">{aid.fileIcon || '📄'}</div>
+                          <div className="absolute inset-0 flex items-center justify-center text-6xl" style={{ display: thumb ? 'none' : undefined }}>{aid.fileIcon || '📄'}</div>
                           {thumb ? (
                             <img
                               src={thumb}
@@ -3011,7 +3287,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                         className="rounded-3xl overflow-hidden border-2 border-dashed border-gray-300 bg-white/90 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col"
                       >
                         <div className="relative h-40 bg-gradient-to-br from-slate-100 to-sky-100 border-b-2 border-gray-200 overflow-hidden">
-                          <div className="absolute inset-0 flex items-center justify-center text-6xl">{aid.fileIcon || '📄'}</div>
+                          <div className="absolute inset-0 flex items-center justify-center text-6xl" style={{ display: thumb ? 'none' : undefined }}>{aid.fileIcon || '📄'}</div>
                           {thumb ? (
                             <img
                               src={thumb}

@@ -310,7 +310,7 @@ const CharacterChallengeStep: React.FC = () => {
 
 
 // --- STEP 2: SNOWBALL EFFECT SIMULATOR ---
-const OverdraftSimulator: React.FC = () => {
+export const OverdraftSimulator: React.FC = () => {
     const [balance, setBalance] = useState(-2000);
     const [interest, setInterest] = useState(12);
     const [months, setMonths] = useState(24);
@@ -350,11 +350,21 @@ const OverdraftSimulator: React.FC = () => {
                     <div className="space-y-4">
                         <div>
                             <label>סכום המינוס ההתחלתי (₪)</label>
-                            <input type="number" value={balance} onChange={e => setBalance(Math.min(0, Number(e.target.value)))} className="w-full mt-1 p-2 rounded text-3xl" />
+                            <input
+                                type="number"
+                                value={balance}
+                                onChange={e => setBalance(Math.min(0, Number(e.target.value)))}
+                                className="w-full mt-1 p-2 rounded text-3xl border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-brand-magenta focus:border-brand-magenta"
+                            />
                         </div>
                         <div>
                             <label>ריבית שנתית על המינוס (%)</label>
-                            <input type="number" value={interest} onChange={e => setInterest(Number(e.target.value))} className="w-full mt-1 p-2 rounded text-3xl" />
+                            <input
+                                type="number"
+                                value={interest}
+                                onChange={e => setInterest(Number(e.target.value))}
+                                className="w-full mt-1 p-2 rounded text-3xl border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-brand-magenta focus:border-brand-magenta"
+                            />
                         </div>
                          <div>
                             <label>גירעון/עודף חודשי (₪)</label>
