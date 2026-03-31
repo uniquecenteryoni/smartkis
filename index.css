@@ -81,6 +81,8 @@ video {
   mix-blend-mode: multiply;
   opacity: 0.16;
   transform: rotate(3deg);
+  mask-image: linear-gradient(90deg, black 0%, black 40%, transparent 45%, transparent 55%, black 60%, black 100%);
+  -webkit-mask-image: linear-gradient(90deg, black 0%, black 40%, transparent 45%, transparent 55%, black 60%, black 100%);
 }
 
 .floating-coins::before,
