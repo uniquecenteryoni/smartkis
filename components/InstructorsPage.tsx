@@ -1,4 +1,24 @@
 import React, { useMemo, useState } from 'react';
+import BudgetModule from './modules/BudgetModule';
+import ExpensesModule from './modules/ExpensesModule';
+import OverdraftModule from './modules/OverdraftModule';
+import RightsModule from './modules/RightsModule';
+import SalaryModule from './modules/SalaryModule';
+import SalaryDeductionsModule from './modules/SalaryDeductionsModule';
+import SelfEmployedModule from './modules/SelfEmployedModule';
+import InterestModule from './modules/InterestModule';
+import ResearchModule from './modules/ResearchModule';
+import LinksModule from './modules/LinksModule';
+import StoryOfMoneyModule from './modules/StoryOfMoneyModule';
+import MoneyAndMeModule from './modules/MoneyAndMeModule';
+import HowMuchCostModule from './modules/HowMuchCostModule';
+import MonopoliesModule from './modules/MonopoliesModule';
+import SmartConsumerismModule from './modules/SmartConsumerismModule';
+import RelationshipsMoneyModule from './modules/RelationshipsMoneyModule';
+import HowToEarnModule from './modules/HowToEarnModule';
+import TimeManagementModule from './modules/TimeManagementModule';
+import PublicSpeakingModule from './modules/PublicSpeakingModule';
+import BuildBusinessModule from './modules/BuildBusinessModule';
 import AliasGame from './modules/AliasGame';
 import JeopardyModule from './modules/JeopardyModule';
 import BullseyeGame from './modules/BullseyeGame';
@@ -478,6 +498,46 @@ interface Aid {
   thumbnailUrl?: string;
 }
 
+type StudentModuleComponent = React.ComponentType<unknown> | null;
+
+function getStudentModuleComponent(activityName: string): StudentModuleComponent {
+  const map: Record<string, StudentModuleComponent> = {
+    'ניהול התקציב הראשון שלי': BudgetModule,
+    'איך מנהלים הוצאות?': ExpensesModule,
+    'הסכנה שבמינוס': OverdraftModule,
+    'זכויות עובדים': RightsModule,
+    'פענוח תלוש שכר': SalaryModule,
+    'ניכויי שכר': SalaryDeductionsModule,
+    'שכירים ועצמאיים': SelfEmployedModule,
+    'חיסכון והשקעות': InterestModule,
+    'משימת למידת חקר': ResearchModule,
+    'מסמכים וקישורים שימושיים': LinksModule,
+    'סיפורו של כסף': StoryOfMoneyModule,
+    'הכסף ואני': MoneyAndMeModule,
+    'כמה זה עולה לי?': HowMuchCostModule,
+    'מונופולים בישראל': MonopoliesModule,
+    'צרכנות נבונה': SmartConsumerismModule,
+    'מערכות יחסים וכסף': RelationshipsMoneyModule,
+    'איך להרוויח כסף?': HowToEarnModule,
+    'ניהול זמן (זמן=כסף)': TimeManagementModule,
+    'עמידה מול קהל': PublicSpeakingModule,
+    'איך בונים עסק?': BuildBusinessModule,
+    'מאיפה בא הכסף?': WhereMoneyComesFromModule,
+    'צרכים ורצונות': NeedsVsWantsModule,
+    'הרפתקת חיסכון': SavingsAdventureModule,
+    'חנות הקסמים': MagicStoreModule,
+    'בנק הקופות': JarBankModule,
+    'סיור עולמי': WorldTourModule,
+    'סודות הפרסום': AdSecretsModule,
+    'משימות הרווחה': KisonimEarningMissions,
+    'שוק צבעוני': ColorfulMarketModule,
+    'מטבעות ושטרות': CoinsVsBillsModule,
+    'כוח הנתינה': PowerOfGivingModule,
+    'החלטות קטנות': SmallDecisionsModule,
+  };
+  return map[activityName] || null;
+}
+
 const AIDS_LIBRARY: Record<string, Array<Aid>> = {
   'ניהול התקציב הראשון שלי': [
     {
@@ -629,6 +689,27 @@ function getAidThumbnail(aid: Aid) {
   if (aid.thumbnailUrl) return aid.thumbnailUrl;
   const driveId = aid.fileId || extractDriveFileId(aid.url);
   return getDriveThumbnail(driveId);
+}
+
+function renderStudentContentCard(activityName: string, onOpen: (activity: string) => void) {
+  const hasModule = !!getStudentModuleComponent(activityName);
+  if (!activityName || !hasModule) return null;
+  return (
+    <button
+      key={`student-${activityName}`}
+      onClick={() => onOpen(activityName)}
+      className="rounded-3xl border-2 border-dashed border-brand-teal/50 bg-white/95 text-right shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col"
+    >
+      <div className="relative h-40 bg-gradient-to-br from-teal-100 to-emerald-100 border-b-2 border-gray-200 overflow-hidden flex items-center justify-center text-5xl">
+        📚
+      </div>
+      <div className="p-5 flex-1 flex flex-col items-start justify-center text-right w-full">
+        <p className="text-xl font-bold text-brand-dark-blue">תוכן המודול · מרחב התלמידים</p>
+        <p className="text-brand-dark-blue/70 mt-2 text-sm">פתחו את מודול התלמיד כדי להציג ולתרגל יחד עם הכיתה.</p>
+        <span className="mt-3 inline-flex items-center gap-2 text-brand-teal font-bold text-sm">פתחו את המודול</span>
+      </div>
+    </button>
+  );
 }
 
 const getSummary = (name: string) => MODULE_SUMMARIES[name] || 'תוכן יתווסף בהמשך עבור מודול זה.';
@@ -784,25 +865,45 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
   const [activeActivity, setActiveActivity] = useState<string | null>(null);
   const [activeSubActivity, setActiveSubActivity] = useState<string | null>(null);
   const [globalSearchTerm, setGlobalSearchTerm] = useState('');
+  const [isCustomPlanBuilder, setIsCustomPlanBuilder] = useState(false);
+  const [customPlanSelections, setCustomPlanSelections] = useState<Set<string>>(new Set());
+  const [customPlanName, setCustomPlanName] = useState('');
+  const [savedCustomPlans, setSavedCustomPlans] = useState<Array<{ name: string; modules: Array<{ program: string; activity: string }> }>>([]);
+  const [activeCustomPlan, setActiveCustomPlan] = useState<string | null>(null);
+  const [activeStudentContent, setActiveStudentContent] = useState<string | null>(null);
+  const [cameFromCustomPlan, setCameFromCustomPlan] = useState(false);
 
   const rootCards: ProgramCardConfig[] = [
     {
       title: "תוכנית 'חכם בכיס'",
       description: 'גישה למערכי שיעור, עזרים וסרטונים',
       icon: SalaryIcon,
-      onSelect: () => { setActiveProgram("'חכם בכיס'"); setActiveModule(null); setActiveActivity(null); setActiveSubActivity(null); },
+      onSelect: () => { setActiveProgram("'חכם בכיס'"); setActiveModule(null); setActiveActivity(null); setActiveSubActivity(null); setCameFromCustomPlan(false); },
     },
     {
       title: "תוכנית 'מה בכיס'",
       description: 'גישה למערכי שיעור, עזרים וסרטונים',
       icon: BusinessIcon,
-      onSelect: () => { setActiveProgram("'מה בכיס'"); setActiveModule(null); setActiveActivity(null); setActiveSubActivity(null); },
+      onSelect: () => { setActiveProgram("'מה בכיס'"); setActiveModule(null); setActiveActivity(null); setActiveSubActivity(null); setCameFromCustomPlan(false); },
     },
     {
       title: "תוכנית 'כיסונים פיננסים'",
       description: 'גישה למערכי שיעור, עזרים וסרטונים',
       icon: PiggyBankIcon,
-      onSelect: () => { setActiveProgram("'כיסונים פיננסים'"); setActiveModule(null); setActiveActivity(null); setActiveSubActivity(null); },
+      onSelect: () => { setActiveProgram("'כיסונים פיננסים'"); setActiveModule(null); setActiveActivity(null); setActiveSubActivity(null); setCameFromCustomPlan(false); },
+    },
+    {
+      title: 'הרכבת תוכנית מותאמת',
+      description: 'בנו שילוב מודולים מכל התוכניות ושמרו בשם מותאם',
+      icon: BusinessIcon,
+      onSelect: () => {
+        setIsCustomPlanBuilder(true);
+        setActiveProgram(null);
+        setActiveModule(null);
+        setActiveActivity(null);
+        setActiveSubActivity(null);
+        setCameFromCustomPlan(false);
+      },
     },
     {
       title: 'מעקב אחר קבוצות למידה',
@@ -907,8 +1008,40 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
       )
     : [];
 
+  const toggleCustomPlanSelection = (program: string, activity: string) => {
+    const key = `${program}||${activity}`;
+    setCustomPlanSelections((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+
+  const resetCustomPlan = () => {
+    setCustomPlanSelections(new Set());
+    setCustomPlanName('');
+  };
+
+  const saveCustomPlan = () => {
+    if (customPlanSelections.size === 0) return;
+    const planLabel = customPlanName.trim() || `הרכבת תוכנית מותאמת ${savedCustomPlans.length + 1}`;
+    const modules = Array.from(customPlanSelections).map((entry) => {
+      const [program, activity] = entry.split('||');
+      return { program, activity };
+    });
+    setSavedCustomPlans((prev) => [...prev, { name: planLabel, modules }]);
+    resetCustomPlan();
+    setIsCustomPlanBuilder(false);
+    setActiveCustomPlan(planLabel);
+  };
+
   const openSearchResult = (result: GlobalSearchResult) => {
     setGlobalSearchTerm('');
+    setCameFromCustomPlan(false);
 
     if (result.kind === 'tool') {
       setActiveProgram(null);
@@ -923,6 +1056,28 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
     setActiveModule(result.module || null);
     setActiveSubActivity(result.subActivity || null);
   };
+
+  const StudentContentComponent = activeStudentContent ? getStudentModuleComponent(activeStudentContent) : null;
+
+  if (activeStudentContent && StudentContentComponent) {
+    return (
+      <div className="animate-fade-in container mx-auto px-4 py-8">
+        <button 
+          onClick={() => { setActiveStudentContent(null); }}
+          className="mb-8 bg-brand-magenta hover:bg-pink-700 text-white font-bold py-3 px-8 text-xl rounded-full flex items-center transition-colors duration-300"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H15a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
+          </svg>
+          חזרה לרשימת התוכן
+        </button>
+        <Header />
+        <div className="my-8">
+          <StudentContentComponent />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in container mx-auto px-4 py-8">
@@ -984,7 +1139,157 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
         )}
       </div>
 
-      {!activeProgram ? (
+      {!activeProgram && isCustomPlanBuilder ? (
+        <main className="mt-12 space-y-6">
+          <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-6 space-y-4">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <p className="text-brand-dark-blue/70">הרכבת תוכנית מותאמת</p>
+                <h3 className="text-2xl font-bold text-brand-dark-blue">הרכבת תוכנית אישית</h3>
+                <p className="text-brand-dark-blue/60">בחרו מודולים מכל התוכניות, תנו שם ושמרו.</p>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => { setIsCustomPlanBuilder(false); resetCustomPlan(); }}
+                  className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                >
+                  חזרה למסך הראשי
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Object.entries(PROGRAM_ACTIVITY_MODULES).map(([program, activities]) => (
+                <div key={program} className="rounded-2xl border-2 border-dashed border-gray-200 bg-white/80 p-4 space-y-3">
+                  <div className="text-lg font-bold text-brand-dark-blue text-center mb-2">{program.replace(/'/g, '')}</div>
+                  <div className="space-y-2">
+                    {activities.map((activity) => {
+                      const key = `${program}||${activity}`;
+                      const selected = customPlanSelections.has(key);
+                      return (
+                        <label
+                          key={key}
+                          className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-right cursor-pointer transition ${selected ? 'border-brand-teal bg-brand-teal/10' : 'border-gray-200 bg-white/70 hover:border-brand-teal/50'}`}
+                        >
+                          <div>
+                            <p className="font-bold text-brand-dark-blue">{activity}</p>
+                            <p className="text-sm text-brand-dark-blue/60">{getSummary(activity)}</p>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={selected}
+                            onChange={() => toggleCustomPlanSelection(program, activity)}
+                            className="w-5 h-5 accent-brand-teal"
+                          />
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex-1">
+                <label className="block text-sm text-brand-dark-blue/70 mb-1">שם התוכנית המותאמת</label>
+                <input
+                  type="text"
+                  value={customPlanName}
+                  onChange={(e) => setCustomPlanName(e.target.value)}
+                  placeholder="לדוגמה: תוכנית מתקדמים כיתה יא"
+                  className="w-full rounded-xl border-2 border-gray-300 bg-white/95 px-4 py-3 text-lg text-brand-dark-blue placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-teal focus:border-brand-teal"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={resetCustomPlan}
+                  className="px-5 py-3 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                >
+                  נקה בחירות
+                </button>
+                <button
+                  onClick={saveCustomPlan}
+                  className="px-6 py-3 rounded-full bg-brand-magenta text-white font-bold hover:bg-pink-700 disabled:opacity-60"
+                  disabled={customPlanSelections.size === 0}
+                >
+                  סיימתי ושמור תוכנית
+                </button>
+              </div>
+            </div>
+
+            {customPlanSelections.size > 0 && (
+              <div className="rounded-2xl border border-brand-teal/40 bg-brand-teal/5 p-4">
+                <p className="font-bold text-brand-dark-blue mb-2">מודולים שנבחרו</p>
+                <div className="flex flex-wrap gap-2">
+                  {Array.from(customPlanSelections).map((key) => {
+                    const [program, activity] = key.split('||');
+                    return (
+                      <span key={key} className="px-3 py-1 rounded-full bg-white border border-brand-teal/40 text-brand-dark-blue text-sm">
+                        {activity} · {program.replace(/'/g, '')}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </main>
+      ) : !activeProgram && activeCustomPlan ? (
+        <main className="mt-12 space-y-6">
+          <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-6 space-y-4">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <p className="text-brand-dark-blue/70">תוכניות מותאמות</p>
+                <h3 className="text-2xl font-bold text-brand-dark-blue">{activeCustomPlan}</h3>
+                <p className="text-brand-dark-blue/60">המודולים שבחרתם — לחצו כדי לפתוח וללמד.</p>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => setActiveCustomPlan(null)}
+                  className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                >
+                  חזרה לתיקיית התוכניות המותאמות
+                </button>
+                <button
+                  onClick={() => { setIsCustomPlanBuilder(true); resetCustomPlan(); }}
+                  className="px-4 py-2 rounded-full bg-brand-magenta text-white font-bold hover:bg-pink-700"
+                >
+                  בנו תוכנית נוספת
+                </button>
+              </div>
+            </div>
+            {(() => {
+              const plan = savedCustomPlans.find((p) => p.name === activeCustomPlan);
+              if (!plan) return (
+                <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-10 text-center text-brand-dark-blue/50">
+                  לא נמצאו מודולים לתוכנית זו.
+                </div>
+              );
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {plan.modules.map((mod, idx) => (
+                    <button
+                      key={`${plan.name}-${idx}`}
+                      onClick={() => {
+                        setActiveProgram(mod.program as string);
+                        setActiveActivity(mod.activity as string);
+                        setActiveModule(null);
+                        setActiveSubActivity(null);
+                        setActiveCustomPlan(null);
+                        setCameFromCustomPlan(true);
+                      }}
+                      className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-5 text-right shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col"
+                    >
+                      <p className="text-xl font-bold text-brand-dark-blue">{mod.activity}</p>
+                      <p className="text-brand-dark-blue/60 mt-2 text-sm">{mod.program.replace(/'/g, '')}</p>
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+        </main>
+      ) : !activeProgram ? (
         <main className="mt-12 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
             {rootCards.map((card) => (
@@ -997,6 +1302,42 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
               />
             ))}
           </div>
+
+          {savedCustomPlans.length > 0 && (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-6 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">תוכניות מותאמות</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">תיקיית תוכניות מותאמות</h3>
+                </div>
+                <button
+                  onClick={() => { setIsCustomPlanBuilder(true); setActiveProgram(null); setActiveModule(null); setActiveActivity(null); setActiveSubActivity(null); }}
+                  className="px-4 py-2 rounded-full bg-brand-magenta text-white font-bold hover:bg-pink-700"
+                >
+                  בנו תוכנית נוספת
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {savedCustomPlans.map((plan) => (
+                  <button
+                    key={plan.name}
+                    onClick={() => setActiveCustomPlan(plan.name)}
+                    className="text-left rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-5 shadow-sm space-y-3 hover:-translate-y-1 hover:shadow-xl transition"
+                  >
+                    <p className="text-xl font-bold text-brand-dark-blue">{plan.name}</p>
+                    <p className="text-sm text-brand-dark-blue/60">לחץ כדי לפתוח את התוכנית והמודולים שנבחרו.</p>
+                    <div className="flex flex-wrap gap-2">
+                      {plan.modules.map((mod, idx) => (
+                        <span key={`${plan.name}-${idx}`} className="px-3 py-1 rounded-full bg-brand-teal/10 border border-brand-teal/30 text-sm text-brand-dark-blue">
+                          {mod.activity} · {mod.program.replace(/'/g, '')}
+                        </span>
+                      ))}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </main>
       ) : !activeActivity ? (
         /* Step 2: pick a module name */
@@ -1005,7 +1346,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
           {(PROGRAM_ACTIVITY_MODULES[activeProgram || ''] || []).map(moduleName => (
             <button
               key={moduleName}
-              onClick={() => { setActiveActivity(moduleName); setActiveModule(null); setActiveSubActivity(null); }}
+              onClick={() => { setActiveActivity(moduleName); setActiveModule(null); setActiveSubActivity(null); setCameFromCustomPlan(false); }}
               className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
             >
               {KISONIM_MODULE_INFO[moduleName]?.icon && (
@@ -1049,6 +1390,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
               </p>
             </button>
           ))}
+          {cameFromCustomPlan && activeActivity && renderStudentContentCard(activeActivity, (act) => setActiveStudentContent(act))}
           <div className="sm:col-span-3 flex justify-center gap-3 mt-4">
             <button
               onClick={() => { setActiveActivity(null); setActiveModule(null); setActiveSubActivity(null); }}
@@ -2737,6 +3079,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 </button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {renderStudentContentCard('ניהול התקציב הראשון שלי', setActiveStudentContent)}
                 {(AIDS_LIBRARY['ניהול התקציב הראשון שלי'] || []).map((aid) => {
                   const thumb = getAidThumbnail(aid);
                   return (
@@ -2851,6 +3194,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                       </a>
                     );
                   })}
+                {renderStudentContentCard('איך מנהלים הוצאות?', setActiveStudentContent)}
               </div>
             </div>
           ) : activeModule === 'עזרים ונספחים' && activeProgram === "'חכם בכיס'" && activeActivity === 'הסכנה שבמינוס' && activeSubActivity === 'סימולטור מינוס' ? (
@@ -2971,6 +3315,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                       <p className="text-2xl font-bold text-brand-dark-blue">סימולטור השקעות</p>
                       <p className="text-brand-dark-blue/60 mt-3 text-lg">הדמיית תיק עם תשואה שנתית צפויה והפקדות שוטפות.</p>
                     </button>
+                    {renderStudentContentCard('חיסכון והשקעות', setActiveStudentContent)}
                     {(AIDS_LIBRARY['חיסכון והשקעות'] || [])
                       .filter((aid) => !['#compound-interest', '#investment-simulator'].includes(aid.url))
                       .map((aid) => {
@@ -3022,6 +3367,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 </button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {renderStudentContentCard('פענוח תלוש שכר', setActiveStudentContent)}
                 {(AIDS_LIBRARY['פענוח תלוש שכר'] || []).map((aid) => {
                   const thumb = getAidThumbnail(aid);
                   return (
@@ -3074,6 +3420,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 </button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {renderStudentContentCard('זכויות עובדים', setActiveStudentContent)}
                 {(AIDS_LIBRARY['זכויות עובדים'] || []).map((aid) => {
                   const thumb = getAidThumbnail(aid);
                   return (
@@ -3127,6 +3474,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
               </div>
               {(AIDS_LIBRARY[activeActivity || ''] || []).length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {renderStudentContentCard(activeActivity || '', setActiveStudentContent)}
                   {(AIDS_LIBRARY[activeActivity || ''] || []).map((aid) => {
                     const thumb = getAidThumbnail(aid);
                     return (
@@ -3210,6 +3558,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
               </div>
               {(VIDEO_LIBRARY[activeActivity || ''] || []).length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {renderStudentContentCard(activeActivity || '', setActiveStudentContent)}
                   {(VIDEO_LIBRARY[activeActivity || ''] || []).map((video) => {
                     const thumb = getVideoThumbnail(video);
                     return (
@@ -3276,6 +3625,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
               </div>
               {(AIDS_LIBRARY[activeActivity || ''] || []).length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {renderStudentContentCard(activeActivity || '', setActiveStudentContent)}
                   {(AIDS_LIBRARY[activeActivity || ''] || []).map((aid) => {
                     const thumb = getAidThumbnail(aid);
                     return (
