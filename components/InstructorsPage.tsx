@@ -62,6 +62,7 @@ interface ActionCardProps {
   description: string;
   icon: React.ComponentType<{ className?: string }>;
   onSelect?: () => void;
+  theme?: 'chacham' | 'mah' | 'kisonim' | 'custom' | 'tracking';
 }
 
 interface ProgramCardConfig {
@@ -69,6 +70,7 @@ interface ProgramCardConfig {
   description: string;
   icon: React.ComponentType<{ className?: string }>;
   onSelect?: () => void;
+  theme?: 'chacham' | 'mah' | 'kisonim' | 'custom' | 'tracking';
 }
 
 interface GlobalSearchResult {
@@ -82,18 +84,88 @@ interface GlobalSearchResult {
   subActivity?: string;
 }
 
-const ActionCard: React.FC<ActionCardProps> = ({ title, description, icon: Icon, onSelect }) => (
-  <button
-    onClick={onSelect}
-    className="relative text-center bg-white/60 backdrop-blur-lg p-8 rounded-4xl border-2 border-gray-300 flex flex-col shadow-xl h-full transition hover:-translate-y-1 hover:shadow-2xl"
-  >
-    <div className="p-4 rounded-full mb-4 shadow-md bg-gray-300 mx-auto">
-      <Icon className="w-12 h-12 text-white" />
-    </div>
-    <h3 className="text-4xl sm:text-5xl font-bold font-display text-gray-700">{title}</h3>
-    <p className="text-xl sm:text-2xl mt-2 text-gray-500">{description}</p>
-  </button>
-);
+const actionCardThemes: Record<NonNullable<ActionCardProps['theme']>, {
+  border: string;
+  headerGradient: string;
+  pill: string;
+  iconBg: string;
+  shadow: string;
+  cta: string;
+}> = {
+  chacham: {
+    border: 'border-cyan-300/80',
+    headerGradient: 'from-cyan-500 to-teal-500',
+    pill: 'bg-cyan-300/35 text-white/95',
+    iconBg: 'from-cyan-300/80 to-teal-300/80',
+    shadow: 'shadow-cyan-500/25',
+    cta: 'text-cyan-700',
+  },
+  mah: {
+    border: 'border-sky-300/80',
+    headerGradient: 'from-sky-500 to-cyan-500',
+    pill: 'bg-sky-300/35 text-white/95',
+    iconBg: 'from-sky-300/80 to-cyan-300/80',
+    shadow: 'shadow-sky-500/25',
+    cta: 'text-sky-700',
+  },
+  kisonim: {
+    border: 'border-fuchsia-300/80',
+    headerGradient: 'from-fuchsia-500 to-pink-500',
+    pill: 'bg-fuchsia-300/35 text-white/95',
+    iconBg: 'from-fuchsia-300/80 to-pink-300/80',
+    shadow: 'shadow-fuchsia-500/25',
+    cta: 'text-fuchsia-700',
+  },
+  custom: {
+    border: 'border-indigo-300/80',
+    headerGradient: 'from-indigo-500 to-violet-500',
+    pill: 'bg-indigo-300/35 text-white/95',
+    iconBg: 'from-indigo-300/80 to-violet-300/80',
+    shadow: 'shadow-indigo-500/25',
+    cta: 'text-indigo-700',
+  },
+  tracking: {
+    border: 'border-emerald-300/80',
+    headerGradient: 'from-emerald-500 to-teal-500',
+    pill: 'bg-emerald-300/35 text-white/95',
+    iconBg: 'from-emerald-300/80 to-teal-300/80',
+    shadow: 'shadow-emerald-500/25',
+    cta: 'text-emerald-700',
+  },
+};
+
+const ActionCard: React.FC<ActionCardProps> = ({ title, description, icon: Icon, onSelect, theme = 'chacham' }) => {
+  const style = actionCardThemes[theme];
+  const disabled = !onSelect;
+
+  return (
+    <button
+      onClick={onSelect}
+      disabled={disabled}
+      className={`
+        card-surface rounded-3xl border-2 overflow-hidden flex flex-col h-full text-right
+        transition-all duration-300 ${style.border}
+        ${disabled ? 'opacity-80 cursor-default' : `cursor-pointer hover:-translate-y-1.5 hover:shadow-2xl ${style.shadow}`}
+      `}
+    >
+      <div className={`h-4 w-full bg-gradient-to-r ${style.headerGradient}`} />
+
+      <div className="p-6 flex flex-col flex-1 items-center justify-between gap-4">
+        <div className={`mx-auto mb-1 w-20 h-20 rounded-full bg-gradient-to-br ${style.iconBg} shadow-lg flex items-center justify-center border border-white/70`}>
+          <Icon className="w-10 h-10 text-white" />
+        </div>
+        <h3 className="text-4xl sm:text-5xl font-bold font-display text-brand-dark-blue text-center">{title}</h3>
+        <p className={`mt-1 text-lg sm:text-xl font-semibold text-center rounded-full px-4 py-2 ${style.pill}`}>
+          מרחב מדריכים
+        </p>
+        <p className="text-xl sm:text-2xl text-brand-dark-blue/80 text-center leading-relaxed">{description}</p>
+        <span className={`text-lg sm:text-xl font-bold ${style.cta}`}>
+          {disabled ? 'בקרוב' : 'כניסה לתוכנית'}
+        </span>
+      </div>
+    </button>
+  );
+};
 
 const PROGRAM_MODULES = ['סרטונים', 'פעילויות ומשחקים', 'עזרים ונספחים', 'מצגת', 'מערך שיעור'];
 const PROGRAM_ACTIVITY_MODULES: Record<string, string[]> = {
@@ -878,24 +950,28 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
       title: "תוכנית 'חכם בכיס'",
       description: 'גישה למערכי שיעור, עזרים וסרטונים',
       icon: SalaryIcon,
+      theme: 'chacham',
       onSelect: () => { setActiveProgram("'חכם בכיס'"); setActiveModule(null); setActiveActivity(null); setActiveSubActivity(null); setCameFromCustomPlan(false); },
     },
     {
       title: "תוכנית 'מה בכיס'",
       description: 'גישה למערכי שיעור, עזרים וסרטונים',
       icon: BusinessIcon,
+      theme: 'mah',
       onSelect: () => { setActiveProgram("'מה בכיס'"); setActiveModule(null); setActiveActivity(null); setActiveSubActivity(null); setCameFromCustomPlan(false); },
     },
     {
       title: "תוכנית 'כיסונים פיננסים'",
       description: 'גישה למערכי שיעור, עזרים וסרטונים',
       icon: PiggyBankIcon,
+      theme: 'kisonim',
       onSelect: () => { setActiveProgram("'כיסונים פיננסים'"); setActiveModule(null); setActiveActivity(null); setActiveSubActivity(null); setCameFromCustomPlan(false); },
     },
     {
       title: 'הרכבת תוכנית מותאמת',
       description: 'בנו שילוב מודולים מכל התוכניות ושמרו בשם מותאם',
       icon: BusinessIcon,
+      theme: 'custom',
       onSelect: () => {
         setIsCustomPlanBuilder(true);
         setActiveProgram(null);
@@ -909,6 +985,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
       title: 'מעקב אחר קבוצות למידה',
       description: 'ניהול התקדמות התלמידים וצפייה בתוצרים',
       icon: PodiumIcon,
+      theme: 'tracking',
     },
   ];
 
@@ -1299,6 +1376,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 description={card.description}
                 icon={card.icon}
                 onSelect={card.onSelect}
+                theme={card.theme}
               />
             ))}
           </div>
@@ -1374,6 +1452,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
       ) : !activeModule ? (
         /* Step 3: pick content type */
         <main className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 items-stretch">
+          {activeActivity && renderStudentContentCard(activeActivity, (act) => setActiveStudentContent(act))}
           {PROGRAM_MODULES.map(module => (
             <button
               key={module}
@@ -1390,7 +1469,6 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
               </p>
             </button>
           ))}
-          {cameFromCustomPlan && activeActivity && renderStudentContentCard(activeActivity, (act) => setActiveStudentContent(act))}
           <div className="sm:col-span-3 flex justify-center gap-3 mt-4">
             <button
               onClick={() => { setActiveActivity(null); setActiveModule(null); setActiveSubActivity(null); }}
@@ -3079,7 +3157,6 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 </button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {renderStudentContentCard('ניהול התקציב הראשון שלי', setActiveStudentContent)}
                 {(AIDS_LIBRARY['ניהול התקציב הראשון שלי'] || []).map((aid) => {
                   const thumb = getAidThumbnail(aid);
                   return (
@@ -3194,7 +3271,6 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                       </a>
                     );
                   })}
-                {renderStudentContentCard('איך מנהלים הוצאות?', setActiveStudentContent)}
               </div>
             </div>
           ) : activeModule === 'עזרים ונספחים' && activeProgram === "'חכם בכיס'" && activeActivity === 'הסכנה שבמינוס' && activeSubActivity === 'סימולטור מינוס' ? (
@@ -3315,7 +3391,6 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                       <p className="text-2xl font-bold text-brand-dark-blue">סימולטור השקעות</p>
                       <p className="text-brand-dark-blue/60 mt-3 text-lg">הדמיית תיק עם תשואה שנתית צפויה והפקדות שוטפות.</p>
                     </button>
-                    {renderStudentContentCard('חיסכון והשקעות', setActiveStudentContent)}
                     {(AIDS_LIBRARY['חיסכון והשקעות'] || [])
                       .filter((aid) => !['#compound-interest', '#investment-simulator'].includes(aid.url))
                       .map((aid) => {
@@ -3367,7 +3442,6 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 </button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {renderStudentContentCard('פענוח תלוש שכר', setActiveStudentContent)}
                 {(AIDS_LIBRARY['פענוח תלוש שכר'] || []).map((aid) => {
                   const thumb = getAidThumbnail(aid);
                   return (
@@ -3420,7 +3494,6 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 </button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {renderStudentContentCard('זכויות עובדים', setActiveStudentContent)}
                 {(AIDS_LIBRARY['זכויות עובדים'] || []).map((aid) => {
                   const thumb = getAidThumbnail(aid);
                   return (
@@ -3474,7 +3547,6 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
               </div>
               {(AIDS_LIBRARY[activeActivity || ''] || []).length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {renderStudentContentCard(activeActivity || '', setActiveStudentContent)}
                   {(AIDS_LIBRARY[activeActivity || ''] || []).map((aid) => {
                     const thumb = getAidThumbnail(aid);
                     return (
@@ -3558,7 +3630,6 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
               </div>
               {(VIDEO_LIBRARY[activeActivity || ''] || []).length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {renderStudentContentCard(activeActivity || '', setActiveStudentContent)}
                   {(VIDEO_LIBRARY[activeActivity || ''] || []).map((video) => {
                     const thumb = getVideoThumbnail(video);
                     return (
@@ -3625,7 +3696,6 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
               </div>
               {(AIDS_LIBRARY[activeActivity || ''] || []).length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {renderStudentContentCard(activeActivity || '', setActiveStudentContent)}
                   {(AIDS_LIBRARY[activeActivity || ''] || []).map((aid) => {
                     const thumb = getAidThumbnail(aid);
                     return (
