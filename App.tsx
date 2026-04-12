@@ -16,6 +16,7 @@ import InterestModule from './components/modules/InterestModule';
 import OverdraftModule from './components/modules/OverdraftModule';
 import ExpensesModule from './components/modules/ExpensesModule';
 import ResearchModule from './components/modules/ResearchModule';
+import GovernmentBudgetModule, { MobileBudgetView } from './components/modules/GovernmentBudgetModule';
 import FinalExam from './components/FinalExam';
 import LinksModule from './components/modules/LinksModule';
 // FIX: SelfEmployedModule now has a default export.
@@ -139,6 +140,14 @@ const hachamBakisModules: Module[] = [
     icon: ResearchIcon,
     component: ResearchModule,
     completionGoal: 'יש להשיג ציון של 80% ומעלה בבוחן הידע.'
+  },
+  {
+    id: 'government-budget',
+    title: 'תקציב המדינה',
+    description: 'הכירו את תקציב המדינה, גלו מה עושה כל משרד ממשלתי, השתתפו בישיבת ממשלה וחלקו בעצמכם את התקציב הלאומי.',
+    icon: BusinessIcon,
+    component: GovernmentBudgetModule,
+    completionGoal: 'יש להשלים את ישיבת הממשלה ולהגיש תקציב לבדיקה.',
   },
   {
     id: 'links',
@@ -769,6 +778,9 @@ const App: React.FC = () => {
     }
   };
   
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('mode') === 'budget-mobile') return <MobileBudgetView />;
+
   return (
     (appState === 'user_selection' && isSupermarketPlayer) ? <SupermarketPlayerView /> :
     (appState === 'user_selection' && isWordCloudPlayer)    ? <WordCloudPlayerView /> :

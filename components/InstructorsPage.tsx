@@ -8,6 +8,7 @@ import SalaryDeductionsModule from './modules/SalaryDeductionsModule';
 import SelfEmployedModule from './modules/SelfEmployedModule';
 import InterestModule from './modules/InterestModule';
 import ResearchModule from './modules/ResearchModule';
+import GovernmentBudgetModule from './modules/GovernmentBudgetModule';
 import LinksModule from './modules/LinksModule';
 import StoryOfMoneyModule from './modules/StoryOfMoneyModule';
 import MoneyAndMeModule from './modules/MoneyAndMeModule';
@@ -179,6 +180,7 @@ const PROGRAM_ACTIVITY_MODULES: Record<string, string[]> = {
     'שכירים ועצמאיים',
     'חיסכון והשקעות',
     'משימת למידת חקר',
+    'תקציב המדינה',
     'רב תחומי',
   ],
   "'מה בכיס'": [
@@ -218,6 +220,7 @@ const CHACHAM_GENERIC_GAME_ACTIVITIES = [
   'פענוח תלוש שכר',
   'שכירים ועצמאיים',
   'חיסכון והשקעות',
+  'תקציב המדינה',
 ];
 
 const KISONIM_MODULE_INFO: Record<string, { icon: string; desc: string }> = {
@@ -245,6 +248,7 @@ const MODULE_SUMMARIES: Record<string, string> = {
   'שכירים ועצמאיים': 'הבדלים בין שכיר לעצמאי וניהול תרחישים עסקיים.',
   'חיסכון והשקעות': 'היכרות עם ריבית דריבית וכלים לחיסכון והשקעה.',
   'משימת למידת חקר': 'תרגול חקר אינפלציה והשפעתה על יוקר המחיה.',
+  'תקציב המדינה': 'היכרות עם תקציב המדינה, משרדי הממשלה וישיבת ממשלה לחלוקת התקציב.',
   'מסמכים וקישורים שימושיים': 'אוסף חומרים תומכים ומחשובנים לשימוש חופשי.',
   'סיפורו של כסף': 'מסע בזמן על התפתחות אמצעי התשלום והכסף.',
   'הכסף ואני': 'עיצוב מערכת יחסים אישית עם כסף והצבת מטרות.',
@@ -583,6 +587,7 @@ function getStudentModuleComponent(activityName: string): StudentModuleComponent
     'שכירים ועצמאיים': SelfEmployedModule,
     'חיסכון והשקעות': InterestModule,
     'משימת למידת חקר': ResearchModule,
+    'תקציב המדינה': GovernmentBudgetModule,
     'מסמכים וקישורים שימושיים': LinksModule,
     'סיפורו של כסף': StoryOfMoneyModule,
     'הכסף ואני': MoneyAndMeModule,
