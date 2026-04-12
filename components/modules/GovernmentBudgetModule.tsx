@@ -721,7 +721,7 @@ export default GovernmentBudgetModule;
 
 // ======= Mobile standalone view (loaded via ?mode=budget-mobile) =======
 export const MobileBudgetView: React.FC = () => {
-  const [allocations, setAllocations] = useState<AllocationMap>(() => buildReferenceAllocations());
+  const [allocations, setAllocations] = useState<AllocationMap>({});
   const [submitted, setSubmitted] = useState(false);
 
   const used = useMemo(() => getUsedBudget(allocations), [allocations]);
@@ -732,7 +732,15 @@ export const MobileBudgetView: React.FC = () => {
     setAllocations((prev) => ({ ...prev, [id]: Number(safe.toFixed(1)) }));
   };
 
-  const reset = () => setAllocations(buildReferenceAllocations());
+  const clearAlloc = (id: string) => {
+    setAllocations((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
+  const reset = () => setAllocations({});
 
   if (submitted) {
     const rows = [...budgetItems]
@@ -797,8 +805,15 @@ export const MobileBudgetView: React.FC = () => {
                 type="number"
                 min={0}
                 step={0.5}
-                value={allocations[item.id] ?? 0}
-                onChange={(e) => setAlloc(item.id, Number(e.target.value))}
+                value={allocations[item.id] ?? ''}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  if (raw === '') {
+                    clearAlloc(item.id);
+                    return;
+                  }
+                  setAlloc(item.id, Number(raw));
+                }}
                 className="flex-1 rounded-2xl border-2 border-gray-200 px-4 py-3 text-xl font-bold text-brand-dark-blue text-center focus:outline-none focus:ring-2 focus:ring-brand-teal"
               />
               <button
