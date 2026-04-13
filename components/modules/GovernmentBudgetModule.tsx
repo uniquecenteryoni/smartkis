@@ -21,6 +21,7 @@ type BudgetItem = {
 };
 
 type AllocationMap = Record<string, number>;
+type OtherCutPercents = Record<string, number>;
 
 // סכום 15 הסעיפים המפורטים מלבד "משרדים אחרים": 585.512 מיליארד
 // שארית "משרדים אחרים": 699 - 585.512 = 113.488 מיליארד
@@ -224,9 +225,56 @@ const chapterMeta = [
 ];
 
 const formatBillions = (value: number) => `${value.toLocaleString('he-IL', { maximumFractionDigits: 2 })} מיליארד ₪`;
+const debtReference = budgetItems.find((item) => item.id === 'debt')?.reference ?? 84;
+const debtMinimum = Number((debtReference * 0.9).toFixed(1));
+const otherReference = budgetItems.find((item) => item.id === 'other')?.reference ?? 113.488;
+
+type OtherOfficeOption = {
+  id: string;
+  title: string;
+  amount: number;
+};
+
+const OTHER_OFFICE_OPTIONS: OtherOfficeOption[] = [
+  { id: 'justice', title: 'משרד המשפטים', amount: 5.048 },
+  { id: 'foreign', title: 'משרד החוץ', amount: 3.342 },
+  { id: 'higher-education', title: 'המשרד להשכלה גבוהה', amount: 14.983 },
+  { id: 'religious-services', title: 'המשרד לשירותי דת', amount: 0.878 },
+  { id: 'aliya', title: 'משרד קליטת העליה', amount: 1.539 },
+  { id: 'energy', title: 'משרד האנרגיה', amount: 0.543 },
+  { id: 'housing', title: 'משרד הבינוי והשיכון', amount: 6.688 },
+  { id: 'water', title: 'משרד משק המים', amount: 0.84 },
+  { id: 'interior-local', title: 'משרד הפנים ושלטון מקומי', amount: 8.432 },
+  { id: 'communications', title: 'משרד התקשורת', amount: 0.085 },
+  { id: 'national-reserve', title: 'הרזרבה הלאומית', amount: 12.8 },
+  { id: 'pensions', title: 'גמלאות', amount: 26.752 },
+  { id: 'misc', title: 'הוצאות שונות', amount: 31.558 },
+];
+
+const normalizePercent = (value: number) => {
+  if (!Number.isFinite(value)) return 0;
+  return Number(Math.min(100, Math.max(0, value)).toFixed(1));
+};
+
+const buildDefaultOtherCutPercents = (): OtherCutPercents =>
+  Object.fromEntries(OTHER_OFFICE_OPTIONS.map((option) => [option.id, 0]));
+
+const getOtherCutAmountFromPercents = (cutPercents: OtherCutPercents) =>
+  OTHER_OFFICE_OPTIONS.reduce(
+    (sum, option) => sum + option.amount * ((cutPercents[option.id] || 0) / 100),
+    0,
+  );
+
+const getOtherAmountFromCutPercents = (cutPercents: OtherCutPercents) =>
+  Number(Math.max(0, otherReference - getOtherCutAmountFromPercents(cutPercents)).toFixed(3));
 
 const buildReferenceAllocations = (): AllocationMap =>
   Object.fromEntries(budgetItems.map((item) => [item.id, item.reference]));
+
+const buildInitialAllocations = (): AllocationMap => ({
+  debt: debtReference,
+  other: otherReference,
+});
 
 const buildEqualAllocations = (): AllocationMap => {
   const base = Number((TOTAL_BUDGET / budgetItems.length).toFixed(1));
@@ -365,10 +413,12 @@ type SimulationChapterProps = {
   allocations: AllocationMap;
   usedBudget: number;
   remainingBudget: number;
-  onAllocationChange: (id: string, value: number) => void;
+  onAllocationChange: (id: string, value: number | null) => void;
+  otherCutPercents: OtherCutPercents;
+  onOtherCutPercentChange: (cutId: string, percent: number) => void;
   onLoadEqual: () => void;
+  onLoadReference: () => void;
   onReset: () => void;
-  onFillReserve: () => void;
   onSubmitBudget: () => void;
   mobileUrl: string;
 };
@@ -378,12 +428,34 @@ const SimulationChapter: React.FC<SimulationChapterProps> = ({
   usedBudget,
   remainingBudget,
   onAllocationChange,
+  otherCutPercents,
+  onOtherCutPercentChange,
   onLoadEqual,
+  onLoadReference,
   onReset,
-  onFillReserve,
   onSubmitBudget,
   mobileUrl,
-}) => (
+}) => {
+  const [isOtherModalOpen, setIsOtherModalOpen] = useState(false);
+  const [itemAdjustPercents, setItemAdjustPercents] = useState<Record<string, number>>({});
+  const selectedCutAmount = useMemo(
+    () => Number(getOtherCutAmountFromPercents(otherCutPercents).toFixed(3)),
+    [otherCutPercents],
+  );
+
+  const setItemAdjustPercent = (id: string, value: number) => {
+    setItemAdjustPercents((prev) => ({ ...prev, [id]: normalizePercent(value) }));
+  };
+
+  const applyItemPercentChange = (id: string, mode: 'cut' | 'add') => {
+    const current = allocations[id] ?? 0;
+    const percent = normalizePercent(itemAdjustPercents[id] ?? 0);
+    const delta = current * (percent / 100);
+    const nextValue = mode === 'cut' ? Math.max(0, current - delta) : current + delta;
+    onAllocationChange(id, Number(nextValue.toFixed(1)));
+  };
+
+  return (
   <div className="space-y-6 animate-fade-in">
     <div className="bg-gradient-to-r from-fuchsia-50 to-pink-100 border-2 border-pink-200 rounded-3xl p-8">
       <h3 className="text-3xl font-bold text-brand-magenta mb-3">ישיבת הממשלה מתחילה</h3>
@@ -425,13 +497,14 @@ const SimulationChapter: React.FC<SimulationChapterProps> = ({
 
     <div className="flex flex-wrap gap-3">
       <button onClick={onLoadEqual} className="px-5 py-3 rounded-full bg-cyan-100 text-cyan-800 font-bold hover:bg-cyan-200">חלוקה שווה</button>
-      <button onClick={onFillReserve} className="px-5 py-3 rounded-full bg-violet-100 text-violet-800 font-bold hover:bg-violet-200">העבר יתרה לרזרבה</button>
+      <button onClick={onLoadReference} className="px-5 py-3 rounded-full bg-emerald-100 text-emerald-800 font-bold hover:bg-emerald-200">התקציב האמיתי</button>
       <button onClick={onReset} className="px-5 py-3 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300">אפס הכול</button>
     </div>
 
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
       {budgetItems.map((item) => {
-        const diff = Number(((allocations[item.id] || 0) - item.reference).toFixed(1));
+        const isDebt = item.id === 'debt';
+        const isOther = item.id === 'other';
         return (
           <div key={item.id} className="rounded-3xl bg-white/90 border border-white/80 shadow p-5 space-y-3">
             <div className="flex items-start justify-between gap-4">
@@ -444,22 +517,78 @@ const SimulationChapter: React.FC<SimulationChapterProps> = ({
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+            <div>
               <label className="block">
-                <span className="text-sm text-brand-dark-blue/70">תקציב שבחרתם (מיליארדים)</span>
+                <span className="text-sm text-brand-dark-blue/70">
+                  {isOther ? 'תקציב נגזר מרשימת הקיצוצים שבחרתם' : 'תקציב שבחרתם (מיליארדים)'}
+                </span>
                 <input
                   type="number"
                   min={0}
                   step={0.5}
-                  value={allocations[item.id] ?? 0}
-                  onChange={(e) => onAllocationChange(item.id, Number(e.target.value))}
-                  className="mt-2 w-full rounded-2xl border-2 border-gray-200 px-4 py-3 text-xl font-bold text-brand-dark-blue focus:outline-none focus:ring-2 focus:ring-brand-teal"
+                  value={isOther ? (allocations[item.id] ?? otherReference) : (allocations[item.id] ?? '')}
+                  onChange={(e) => {
+                    if (isOther) return;
+                    const raw = e.target.value;
+                    if (raw === '') {
+                      onAllocationChange(item.id, null);
+                      return;
+                    }
+                    onAllocationChange(item.id, Number(raw));
+                  }}
+                  disabled={isOther}
+                  className={`mt-2 w-full rounded-2xl border-2 px-4 py-3 text-xl font-bold focus:outline-none focus:ring-2 ${isOther ? 'border-indigo-200 bg-indigo-50 text-indigo-800 cursor-not-allowed focus:ring-indigo-300' : 'border-gray-200 text-brand-dark-blue focus:ring-brand-teal'}`}
                 />
+                {isDebt && (
+                  <p className="mt-2 text-sm text-amber-700">
+                    ניתן להקטין החזר חוב עד {formatBillions(debtMinimum)} בלבד (עד 10%- מתקציב הייחוס).
+                  </p>
+                )}
+                {!isOther && (
+                  <div className="mt-3 rounded-2xl border border-cyan-100 bg-cyan-50/70 p-3 space-y-3">
+                    <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap">
+                      <label className="text-sm text-brand-dark-blue/70 shrink-0">שינוי %</label>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={1}
+                          value={itemAdjustPercents[item.id] ?? 0}
+                          onChange={(e) => setItemAdjustPercent(item.id, Number(e.target.value))}
+                          className="w-24 rounded-xl border border-gray-300 px-3 py-2 font-bold text-brand-dark-blue"
+                        />
+                        <span className="text-brand-dark-blue/70">%</span>
+                      </div>
+                      <button
+                        onClick={() => applyItemPercentChange(item.id, 'cut')}
+                        className="px-3 py-1.5 rounded-full bg-rose-100 text-rose-700 text-sm font-bold hover:bg-rose-200 shrink-0"
+                      >
+                        קצץ
+                      </button>
+                      <button
+                        onClick={() => applyItemPercentChange(item.id, 'add')}
+                        className="px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold hover:bg-emerald-200 shrink-0"
+                      >
+                        הגדל
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {isOther && (
+                  <div className="mt-3 space-y-2">
+                    <button
+                      onClick={() => setIsOtherModalOpen(true)}
+                      className="px-4 py-2 rounded-full bg-indigo-100 text-indigo-800 font-bold hover:bg-indigo-200"
+                    >
+                      בחרו מאילו משרדים לקצץ
+                    </button>
+                    <p className="text-sm text-indigo-800/80">
+                      סך הקיצוץ שנבחר: {formatBillions(selectedCutAmount)}
+                    </p>
+                  </div>
+                )}
               </label>
-              <div className={`rounded-2xl px-4 py-3 border ${diff === 0 ? 'bg-gray-50 border-gray-200' : diff > 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
-                <div className="text-sm text-brand-dark-blue/60">פער</div>
-                <div className="text-xl font-bold text-brand-dark-blue">{diff > 0 ? '+' : ''}{formatBillions(diff)}</div>
-              </div>
             </div>
           </div>
         );
@@ -478,14 +607,62 @@ const SimulationChapter: React.FC<SimulationChapterProps> = ({
         בדקו את התקציב שבניתם
       </button>
     </div>
+
+    {isOtherModalOpen && (
+      <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" dir="rtl">
+        <div className="w-full max-w-2xl rounded-3xl bg-white shadow-2xl p-6 space-y-4 max-h-[85vh] overflow-y-auto">
+          <div className="flex items-center justify-between gap-3">
+            <h4 className="text-2xl font-bold text-brand-dark-blue">בחירת קיצוץ מתוך "משרדים אחרים"</h4>
+            <button onClick={() => setIsOtherModalOpen(false)} className="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200">סגור</button>
+          </div>
+          <p className="text-brand-dark-blue/80">
+            הגדירו לכל משרד את אחוז הקיצוץ הרצוי (0%-100%).
+          </p>
+          <div className="space-y-2">
+            {OTHER_OFFICE_OPTIONS.map((option) => (
+              <div key={option.id} className="rounded-2xl border border-gray-200 p-3 bg-slate-50 space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-semibold text-brand-dark-blue">{option.title}</span>
+                  <span className="font-bold text-brand-dark-blue/80">{formatBillions(option.amount)}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <label className="text-sm text-brand-dark-blue/70">אחוז קיצוץ</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={otherCutPercents[option.id] ?? 0}
+                    onChange={(e) => onOtherCutPercentChange(option.id, Number(e.target.value))}
+                    className="w-28 rounded-xl border border-gray-300 px-3 py-2 font-bold text-brand-dark-blue"
+                  />
+                  <span className="text-brand-dark-blue/70">%</span>
+                  <span className="text-sm text-indigo-800 font-semibold">
+                    קיצוץ בפועל: {formatBillions(Number((option.amount * ((otherCutPercents[option.id] || 0) / 100)).toFixed(3)))}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-4 text-indigo-900 font-semibold">
+            תקציב "משרדים אחרים" לאחר הקיצוץ: {formatBillions(allocations.other ?? otherReference)}
+          </div>
+          <div className="flex justify-end">
+            <button onClick={() => setIsOtherModalOpen(false)} className="px-5 py-2 rounded-full bg-brand-teal text-white font-bold hover:bg-teal-500">סיום</button>
+          </div>
+        </div>
+      </div>
+    )}
   </div>
-);
+  );
+};
 
 type EvaluationChapterProps = {
   submittedBudget: AllocationMap | null;
+  submittedOtherCutPercents: OtherCutPercents;
 };
 
-const EvaluationChapter: React.FC<EvaluationChapterProps> = ({ submittedBudget }) => {
+const EvaluationChapter: React.FC<EvaluationChapterProps> = ({ submittedBudget, submittedOtherCutPercents }) => {
   const evaluation = useMemo(() => {
     if (!submittedBudget) return null;
 
@@ -522,8 +699,22 @@ const EvaluationChapter: React.FC<EvaluationChapterProps> = ({ submittedBudget }
       narrative.push('התקציב שבחרתם קרוב יחסית לתקציב הייחוס, ולכן מתקבלת מדינה עם שירותים דומים יחסית למצב הקיים.');
     }
 
-    return { rows, biggestGaps, similarity, identity, narrative };
-  }, [submittedBudget]);
+    const debtRow = rows.find((row) => row.id === 'debt');
+    if (debtRow && debtRow.chosen < debtRow.reference) {
+      const deferred = Number((debtRow.reference - debtRow.chosen).toFixed(1));
+      narrative.push(`החזרי חובות: הקטנתם השנה ב-${formatBillions(deferred)} ולכן חלק מהנטל צפוי לעבור לשנים הבאות.`);
+    }
+
+    const otherCutSummary = OTHER_OFFICE_OPTIONS
+      .filter((option) => (submittedOtherCutPercents[option.id] || 0) > 0)
+      .map((option) => {
+        const percent = submittedOtherCutPercents[option.id] || 0;
+        const cutAmount = Number((option.amount * (percent / 100)).toFixed(3));
+        return `${option.title}: ${percent}% (${formatBillions(cutAmount)})`;
+      });
+
+    return { rows, biggestGaps, similarity, identity, narrative, otherCutSummary };
+  }, [submittedBudget, submittedOtherCutPercents]);
 
   if (!evaluation) {
     return (
@@ -605,13 +796,28 @@ const EvaluationChapter: React.FC<EvaluationChapterProps> = ({ submittedBudget }
           </tbody>
         </table>
       </div>
+
+      {evaluation.otherCutSummary.length > 0 && (
+        <div className="rounded-3xl bg-white/90 border border-white/70 shadow-lg p-6">
+          <h4 className="text-2xl font-bold text-brand-dark-blue mb-4">מאילו משרדים קוצץ סעיף "משרדים אחרים"?</h4>
+          <div className="space-y-2">
+            {evaluation.otherCutSummary.map((line) => (
+              <div key={line} className="rounded-2xl border border-indigo-100 bg-indigo-50 p-3 text-brand-dark-blue">
+                {line}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 const GovernmentBudgetModule: React.FC<GovernmentBudgetModuleProps> = ({ onBack, title, onComplete }) => {
   const [currentChapter, setCurrentChapter] = useState(0);
-  const [allocations, setAllocations] = useState<AllocationMap>(() => buildReferenceAllocations());
+  const [allocations, setAllocations] = useState<AllocationMap>(() => buildInitialAllocations());
+  const [otherCutPercents, setOtherCutPercents] = useState<OtherCutPercents>(() => buildDefaultOtherCutPercents());
+  const [submittedOtherCutPercents, setSubmittedOtherCutPercents] = useState<OtherCutPercents>(() => buildDefaultOtherCutPercents());
   const [submittedBudget, setSubmittedBudget] = useState<AllocationMap | null>(null);
 
   const usedBudget = useMemo(() => getUsedBudget(allocations), [allocations]);
@@ -626,23 +832,54 @@ const GovernmentBudgetModule: React.FC<GovernmentBudgetModuleProps> = ({ onBack,
     if (submittedBudget) onComplete();
   }, [submittedBudget, onComplete]);
 
-  const setAllocation = (id: string, value: number) => {
+  const setAllocation = (id: string, value: number | null) => {
+    if (id === 'other') return;
+    if (value === null) {
+      setAllocations((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      return;
+    }
+
+    if (id === 'debt' && value < debtReference) {
+      window.alert('שימו לב: הקטנת סכום החזר החוב השנה תגדיל את הנטל בשנים הבאות.');
+    }
+
     const safeValue = Number.isFinite(value) ? Math.max(0, Number(value)) : 0;
-    setAllocations((prev) => ({ ...prev, [id]: Number(safeValue.toFixed(1)) }));
+    const cappedDebt = id === 'debt' ? Math.max(debtMinimum, safeValue) : safeValue;
+    setAllocations((prev) => ({ ...prev, [id]: Number(cappedDebt.toFixed(1)) }));
   };
 
-  const loadEqualBudget = () => setAllocations(buildEqualAllocations());
-  const resetBudget = () => setAllocations(Object.fromEntries(budgetItems.map((item) => [item.id, 0])));
-  const fillReserve = () => {
-    setAllocations((prev) => ({
-      ...prev,
-      other: Number(((prev.other || 0) + (TOTAL_BUDGET - getUsedBudget(prev))).toFixed(1)),
-    }));
+  const setOtherCutPercent = (cutId: string, percent: number) => {
+    setOtherCutPercents((prev) => {
+      const next = { ...prev, [cutId]: normalizePercent(percent) };
+      setAllocations((prevAllocations) => ({ ...prevAllocations, other: getOtherAmountFromCutPercents(next) }));
+      return next;
+    });
+  };
+
+  const loadEqualBudget = () => {
+    const equal = buildEqualAllocations();
+    equal.debt = Math.max(debtMinimum, Number((equal.debt || debtReference).toFixed(1)));
+    equal.other = otherReference;
+    setOtherCutPercents(buildDefaultOtherCutPercents());
+    setAllocations(equal);
+  };
+  const loadReferenceBudget = () => {
+    setOtherCutPercents(buildDefaultOtherCutPercents());
+    setAllocations(buildReferenceAllocations());
+  };
+  const resetBudget = () => {
+    setOtherCutPercents(buildDefaultOtherCutPercents());
+    setAllocations(buildInitialAllocations());
   };
 
   const submitBudget = () => {
     if (remainingBudget !== 0) return;
-    setSubmittedBudget({ ...allocations });
+    setSubmittedBudget({ ...allocations, other: getOtherAmountFromCutPercents(otherCutPercents) });
+    setSubmittedOtherCutPercents({ ...otherCutPercents });
     setCurrentChapter(3);
   };
 
@@ -659,15 +896,17 @@ const GovernmentBudgetModule: React.FC<GovernmentBudgetModuleProps> = ({ onBack,
             usedBudget={usedBudget}
             remainingBudget={remainingBudget}
             onAllocationChange={setAllocation}
+            otherCutPercents={otherCutPercents}
+            onOtherCutPercentChange={setOtherCutPercent}
             onLoadEqual={loadEqualBudget}
+            onLoadReference={loadReferenceBudget}
             onReset={resetBudget}
-            onFillReserve={fillReserve}
             onSubmitBudget={submitBudget}
             mobileUrl={mobileUrl}
           />
         );
       case 3:
-        return <EvaluationChapter submittedBudget={submittedBudget} />;
+        return <EvaluationChapter submittedBudget={submittedBudget} submittedOtherCutPercents={submittedOtherCutPercents} />;
       default:
         return null;
     }
@@ -721,18 +960,31 @@ export default GovernmentBudgetModule;
 
 // ======= Mobile standalone view (loaded via ?mode=budget-mobile) =======
 export const MobileBudgetView: React.FC = () => {
-  const [allocations, setAllocations] = useState<AllocationMap>({});
+  const [allocations, setAllocations] = useState<AllocationMap>(() => buildInitialAllocations());
+  const [otherCutPercents, setOtherCutPercents] = useState<OtherCutPercents>(() => buildDefaultOtherCutPercents());
+  const [itemAdjustPercents, setItemAdjustPercents] = useState<Record<string, number>>({});
+  const [isOtherModalOpen, setIsOtherModalOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const used = useMemo(() => getUsedBudget(allocations), [allocations]);
   const remaining = useMemo(() => Number((TOTAL_BUDGET - used).toFixed(1)), [used]);
+  const selectedOtherCutAmount = useMemo(
+    () => Number(getOtherCutAmountFromPercents(otherCutPercents).toFixed(3)),
+    [otherCutPercents],
+  );
 
   const setAlloc = (id: string, value: number) => {
+    if (id === 'other') return;
     const safe = Number.isFinite(value) ? Math.max(0, value) : 0;
-    setAllocations((prev) => ({ ...prev, [id]: Number(safe.toFixed(1)) }));
+    const cappedDebt = id === 'debt' ? Math.max(debtMinimum, safe) : safe;
+    if (id === 'debt' && safe < debtReference) {
+      window.alert('שימו לב: הקטנת סכום החזר החוב השנה תגדיל את הנטל בשנים הבאות.');
+    }
+    setAllocations((prev) => ({ ...prev, [id]: Number(cappedDebt.toFixed(1)) }));
   };
 
   const clearAlloc = (id: string) => {
+    if (id === 'other') return;
     setAllocations((prev) => {
       const next = { ...prev };
       delete next[id];
@@ -740,19 +992,70 @@ export const MobileBudgetView: React.FC = () => {
     });
   };
 
-  const reset = () => setAllocations({});
+  const setOtherCutPercent = (cutId: string, percent: number) => {
+    setOtherCutPercents((prev) => {
+      const next = { ...prev, [cutId]: normalizePercent(percent) };
+      setAllocations((prevAllocations) => ({ ...prevAllocations, other: getOtherAmountFromCutPercents(next) }));
+      return next;
+    });
+  };
+
+  const setItemAdjustPercent = (id: string, value: number) => {
+    setItemAdjustPercents((prev) => ({ ...prev, [id]: normalizePercent(value) }));
+  };
+
+  const applyItemPercentChange = (id: string, mode: 'cut' | 'add') => {
+    const current = allocations[id] ?? 0;
+    const percent = normalizePercent(itemAdjustPercents[id] ?? 0);
+    const delta = current * (percent / 100);
+    const nextValue = mode === 'cut' ? Math.max(0, current - delta) : current + delta;
+    setAlloc(id, Number(nextValue.toFixed(1)));
+  };
+
+  const loadEqual = () => {
+    const equal = buildEqualAllocations();
+    equal.debt = Math.max(debtMinimum, Number((equal.debt || debtReference).toFixed(1)));
+    equal.other = otherReference;
+    setOtherCutPercents(buildDefaultOtherCutPercents());
+    setAllocations(equal);
+  };
+
+  const loadReference = () => {
+    setOtherCutPercents(buildDefaultOtherCutPercents());
+    setAllocations(buildReferenceAllocations());
+  };
+
+  const reset = () => {
+    setOtherCutPercents(buildDefaultOtherCutPercents());
+    setAllocations(buildInitialAllocations());
+  };
 
   if (submitted) {
     const rows = [...budgetItems]
       .map((item) => ({ ...item, chosen: allocations[item.id] || 0, gap: Number(((allocations[item.id] || 0) - item.reference).toFixed(1)) }))
       .sort((a, b) => b.chosen - a.chosen);
     const identity = getStateIdentity(allocations);
+    const otherCutSummary = OTHER_OFFICE_OPTIONS
+      .filter((option) => (otherCutPercents[option.id] || 0) > 0)
+      .map((option) => {
+        const percent = otherCutPercents[option.id] || 0;
+        const cutAmount = Number((option.amount * (percent / 100)).toFixed(3));
+        return `${option.title}: ${percent}% (${formatBillions(cutAmount)})`;
+      });
+    const deferredDebt = allocations.debt && allocations.debt < debtReference
+      ? Number((debtReference - allocations.debt).toFixed(1))
+      : 0;
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 p-4 space-y-4" dir="rtl">
         <div className={`rounded-3xl bg-gradient-to-r ${identity.accent} text-white p-6 shadow-xl`}>
           <h2 className="text-3xl font-black mb-2">{identity.title}</h2>
           <p className="text-lg text-white/90 leading-relaxed">{identity.description}</p>
         </div>
+        {deferredDebt > 0 && (
+          <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 text-amber-900 font-semibold">
+            הקטנתם את החזרי החובות ב-{formatBillions(deferredDebt)} ולכן חלק מהנטל יעבור לשנים הבאות.
+          </div>
+        )}
         <div className="space-y-2">
           {rows.map((row) => (
             <div key={row.id} className="rounded-2xl bg-white shadow p-4 flex items-center justify-between gap-3">
@@ -766,6 +1069,16 @@ export const MobileBudgetView: React.FC = () => {
             </div>
           ))}
         </div>
+        {otherCutSummary.length > 0 && (
+          <div className="rounded-2xl bg-white shadow p-4 space-y-2">
+            <h3 className="font-bold text-brand-dark-blue">קיצוצים מתוך "משרדים אחרים"</h3>
+            {otherCutSummary.map((line) => (
+              <div key={line} className="rounded-xl bg-indigo-50 border border-indigo-100 p-3 text-brand-dark-blue">
+                {line}
+              </div>
+            ))}
+          </div>
+        )}
         <button onClick={() => setSubmitted(false)} className="w-full py-4 rounded-3xl bg-brand-teal text-white font-bold text-xl">
           נסו שוב
         </button>
@@ -786,8 +1099,17 @@ export const MobileBudgetView: React.FC = () => {
         <span className="font-black text-2xl">{formatBillions(remaining)}</span>
       </div>
 
+      <div className="grid grid-cols-3 gap-2">
+        <button onClick={loadEqual} className="py-3 rounded-2xl bg-cyan-100 text-cyan-800 font-bold text-sm">חלוקה שווה</button>
+        <button onClick={loadReference} className="py-3 rounded-2xl bg-emerald-100 text-emerald-800 font-bold text-sm">התקציב האמיתי</button>
+        <button onClick={reset} className="py-3 rounded-2xl bg-gray-200 text-brand-dark-blue font-bold text-sm">אפס הכול</button>
+      </div>
+
       <div className="space-y-3">
-        {budgetItems.map((item) => (
+        {budgetItems.map((item) => {
+          const isOther = item.id === 'other';
+          const isDebt = item.id === 'debt';
+          return (
           <div key={item.id} className="rounded-3xl bg-white shadow-md p-4 space-y-2">
             <div className="flex items-center justify-between gap-2">
               <h3 className="font-bold text-brand-dark-blue text-xl leading-tight">{item.title}</h3>
@@ -798,15 +1120,17 @@ export const MobileBudgetView: React.FC = () => {
             <p className="text-sm text-brand-dark-blue/65 leading-relaxed">{item.purpose}</p>
             <div className="flex items-center gap-3">
               <button
+                disabled={isOther}
                 onClick={() => setAlloc(item.id, Math.max(0, Number(((allocations[item.id] || 0) - 0.5).toFixed(1))))}
-                className="w-12 h-12 rounded-full bg-rose-100 text-rose-700 font-black text-2xl flex items-center justify-center"
+                className="w-12 h-12 rounded-full bg-rose-100 text-rose-700 font-black text-2xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
               >−</button>
               <input
                 type="number"
                 min={0}
                 step={0.5}
-                value={allocations[item.id] ?? ''}
+                value={isOther ? (allocations[item.id] ?? otherReference) : (allocations[item.id] ?? '')}
                 onChange={(e) => {
+                  if (isOther) return;
                   const raw = e.target.value;
                   if (raw === '') {
                     clearAlloc(item.id);
@@ -814,29 +1138,121 @@ export const MobileBudgetView: React.FC = () => {
                   }
                   setAlloc(item.id, Number(raw));
                 }}
-                className="flex-1 rounded-2xl border-2 border-gray-200 px-4 py-3 text-xl font-bold text-brand-dark-blue text-center focus:outline-none focus:ring-2 focus:ring-brand-teal"
+                disabled={isOther}
+                className={`flex-1 rounded-2xl border-2 px-4 py-3 text-xl font-bold text-center focus:outline-none focus:ring-2 ${isOther ? 'border-indigo-200 bg-indigo-50 text-indigo-800 cursor-not-allowed focus:ring-indigo-300' : 'border-gray-200 text-brand-dark-blue focus:ring-brand-teal'}`}
               />
               <button
+                disabled={isOther}
                 onClick={() => setAlloc(item.id, Number(((allocations[item.id] || 0) + 0.5).toFixed(1)))}
-                className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 font-black text-2xl flex items-center justify-center"
+                className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 font-black text-2xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
               >+</button>
             </div>
+            {isDebt && (
+              <p className="text-sm text-amber-700">
+                ניתן להקטין החזר חוב עד {formatBillions(debtMinimum)} בלבד.
+              </p>
+            )}
+            {!isOther && (
+              <div className="rounded-2xl border border-cyan-100 bg-cyan-50/70 p-3">
+                <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap">
+                  <label className="text-sm text-brand-dark-blue/70 shrink-0">שינוי %</label>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={itemAdjustPercents[item.id] ?? 0}
+                      onChange={(e) => setItemAdjustPercent(item.id, Number(e.target.value))}
+                      className="w-20 rounded-xl border border-gray-300 px-3 py-2 font-bold text-brand-dark-blue"
+                    />
+                    <span className="text-brand-dark-blue/70">%</span>
+                  </div>
+                  <button
+                    onClick={() => applyItemPercentChange(item.id, 'cut')}
+                    className="px-3 py-1.5 rounded-full bg-rose-100 text-rose-700 text-sm font-bold hover:bg-rose-200 shrink-0"
+                  >
+                    קצץ
+                  </button>
+                  <button
+                    onClick={() => applyItemPercentChange(item.id, 'add')}
+                    className="px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold hover:bg-emerald-200 shrink-0"
+                  >
+                    הגדל
+                  </button>
+                </div>
+              </div>
+            )}
+            {isOther && (
+              <div className="space-y-2">
+                <button
+                  onClick={() => setIsOtherModalOpen(true)}
+                  className="w-full py-3 rounded-2xl bg-indigo-100 text-indigo-800 font-bold"
+                >
+                  בחרו אחוזי קיצוץ למשרדים האחרים
+                </button>
+                <p className="text-sm text-indigo-800/80">
+                  סך הקיצוץ שנבחר: {formatBillions(selectedOtherCutAmount)}
+                </p>
+              </div>
+            )}
           </div>
-        ))}
+        );})}
       </div>
 
       <div className="flex gap-3 pb-8">
-        <button onClick={reset} className="flex-1 py-4 rounded-3xl bg-gray-200 text-brand-dark-blue font-bold text-lg">
-          אפס
-        </button>
         <button
           onClick={() => remaining === 0 && setSubmitted(true)}
           disabled={remaining !== 0}
-          className="flex-[2] py-4 rounded-3xl bg-brand-magenta text-white font-bold text-xl disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-4 rounded-3xl bg-brand-magenta text-white font-bold text-xl disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {remaining === 0 ? 'בדקו את התקציב שלכם ✓' : `נותרו ${formatBillions(remaining)}`}
         </button>
       </div>
+
+      {isOtherModalOpen && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" dir="rtl">
+          <div className="w-full max-w-2xl rounded-3xl bg-white shadow-2xl p-6 space-y-4 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between gap-3">
+              <h4 className="text-2xl font-bold text-brand-dark-blue">בחירת קיצוץ מתוך "משרדים אחרים"</h4>
+              <button onClick={() => setIsOtherModalOpen(false)} className="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200">סגור</button>
+            </div>
+            <p className="text-brand-dark-blue/80">הגדירו לכל משרד את אחוז הקיצוץ הרצוי (0%-100%).</p>
+            <div className="space-y-2">
+              {OTHER_OFFICE_OPTIONS.map((option) => (
+                <div key={option.id} className="rounded-2xl border border-gray-200 p-3 bg-slate-50 space-y-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="font-semibold text-brand-dark-blue">{option.title}</span>
+                    <span className="font-bold text-brand-dark-blue/80">{formatBillions(option.amount)}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <label className="text-sm text-brand-dark-blue/70">אחוז קיצוץ</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={otherCutPercents[option.id] ?? 0}
+                      onChange={(e) => setOtherCutPercent(option.id, Number(e.target.value))}
+                      className="w-24 rounded-xl border border-gray-300 px-3 py-2 font-bold text-brand-dark-blue"
+                    />
+                    <span className="text-brand-dark-blue/70">%</span>
+                  </div>
+                  <div className="text-sm text-indigo-800 font-semibold">
+                    קיצוץ בפועל: {formatBillions(Number((option.amount * ((otherCutPercents[option.id] || 0) / 100)).toFixed(3)))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-4 text-indigo-900 font-semibold">
+              תקציב "משרדים אחרים" לאחר הקיצוץ: {formatBillions(allocations.other ?? otherReference)}
+            </div>
+            <div className="flex justify-end">
+              <button onClick={() => setIsOtherModalOpen(false)} className="px-5 py-2 rounded-full bg-brand-teal text-white font-bold hover:bg-teal-500">סיום</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
