@@ -51,6 +51,7 @@ import ProgressiveTaxSimulator from './modules/ProgressiveTaxSimulator';
 import CoinsVsBillsModule from './modules/kisonim/CoinsVsBillsModule';
 import PowerOfGivingModule from './modules/kisonim/PowerOfGivingModule';
 import SmallDecisionsModule from './modules/kisonim/SmallDecisionsModule';
+import BudgetMeetingActivity from './modules/BudgetMeetingActivity';
 import Header from './Header';
 import { SalaryIcon, BusinessIcon, PiggyBankIcon, PodiumIcon } from './icons/Icons';
 
@@ -2917,6 +2918,34 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
               </div>
               <MillionDropGame onBack={() => setActiveSubActivity(null)} topic="savingsInvest" />
             </div>
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'תקציב המדינה' && activeProgram === "'חכם בכיס'" && !activeSubActivity ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">פעילויות ומשחקים</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">תקציב המדינה</h3>
+                  <p className="text-brand-dark-blue/60">בחרו פעילות קבוצתית למודול תקציב המדינה.</p>
+                </div>
+                <button
+                  onClick={() => setActiveModule(null)}
+                  className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                >
+                  חזרה לחלון הפעילויות
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <button
+                  onClick={() => setActiveSubActivity('ישיבת תקציב')}
+                  className="rounded-3xl border-2 border-dashed border-brand-teal bg-teal-50 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+                >
+                  <p className="text-4xl mb-3">🏛️</p>
+                  <p className="text-2xl font-bold text-brand-dark-blue">ישיבת תקציב</p>
+                  <p className="text-brand-dark-blue/60 mt-3 text-lg">הגדירו קבוצות, שתפו QR, וקבלו על מסך המחשב את התקציבים שמוגשים מהטלפונים.</p>
+                </button>
+              </div>
+            </div>
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'תקציב המדינה' && activeProgram === "'חכם בכיס'" && activeSubActivity === 'ישיבת תקציב' ? (
+            <BudgetMeetingActivity onBack={() => setActiveSubActivity(null)} />
           ) : activeModule === 'פעילויות ומשחקים' && activeProgram === "'חכם בכיס'" && CHACHAM_GENERIC_GAME_ACTIVITIES.includes(activeActivity || '') && activeSubActivity === 'BLOOKET' ? (
             <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
               <div className="flex items-center justify-between gap-3 flex-wrap">

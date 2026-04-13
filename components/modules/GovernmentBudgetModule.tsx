@@ -8,7 +8,7 @@ interface GovernmentBudgetModuleProps {
   onComplete: () => void;
 }
 
-type BudgetItem = {
+export type BudgetItem = {
   id: string;
   title: string;
   shortTitle: string;
@@ -20,14 +20,14 @@ type BudgetItem = {
   highImpact: string;
 };
 
-type AllocationMap = Record<string, number>;
-type OtherCutPercents = Record<string, number>;
+export type AllocationMap = Record<string, number>;
+export type OtherCutPercents = Record<string, number>;
 
 // סכום 15 הסעיפים המפורטים מלבד "משרדים אחרים": 585.512 מיליארד
 // שארית "משרדים אחרים": 699 - 585.512 = 113.488 מיליארד
-const TOTAL_BUDGET = 699;
+export const TOTAL_BUDGET = 699;
 
-const budgetItems: BudgetItem[] = [
+export const budgetItems: BudgetItem[] = [
   {
     id: 'defense',
     title: 'משרד הביטחון',
@@ -224,18 +224,18 @@ const chapterMeta = [
   { id: 'review', title: 'בדיקת התקציב', icon: '✅' },
 ];
 
-const formatBillions = (value: number) => `${value.toLocaleString('he-IL', { maximumFractionDigits: 2 })} מיליארד ₪`;
-const debtReference = budgetItems.find((item) => item.id === 'debt')?.reference ?? 84;
-const debtMinimum = Number((debtReference * 0.9).toFixed(1));
-const otherReference = budgetItems.find((item) => item.id === 'other')?.reference ?? 113.488;
+export const formatBillions = (value: number) => `${value.toLocaleString('he-IL', { maximumFractionDigits: 2 })} מיליארד ₪`;
+export const debtReference = budgetItems.find((item) => item.id === 'debt')?.reference ?? 84;
+export const debtMinimum = Number((debtReference * 0.9).toFixed(1));
+export const otherReference = budgetItems.find((item) => item.id === 'other')?.reference ?? 113.488;
 
-type OtherOfficeOption = {
+export type OtherOfficeOption = {
   id: string;
   title: string;
   amount: number;
 };
 
-const OTHER_OFFICE_OPTIONS: OtherOfficeOption[] = [
+export const OTHER_OFFICE_OPTIONS: OtherOfficeOption[] = [
   { id: 'justice', title: 'משרד המשפטים', amount: 5.048 },
   { id: 'foreign', title: 'משרד החוץ', amount: 3.342 },
   { id: 'higher-education', title: 'המשרד להשכלה גבוהה', amount: 14.983 },
@@ -251,32 +251,32 @@ const OTHER_OFFICE_OPTIONS: OtherOfficeOption[] = [
   { id: 'misc', title: 'הוצאות שונות', amount: 31.558 },
 ];
 
-const normalizePercent = (value: number) => {
+export const normalizePercent = (value: number) => {
   if (!Number.isFinite(value)) return 0;
   return Number(Math.min(100, Math.max(0, value)).toFixed(1));
 };
 
-const buildDefaultOtherCutPercents = (): OtherCutPercents =>
+export const buildDefaultOtherCutPercents = (): OtherCutPercents =>
   Object.fromEntries(OTHER_OFFICE_OPTIONS.map((option) => [option.id, 0]));
 
-const getOtherCutAmountFromPercents = (cutPercents: OtherCutPercents) =>
+export const getOtherCutAmountFromPercents = (cutPercents: OtherCutPercents) =>
   OTHER_OFFICE_OPTIONS.reduce(
     (sum, option) => sum + option.amount * ((cutPercents[option.id] || 0) / 100),
     0,
   );
 
-const getOtherAmountFromCutPercents = (cutPercents: OtherCutPercents) =>
+export const getOtherAmountFromCutPercents = (cutPercents: OtherCutPercents) =>
   Number(Math.max(0, otherReference - getOtherCutAmountFromPercents(cutPercents)).toFixed(3));
 
-const buildReferenceAllocations = (): AllocationMap =>
+export const buildReferenceAllocations = (): AllocationMap =>
   Object.fromEntries(budgetItems.map((item) => [item.id, item.reference]));
 
-const buildInitialAllocations = (): AllocationMap => ({
+export const buildInitialAllocations = (): AllocationMap => ({
   debt: debtReference,
   other: otherReference,
 });
 
-const buildEqualAllocations = (): AllocationMap => {
+export const buildEqualAllocations = (): AllocationMap => {
   const base = Number((TOTAL_BUDGET / budgetItems.length).toFixed(1));
   const allocations: AllocationMap = {};
   let running = 0;
@@ -290,10 +290,10 @@ const buildEqualAllocations = (): AllocationMap => {
   return allocations;
 };
 
-const getUsedBudget = (allocations: AllocationMap) =>
+export const getUsedBudget = (allocations: AllocationMap) =>
   Number(budgetItems.reduce((sum, item) => sum + (allocations[item.id] || 0), 0).toFixed(1));
 
-const getStateIdentity = (allocations: AllocationMap) => {
+export const getStateIdentity = (allocations: AllocationMap) => {
   const by = (id: string) => allocations[id] || 0;
   const social = by('education') + by('health') + by('welfare') + by('social-security') + by('employment') + by('culture');
   const security = by('defense') + by('national-security');
@@ -1035,6 +1035,16 @@ export const MobileBudgetView: React.FC = () => {
       .map((item) => ({ ...item, chosen: allocations[item.id] || 0, gap: Number(((allocations[item.id] || 0) - item.reference).toFixed(1)) }))
       .sort((a, b) => b.chosen - a.chosen);
     const identity = getStateIdentity(allocations);
+    const totalShift = Number((rows.filter((row) => row.gap > 0).reduce((sum, row) => sum + row.gap, 0)).toFixed(1));
+    const similarity = Math.max(0, Math.round(100 - (totalShift / TOTAL_BUDGET) * 100));
+    const strengths = rows
+      .filter((row) => row.reference > 0 && row.chosen / row.reference > 1.15)
+      .slice(0, 4)
+      .map((row) => `${row.title}: ${row.highImpact}`);
+    const drawbacks = rows
+      .filter((row) => row.reference > 0 && row.chosen / row.reference < 0.85)
+      .slice(0, 4)
+      .map((row) => `${row.title}: ${row.lowImpact}`);
     const otherCutSummary = OTHER_OFFICE_OPTIONS
       .filter((option) => (otherCutPercents[option.id] || 0) > 0)
       .map((option) => {
@@ -1047,15 +1057,37 @@ export const MobileBudgetView: React.FC = () => {
       : 0;
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 p-4 space-y-4" dir="rtl">
-        <div className={`rounded-3xl bg-gradient-to-r ${identity.accent} text-white p-6 shadow-xl`}>
-          <h2 className="text-3xl font-black mb-2">{identity.title}</h2>
-          <p className="text-lg text-white/90 leading-relaxed">{identity.description}</p>
+        <div className={`rounded-3xl bg-gradient-to-r ${identity.accent} text-white p-6 shadow-xl space-y-4`}>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-3xl font-black mb-2">{identity.title}</h2>
+              <p className="text-lg text-white/90 leading-relaxed">{identity.description}</p>
+            </div>
+            <div className="rounded-2xl bg-white/20 px-4 py-3 text-center min-w-[6.5rem]">
+              <div className="text-sm text-white/80">התאמה</div>
+              <div className="text-3xl font-black">{similarity}%</div>
+            </div>
+          </div>
         </div>
         {deferredDebt > 0 && (
           <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 text-amber-900 font-semibold">
             הקטנתם את החזרי החובות ב-{formatBillions(deferredDebt)} ולכן חלק מהנטל יעבור לשנים הבאות.
           </div>
         )}
+        <div className="grid grid-cols-1 gap-3">
+          <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-4 space-y-2">
+            <h3 className="font-bold text-emerald-800">יתרונות</h3>
+            {(strengths.length > 0 ? strengths : ['התקציב שבחרתם לא יצר תוספות גדולות במיוחד ביחס לתקציב הייחוס.']).map((line) => (
+              <div key={line} className="text-brand-dark-blue leading-relaxed">{line}</div>
+            ))}
+          </div>
+          <div className="rounded-2xl bg-rose-50 border border-rose-200 p-4 space-y-2">
+            <h3 className="font-bold text-rose-800">חסרונות</h3>
+            {(drawbacks.length > 0 ? drawbacks : ['לא נרשמו קיצוצים חריגים במיוחד, ולכן גם החסרונות יחסית מתונים.']).map((line) => (
+              <div key={line} className="text-brand-dark-blue leading-relaxed">{line}</div>
+            ))}
+          </div>
+        </div>
         <div className="space-y-2">
           {rows.map((row) => (
             <div key={row.id} className="rounded-2xl bg-white shadow p-4 flex items-center justify-between gap-3">
@@ -1087,16 +1119,18 @@ export const MobileBudgetView: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-fuchsia-50 to-indigo-50 p-4 space-y-4" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-fuchsia-50 to-indigo-50 p-4 pt-24 space-y-4" dir="rtl">
       <div className="rounded-3xl bg-gradient-to-l from-brand-magenta to-indigo-600 text-white p-5 shadow-xl">
         <h1 className="text-3xl font-black mb-1">ישיבת ממשלה 🏛️</h1>
         <p className="text-lg text-white/90">חלקו את תקציב המדינה — {formatBillions(TOTAL_BUDGET)}</p>
       </div>
 
       {/* sticky bar */}
-      <div className={`sticky top-2 z-10 rounded-2xl p-4 shadow-lg flex justify-between items-center gap-3 transition-colors ${remaining === 0 ? 'bg-emerald-500 text-white' : remaining > 0 ? 'bg-amber-400 text-amber-900' : 'bg-rose-500 text-white'}`}>
-        <span className="font-bold text-lg">יתרה לחלוקה</span>
-        <span className="font-black text-2xl">{formatBillions(remaining)}</span>
+      <div className="fixed top-0 left-0 right-0 z-40 p-3">
+        <div className={`mx-auto max-w-3xl rounded-2xl p-4 shadow-lg flex justify-between items-center gap-3 backdrop-blur transition-colors ${remaining === 0 ? 'bg-emerald-500 text-white' : remaining > 0 ? 'bg-amber-400 text-amber-900' : 'bg-rose-500 text-white'}`}>
+          <span className="font-bold text-lg">יתרה לחלוקה</span>
+          <span className="font-black text-2xl">{formatBillions(remaining)}</span>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-2">

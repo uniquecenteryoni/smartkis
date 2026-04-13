@@ -52,6 +52,7 @@ import ColorfulMarketModule from './components/modules/kisonim/ColorfulMarketMod
 import CoinsVsBillsModule from './components/modules/kisonim/CoinsVsBillsModule';
 import PowerOfGivingModule from './components/modules/kisonim/PowerOfGivingModule';
 import SmallDecisionsModule from './components/modules/kisonim/SmallDecisionsModule';
+import { BudgetMeetingPlayerView } from './components/modules/BudgetMeetingActivity';
 
 // --- Colorful Icons for Kisonim Program ---
 const KisonimSalaryIcon: React.FC<{ className?: string }> = ({ className }) => ( <svg className={className} viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="a" x1="32" x2="32" y1="8" y2="56" gradientUnits="userSpaceOnUse"><stop stopColor="#01b2cf" offset="0"/><stop stopColor="#00b1a6" offset="1"/></linearGradient></defs><rect width="48" height="48" x="8" y="8" fill="url(#a)" rx="6" ry="6"/><path fill="#fff" d="M24 20h16v4H24zM24 28h16v4H24zM24 36h10v4H24z"/><path fill="#fff" d="M40 40a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm-2 5h-2v2h2v-2zm2-1h-2v-2h2v2z"/></svg> );
@@ -780,6 +781,7 @@ const App: React.FC = () => {
   
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('mode') === 'budget-mobile') return <MobileBudgetView />;
+  if (urlParams.get('mode') === 'budget-meeting-player') return <BudgetMeetingPlayerView />;
 
   return (
     (appState === 'user_selection' && isSupermarketPlayer) ? <SupermarketPlayerView /> :
