@@ -1020,11 +1020,6 @@ export const MobileBudgetView: React.FC = () => {
     setAllocations(equal);
   };
 
-  const loadReference = () => {
-    setOtherCutPercents(buildDefaultOtherCutPercents());
-    setAllocations(buildReferenceAllocations());
-  };
-
   const reset = () => {
     setOtherCutPercents(buildDefaultOtherCutPercents());
     setAllocations(buildInitialAllocations());
@@ -1133,9 +1128,8 @@ export const MobileBudgetView: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <button onClick={loadEqual} className="py-3 rounded-2xl bg-cyan-100 text-cyan-800 font-bold text-sm">חלוקה שווה</button>
-        <button onClick={loadReference} className="py-3 rounded-2xl bg-emerald-100 text-emerald-800 font-bold text-sm">התקציב האמיתי</button>
         <button onClick={reset} className="py-3 rounded-2xl bg-gray-200 text-brand-dark-blue font-bold text-sm">אפס הכול</button>
       </div>
 
