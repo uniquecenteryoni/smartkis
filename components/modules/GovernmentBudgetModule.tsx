@@ -1026,86 +1026,25 @@ export const MobileBudgetView: React.FC = () => {
   };
 
   if (submitted) {
-    const rows = [...budgetItems]
-      .map((item) => ({ ...item, chosen: allocations[item.id] || 0, gap: Number(((allocations[item.id] || 0) - item.reference).toFixed(1)) }))
-      .sort((a, b) => b.chosen - a.chosen);
-    const identity = getStateIdentity(allocations);
-    const totalShift = Number((rows.filter((row) => row.gap > 0).reduce((sum, row) => sum + row.gap, 0)).toFixed(1));
+    const totalShift = Number(
+      budgetItems
+        .reduce((sum, item) => {
+          const chosen = allocations[item.id] || 0;
+          const gap = Number((chosen - item.reference).toFixed(1));
+          return gap > 0 ? sum + gap : sum;
+        }, 0)
+        .toFixed(1),
+    );
     const similarity = Math.max(0, Math.round(100 - (totalShift / TOTAL_BUDGET) * 100));
-    const strengths = rows
-      .filter((row) => row.reference > 0 && row.chosen / row.reference > 1.15)
-      .slice(0, 4)
-      .map((row) => `${row.title}: ${row.highImpact}`);
-    const drawbacks = rows
-      .filter((row) => row.reference > 0 && row.chosen / row.reference < 0.85)
-      .slice(0, 4)
-      .map((row) => `${row.title}: ${row.lowImpact}`);
-    const otherCutSummary = OTHER_OFFICE_OPTIONS
-      .filter((option) => (otherCutPercents[option.id] || 0) > 0)
-      .map((option) => {
-        const percent = otherCutPercents[option.id] || 0;
-        const cutAmount = Number((option.amount * (percent / 100)).toFixed(3));
-        return `${option.title}: ${percent}% (${formatBillions(cutAmount)})`;
-      });
-    const deferredDebt = allocations.debt && allocations.debt < debtReference
-      ? Number((debtReference - allocations.debt).toFixed(1))
-      : 0;
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 p-4 space-y-4" dir="rtl">
-        <div className={`rounded-3xl bg-gradient-to-r ${identity.accent} text-white p-6 shadow-xl space-y-4`}>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-3xl font-black mb-2">{identity.title}</h2>
-              <p className="text-lg text-white/90 leading-relaxed">{identity.description}</p>
-            </div>
-            <div className="rounded-2xl bg-white/20 px-4 py-3 text-center min-w-[6.5rem]">
-              <div className="text-sm text-white/80">התאמה</div>
-              <div className="text-3xl font-black">{similarity}%</div>
-            </div>
-          </div>
+        <div className="rounded-3xl bg-gradient-to-r from-indigo-600 to-brand-magenta text-white p-6 shadow-xl text-center space-y-2">
+          <h2 className="text-3xl font-black">בדיקת התקציב שלכם</h2>
+          <p className="text-lg text-white/90">אחוז ההתאמה לתקציב האמיתי</p>
+          <div className="text-6xl font-black">{similarity}%</div>
         </div>
-        {deferredDebt > 0 && (
-          <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4 text-amber-900 font-semibold">
-            הקטנתם את החזרי החובות ב-{formatBillions(deferredDebt)} ולכן חלק מהנטל יעבור לשנים הבאות.
-          </div>
-        )}
-        <div className="grid grid-cols-1 gap-3">
-          <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-4 space-y-2">
-            <h3 className="font-bold text-emerald-800">יתרונות</h3>
-            {(strengths.length > 0 ? strengths : ['התקציב שבחרתם לא יצר תוספות גדולות במיוחד ביחס לתקציב הייחוס.']).map((line) => (
-              <div key={line} className="text-brand-dark-blue leading-relaxed">{line}</div>
-            ))}
-          </div>
-          <div className="rounded-2xl bg-rose-50 border border-rose-200 p-4 space-y-2">
-            <h3 className="font-bold text-rose-800">חסרונות</h3>
-            {(drawbacks.length > 0 ? drawbacks : ['לא נרשמו קיצוצים חריגים במיוחד, ולכן גם החסרונות יחסית מתונים.']).map((line) => (
-              <div key={line} className="text-brand-dark-blue leading-relaxed">{line}</div>
-            ))}
-          </div>
-        </div>
-        <div className="space-y-2">
-          {rows.map((row) => (
-            <div key={row.id} className="rounded-2xl bg-white shadow p-4 flex items-center justify-between gap-3">
-              <span className="font-bold text-brand-dark-blue text-lg">{row.shortTitle}</span>
-              <div className="flex items-center gap-3">
-                <span className="font-bold text-brand-dark-blue">{formatBillions(row.chosen)}</span>
-                <span className={`text-sm font-bold px-2 py-1 rounded-full ${row.gap > 0 ? 'bg-emerald-100 text-emerald-700' : row.gap < 0 ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-500'}`}>
-                  {row.gap > 0 ? '+' : ''}{row.gap !== 0 ? formatBillions(row.gap) : '✓'}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-        {otherCutSummary.length > 0 && (
-          <div className="rounded-2xl bg-white shadow p-4 space-y-2">
-            <h3 className="font-bold text-brand-dark-blue">קיצוצים מתוך "משרדים אחרים"</h3>
-            {otherCutSummary.map((line) => (
-              <div key={line} className="rounded-xl bg-indigo-50 border border-indigo-100 p-3 text-brand-dark-blue">
-                {line}
-              </div>
-            ))}
-          </div>
-        )}
+
         <button onClick={() => setSubmitted(false)} className="w-full py-4 rounded-3xl bg-brand-teal text-white font-bold text-xl">
           נסו שוב
         </button>
