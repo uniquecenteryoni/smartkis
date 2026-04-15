@@ -2318,14 +2318,6 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">{getSummary('ג׳פרדי פיננסי')}</p>
               </button>
               <button
-                onClick={() => setActiveActivity('ג׳פרדי היסטורי')}
-                className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
-              >
-                <p className="text-4xl mb-3">🏛️</p>
-                <p className="text-2xl font-bold text-brand-dark-blue">ג׳פרדי היסטורי</p>
-                <p className="text-brand-dark-blue/60 mt-3 text-lg">{getSummary('ג׳פרדי היסטורי')}</p>
-              </button>
-              <button
                 onClick={() => setActiveActivity('בול פגיעה')}
                 className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
@@ -2367,6 +2359,14 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 <p className="text-4xl mb-3">🎯</p>
                 <p className="text-2xl font-bold text-brand-dark-blue">ג׳פרדי פיננסי</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">{getSummary('ג׳פרדי פיננסי')}</p>
+              </button>
+              <button
+                onClick={() => setActiveActivity('ג׳פרדי היסטורי')}
+                className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">🏛️</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">ג׳פרדי היסטורי</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">{getSummary('ג׳פרדי היסטורי')}</p>
               </button>
               <button
                 onClick={() => setActiveActivity('בול פגיעה')}

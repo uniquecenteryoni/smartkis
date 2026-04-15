@@ -81,6 +81,16 @@ const BudgetMeetingActivity: React.FC<BudgetMeetingActivityProps> = ({ onBack })
   const peerRef = useRef<Peer | null>(null);
   const connsRef = useRef<Map<string, DataConnection>>(new Map());
   const joinedGroupsRef = useRef<Map<string, string>>(new Map());
+  const groupsRef = useRef<string[]>(groups);
+  const phaseRef = useRef<'setup' | 'live'>(phase);
+
+  useEffect(() => {
+    groupsRef.current = groups;
+  }, [groups]);
+
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
 
   const refreshJoinedCounts = useCallback(() => {
     const counts = groups.reduce<Record<string, number>>((acc, groupName) => {
@@ -100,6 +110,15 @@ const BudgetMeetingActivity: React.FC<BudgetMeetingActivityProps> = ({ onBack })
     });
   }, [groups, phase]);
 
+  const sendCurrentState = useCallback((conn: DataConnection) => {
+    const msg: HostStateMessage = {
+      type: 'HOST_STATE',
+      groups: groupsRef.current,
+      live: phaseRef.current === 'live',
+    };
+    if (conn.open) conn.send(msg);
+  }, []);
+
   useEffect(() => {
     const peer = new Peer();
     peerRef.current = peer;
@@ -109,15 +128,19 @@ const BudgetMeetingActivity: React.FC<BudgetMeetingActivityProps> = ({ onBack })
       connsRef.current.set(conn.peer, conn);
 
       conn.on('open', () => {
-        conn.send({ type: 'HOST_STATE', groups, live: phase === 'live' } satisfies HostStateMessage);
+        sendCurrentState(conn);
       });
 
       conn.on('data', (raw) => {
         const msg = raw as BudgetMeetingMessage;
         if (msg.type === 'JOIN_GROUP') {
+          if (!groupsRef.current.includes(msg.groupName)) {
+            sendCurrentState(conn);
+            return;
+          }
           joinedGroupsRef.current.set(conn.peer, msg.groupName);
           refreshJoinedCounts();
-          conn.send({ type: 'HOST_STATE', groups, live: phase === 'live' } satisfies HostStateMessage);
+          sendCurrentState(conn);
           return;
         }
         if (msg.type === 'SUBMIT_BUDGET') {
@@ -146,7 +169,7 @@ const BudgetMeetingActivity: React.FC<BudgetMeetingActivityProps> = ({ onBack })
     return () => {
       peer.destroy();
     };
-  }, [groups, phase, refreshJoinedCounts]);
+  }, [refreshJoinedCounts, sendCurrentState]);
 
   useEffect(() => {
     broadcastState();
@@ -336,6 +359,11 @@ export const BudgetMeetingPlayerView: React.FC = () => {
 
   const connRef = useRef<DataConnection | null>(null);
   const peerRef = useRef<Peer | null>(null);
+  const joinedGroupRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    joinedGroupRef.current = joinedGroup;
+  }, [joinedGroup]);
 
   const usedBudget = useMemo(() => getUsedBudget(allocations), [allocations]);
   const remainingBudget = useMemo(() => Number((TOTAL_BUDGET - usedBudget).toFixed(1)), [usedBudget]);
@@ -361,7 +389,9 @@ export const BudgetMeetingPlayerView: React.FC = () => {
         const msg = raw as BudgetMeetingMessage;
         if (msg.type === 'HOST_STATE') {
           setGroups(msg.groups);
-          if (joinedGroup && msg.live) setStatus((prev) => (prev === 'submitted' ? prev : 'editing'));
+          if (joinedGroupRef.current && msg.live) {
+            setStatus((prev) => (prev === 'submitted' ? prev : 'editing'));
+          }
         }
       });
       conn.on('close', () => {
@@ -381,7 +411,7 @@ export const BudgetMeetingPlayerView: React.FC = () => {
     return () => {
       peer.destroy();
     };
-  }, [hostPeerId, joinedGroup]);
+  }, [hostPeerId]);
 
   const send = useCallback((msg: BudgetMeetingMessage) => {
     if (connRef.current?.open) connRef.current.send(msg);
