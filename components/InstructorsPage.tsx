@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+﻿import React, { useMemo, useState } from 'react';
 import BudgetModule from './modules/BudgetModule';
 import ExpensesModule from './modules/ExpensesModule';
 import OverdraftModule from './modules/OverdraftModule';
@@ -24,6 +24,7 @@ import AliasGame from './modules/AliasGame';
 import JeopardyModule from './modules/JeopardyModule';
 import BullseyeGame from './modules/BullseyeGame';
 import MillionDropGame from './modules/MillionDropGame';
+import MyInvestmentPortfolioGame from './modules/MyInvestmentPortfolioGame';
 import SupermarketRaceGame from './modules/SupermarketRaceGame';
 import PicassoGame from './modules/PicassoGame';
 import CarRaceGame from './modules/CarRaceGame';
@@ -2911,10 +2912,14 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">גרסה מודולרית לחבילה עוברת.</p>
               </button>
-              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-8 text-center text-brand-dark-blue/50 min-h-[14rem] flex flex-col items-center justify-center">
-                <p className="text-2xl font-bold">משחק נוסף</p>
-                <p className="text-lg mt-2">בקרוב יתווסף משחק תומך.</p>
-              </div>
+              <button
+                onClick={() => setActiveSubActivity('תיק ההשקעות שלי')}
+                className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">📈</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">תיק ההשקעות שלי</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">סימולציה מציאותית של בניית תיק, אירועי שוק וחישוב רווח/הפסד.</p>
+              </button>
               <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-8 text-center text-brand-dark-blue/50 min-h-[14rem] flex flex-col items-center justify-center">
                 <p className="text-2xl font-bold">אתגר כיתתי</p>
                 <p className="text-lg mt-2">בקרוב יתווסף אתגר כיתתי.</p>
@@ -2937,6 +2942,8 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
               </div>
               <MillionDropGame onBack={() => setActiveSubActivity(null)} topic="savingsInvest" />
             </div>
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'חיסכון והשקעות' && activeProgram === "'חכם בכיס'" && activeSubActivity === 'תיק ההשקעות שלי' ? (
+            <MyInvestmentPortfolioGame onBack={() => setActiveSubActivity(null)} />
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'תקציב המדינה' && activeProgram === "'חכם בכיס'" && !activeSubActivity ? (
             <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
               <div className="flex items-center justify-between gap-3 flex-wrap">
