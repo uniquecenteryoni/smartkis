@@ -5,6 +5,8 @@ type MyInvestmentPortfolioGameProps = {
 };
 
 const MyInvestmentPortfolioGame: React.FC<MyInvestmentPortfolioGameProps> = ({ onBack }) => {
+  const gameUrl = `${import.meta.env.BASE_URL}games/my-investment-portfolio-game.html`;
+
   return (
     <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4" dir="rtl">
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -26,7 +28,7 @@ const MyInvestmentPortfolioGame: React.FC<MyInvestmentPortfolioGameProps> = ({ o
       <div className="rounded-2xl border border-gray-200 overflow-hidden bg-white">
         <iframe
           title="My Investment Portfolio Game"
-          src="/games/my-investment-portfolio-game.html"
+          src={gameUrl}
           className="w-full"
           style={{ height: '84vh', minHeight: '680px', border: '0' }}
           allow="clipboard-read; clipboard-write"
