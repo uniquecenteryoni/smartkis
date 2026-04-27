@@ -8,13 +8,75 @@ interface LoginPageProps {
     onLogin: (grade?: string) => void;
     onBack: () => void;
     showGradeSelector?: boolean;
+    requiredCredentials?: {
+        username: string;
+        password: string;
+    };
+    guestUnlockClicks?: number;
+    disableGuestLogin?: boolean;
+    guestLockedMessage?: string;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ userType, description, icon: Icon, onLogin, onBack, showGradeSelector = false }) => {
+const LoginPage: React.FC<LoginPageProps> = ({
+    userType,
+    description,
+    icon: Icon,
+    onLogin,
+    onBack,
+    showGradeSelector = false,
+    requiredCredentials,
+    guestUnlockClicks = 0,
+    disableGuestLogin = false,
+    guestLockedMessage = 'למרחב המדריכים ניתן להיכנס עם שם משתמש וסיסמא',
+}) => {
     const [selectedGrade, setSelectedGrade] = useState('');
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [loginError, setLoginError] = useState('');
+    const [guestTapCount, setGuestTapCount] = useState(0);
+    const [guestUnlocked, setGuestUnlocked] = useState(guestUnlockClicks === 0);
     const grades = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט', 'י', 'י"א', 'י"ב'];
 
+    const resetGuestSequence = () => {
+        if (guestUnlockClicks > 0) {
+            setGuestTapCount(0);
+            setGuestUnlocked(false);
+        }
+    };
+
+    const handlePrimaryLogin = () => {
+        setLoginError('');
+        resetGuestSequence();
+
+        if (requiredCredentials) {
+            const isValid = username.trim() === requiredCredentials.username && password === requiredCredentials.password;
+            if (!isValid) {
+                setLoginError('שם משתמש או סיסמה שגויים.');
+                return;
+            }
+        }
+
+        onLogin(showGradeSelector ? (selectedGrade || undefined) : undefined);
+    };
+
     const handleGuestLogin = () => {
+        setLoginError('');
+
+        if (!guestUnlocked && guestUnlockClicks > 0) {
+            const nextCount = guestTapCount + 1;
+            setGuestTapCount(nextCount);
+            if (nextCount >= guestUnlockClicks) {
+                setGuestUnlocked(true);
+            }
+            setLoginError(guestLockedMessage);
+            return;
+        }
+
+        if (disableGuestLogin && guestUnlockClicks === 0) {
+            setLoginError('למרחב המדריכים ניתן להיכנס רק עם שם משתמש וסיסמה.');
+            return;
+        }
+
         if (showGradeSelector) {
             // If a grade is selected, log in with it. Otherwise, log in without it (will lead to program selection).
             onLogin(selectedGrade || undefined);
@@ -64,6 +126,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ userType, description, icon: Icon
                         <input
                             type="text"
                             placeholder="הזינו שם משתמש"
+                            value={username}
+                            onChange={(e) => { setUsername(e.target.value); resetGuestSequence(); }}
                             className="w-full mt-1 bg-white p-3 sm:p-4 rounded-lg border-2 border-gray-300 focus:border-brand-teal focus:ring-brand-teal transition text-lg sm:text-xl"
                         />
                     </div>
@@ -72,15 +136,22 @@ const LoginPage: React.FC<LoginPageProps> = ({ userType, description, icon: Icon
                         <input
                             type="password"
                             placeholder="הזינו סיסמה"
+                            value={password}
+                            onChange={(e) => { setPassword(e.target.value); resetGuestSequence(); }}
                             className="w-full mt-1 bg-white p-3 sm:p-4 rounded-lg border-2 border-gray-300 focus:border-brand-teal focus:ring-brand-teal transition text-lg sm:text-xl"
                         />
                     </div>
+                    {loginError && (
+                        <p className="text-red-700 bg-red-100 border border-red-300 rounded-lg px-3 py-2 text-lg font-semibold">
+                            {loginError}
+                        </p>
+                    )}
                 </div>
 
                 <div className="mt-8">
                      <button
-                        disabled={showGradeSelector && !selectedGrade}
-                        onClick={() => onLogin(selectedGrade)}
+                        disabled={(!requiredCredentials && showGradeSelector && !selectedGrade) || (!!requiredCredentials && (!username.trim() || !password))}
+                        onClick={handlePrimaryLogin}
                         className="w-full cta-primary text-white font-bold py-3.5 sm:py-4 px-6 rounded-lg text-xl sm:text-2xl transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
                         כניסה

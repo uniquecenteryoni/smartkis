@@ -727,6 +727,10 @@ const App: React.FC = () => {
                     onLogin={handleStudentLogin}
                     onBack={goBack}
                     showGradeSelector={true}
+              requiredCredentials={{ username: 'SMARTKIS', password: '1121991' }}
+              guestUnlockClicks={5}
+              disableGuestLogin={true}
+              guestLockedMessage="למרחב התלמידים ניתן להיכנס עם שם משתמש וסיסמא"
                 />
             );
         case 'instructor_login':
@@ -737,6 +741,10 @@ const App: React.FC = () => {
                     icon={PodiumIcon}
                     onLogin={() => { pushHistory(); setAppState('instructors_page'); }}
                     onBack={goBack}
+              requiredCredentials={{ username: 'SMARTKIS', password: '1121991' }}
+              guestUnlockClicks={5}
+              disableGuestLogin={true}
+                  guestLockedMessage="למרחב המדריכים ניתן להיכנס עם שם משתמש וסיסמא"
                 />
             );
         case 'parent_login':

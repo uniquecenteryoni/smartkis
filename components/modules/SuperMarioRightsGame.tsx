@@ -54,16 +54,16 @@ function playSound(type: 'jump' | 'coin' | 'stomp' | 'die' | 'win') {
 
 // ─── Workers' Rights Facts ────────────────────────────────────────────────────
 const RIGHTS_FACTS: { title: string; body: string; color: string }[] = [
-  { title: '💰 שכר מינימום לנוער', body: 'נוער בן 15–17 זכאי לשכר מינימום של ₪32.30 לשעה. מתחת לזה — מעסיק פושע חוק!', color: '#10b981' },
+  { title: '💰 שכר מינימום לנוער', body: 'שכר מינימום לנוער מתעדכן מעת לעת. חשוב לבדוק בתלוש שהשכר השעתי עומד בדרישות החוק העדכניות.', color: '#10b981' },
   { title: '⏰ מגבלת שעות יומית', body: 'קטין לא יעבוד יותר מ-8 שעות ביום ויותר מ-40 שעות בשבוע. גופך חשוב לא פחות!', color: '#3b82f6' },
   { title: '📚 יום לימודים', body: 'ביום לימודים אסור לעבוד יותר מ-4 שעות. לימודים = עתיד!', color: '#8b5cf6' },
   { title: '☕ הפסקות חובה', body: 'ב-6 שעות עבודה רצופות — מגיעה לך הפסקה של 45 דקות. זכות, לא חסד!', color: '#f59e0b' },
-  { title: '📅 תשלום שכר', body: 'המעסיק חייב לשלם שכר עד ה-9 בחודש עבור החודש הקודם. איחור = עבירה!', color: '#ef4444' },
-  { title: '➕ שעות נוספות', body: 'שעה נוספת = 125% מהשכר הרגיל. שעה שנייה ואילך = 150%. תבדוק תלוש!', color: '#06b6d4' },
+  { title: '🚌 החזר נסיעות', body: 'עובד זכאי להחזר הוצאות נסיעה לעבודה וממנה בהתאם לכללים הקבועים בדין ובצו ההרחבה.', color: '#ef4444' },
+  { title: '➕ שעות נוספות', body: 'בתלוש: שעות 9–10 ביום מזכות ב-125%, ושעות 11–12 מזכות ב-150%. חשוב לוודא שזה מופיע נכון.', color: '#06b6d4' },
   { title: '🏥 ימי מחלה', body: 'כל עובד צובר יום וחצי ימי מחלה לכל חודש עבודה. אל תוותר!', color: '#ec4899' },
   { title: '🌴 ימי חופשה', body: 'בשנה הראשונה: 12 ימי עבודה בתשלום. הם שייכים לך — תנצל אותם!', color: '#84cc16' },
   { title: '🛡️ זכות לשימוע', body: 'לפני פיטורים חייבים לזמן אותך לשימוע. לא שמעת עליו? ניתן לערער!', color: '#f97316' },
-  { title: '💼 פנסיה מהיום הראשון', body: 'מעסיק חייב להפריש לפנסיה כבר מהחודש הראשון. בגיל 15 כבר בונים עתיד!', color: '#6366f1' },
+  { title: '💼 פנסיה מגיל 21', body: 'בדרך כלל, חובת ההפרשה לפנסיה לשכיר מתחילה מגיל 21 (ולשכירה מגיל 20), בהתאם לכללים החלים.', color: '#6366f1' },
 ];
 
 // ─── Game Constants ───────────────────────────────────────────────────────────
@@ -82,6 +82,17 @@ interface Enemy extends Rect { vx: number; alive: boolean; patrolMin: number; pa
 interface Player extends Rect { vx: number; vy: number; onGround: boolean; lives: number; score: number; facingRight: boolean; frame: number; }
 interface Particle { x: number; y: number; vx: number; vy: number; life: number; color: string; size: number; }
 interface Star { x: number; y: number; size: number; twinkle: number; }
+interface BirdEvent {
+  triggered: boolean;
+  active: boolean;
+  completed: boolean;
+  puzzleShown: boolean;
+  x: number;
+  y: number;
+  targetX: number;
+  targetY: number;
+  landedTicks: number;
+}
 
 // ─── Level Builder ────────────────────────────────────────────────────────────
 function buildLevel() {
@@ -350,7 +361,7 @@ function drawParticles(ctx: CanvasRenderingContext2D, particles: Particle[]) {
   ctx.globalAlpha = 1;
 }
 
-function drawHUD(ctx: CanvasRenderingContext2D, player: Player, coinsLeft: number) {
+function drawHUD(ctx: CanvasRenderingContext2D, player: Player, coinsLeft: number, elapsedSec: number) {
   // HUD bar
   ctx.fillStyle = 'rgba(0,0,0,0.55)';
   ctx.beginPath(); ctx.roundRect(8, 8, 300, 50, 12); ctx.fill();
@@ -362,6 +373,13 @@ function drawHUD(ctx: CanvasRenderingContext2D, player: Player, coinsLeft: numbe
   }
   ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 14px sans-serif';
   ctx.fillText(`✊ ${player.score}  |  נותרו: ${coinsLeft}`, 105, 33);
+
+  const mm = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+  const ss = String(elapsedSec % 60).padStart(2, '0');
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.beginPath(); ctx.roundRect(318, 8, 140, 50, 12); ctx.fill();
+  ctx.fillStyle = '#86efac'; ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(`⏱ ${mm}:${ss}`, 388, 33);
 
   // goal
   ctx.fillStyle = 'rgba(0,0,0,0.55)';
@@ -381,6 +399,38 @@ function drawFlag(ctx: CanvasRenderingContext2D, camX: number) {
   ctx.fillText('🏁 סיום!', fx + 50, H - 270);
   ctx.fillText('זכויות', fx + 50, H - 258);
   ctx.fillText('עובדים', fx + 50, H - 246);
+}
+
+function drawBirdWithPayslip(ctx: CanvasRenderingContext2D, camX: number, tick: number, bird: BirdEvent) {
+  if (!bird.active) return;
+  const bx = bird.x - camX;
+  const by = bird.y + Math.sin(tick * 0.2) * 2;
+
+  // wings
+  ctx.fillStyle = '#111827';
+  ctx.beginPath();
+  ctx.ellipse(bx - 8, by + 8, 12, 7, -0.4, 0, Math.PI * 2);
+  ctx.ellipse(bx + 10, by + 8, 12, 7, 0.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // body
+  ctx.fillStyle = '#374151';
+  ctx.beginPath(); ctx.ellipse(bx, by + 10, 12, 9, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fbbf24';
+  ctx.beginPath(); ctx.moveTo(bx + 12, by + 9); ctx.lineTo(bx + 18, by + 11); ctx.lineTo(bx + 12, by + 13); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(bx + 4, by + 8, 2.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#111827';
+  ctx.beginPath(); ctx.arc(bx + 4, by + 8, 1, 0, Math.PI * 2); ctx.fill();
+
+  // payslip in beak
+  ctx.fillStyle = '#f9fafb';
+  ctx.strokeStyle = '#9ca3af';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.roundRect(bx + 18, by + 6, 16, 12, 2); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = '#d1d5db';
+  ctx.beginPath(); ctx.moveTo(bx + 20, by + 10); ctx.lineTo(bx + 32, by + 10); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bx + 20, by + 13); ctx.lineTo(bx + 30, by + 13); ctx.stroke();
 }
 
 function overlap(a: Rect, b: Rect) {
@@ -404,7 +454,11 @@ const SuperMarioRightsGame: React.FC<Props> = ({ onBack }) => {
     stars: Star[];
     keys: Record<string, boolean>;
     tick: number;
+    startTimeMs: number;
+    elapsedSec: number;
+    lastSyncedSecond: number;
     invincible: number;
+    bird: BirdEvent;
     screen: GameScreen;
     currentFact: number;
     pendingFact: { fact: typeof RIGHTS_FACTS[0]; resume: () => void } | null;
@@ -412,6 +466,9 @@ const SuperMarioRightsGame: React.FC<Props> = ({ onBack }) => {
 
   const [screen, setScreen] = useState<GameScreen>('menu');
   const [factPopup, setFactPopup] = useState<{ fact: typeof RIGHTS_FACTS[0] } | null>(null);
+  const [payslipPuzzleOpen, setPayslipPuzzleOpen] = useState(false);
+  const [payslipPuzzleResult, setPayslipPuzzleResult] = useState<'correct' | 'wrong' | null>(null);
+  const [elapsedSecUi, setElapsedSecUi] = useState(0);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
   const rafRef = useRef<number>(0);
@@ -425,10 +482,23 @@ const SuperMarioRightsGame: React.FC<Props> = ({ onBack }) => {
     stateRef.current = {
       player: { x: 60, y: 300, w: 30, h: 46, vx: 0, vy: 0, onGround: false, lives: 3, score: 0, facingRight: true, frame: 0 },
       platforms, coins, enemies, camX: 0, particles: [], stars,
-      keys: {}, tick: 0, invincible: 0, screen: 'playing',
+      keys: {}, tick: 0, startTimeMs: performance.now(), elapsedSec: 0, lastSyncedSecond: -1,
+      invincible: 0,
+      bird: {
+        triggered: false,
+        active: false,
+        completed: false,
+        puzzleShown: false,
+        x: 0,
+        y: -50,
+        targetX: 0,
+        targetY: 0,
+        landedTicks: 0,
+      },
+      screen: 'playing',
       currentFact: -1, pendingFact: null,
     };
-    setScore(0); setLives(3);
+    setScore(0); setLives(3); setElapsedSecUi(0); setPayslipPuzzleOpen(false); setPayslipPuzzleResult(null);
   }, []);
 
   const spawnParticles = (x: number, y: number, color: string, count = 12) => {
@@ -461,6 +531,19 @@ const SuperMarioRightsGame: React.FC<Props> = ({ onBack }) => {
     }
   }, []);
 
+  const answerPayslipPuzzle = useCallback((isCorrect: boolean) => {
+    setPayslipPuzzleResult(isCorrect ? 'correct' : 'wrong');
+  }, []);
+
+  const continueAfterPayslipPuzzle = useCallback(() => {
+    if (stateRef.current) {
+      stateRef.current.bird.completed = true;
+      stateRef.current.bird.active = false;
+    }
+    setPayslipPuzzleOpen(false);
+    pausedForFact.current = false;
+  }, []);
+
   useEffect(() => {
     if (screen !== 'playing') return;
     initGame();
@@ -485,6 +568,11 @@ const SuperMarioRightsGame: React.FC<Props> = ({ onBack }) => {
       if (!ctx) return;
 
       s.tick++;
+      s.elapsedSec = Math.floor((performance.now() - s.startTimeMs) / 1000);
+      if (s.elapsedSec !== s.lastSyncedSecond) {
+        s.lastSyncedSecond = s.elapsedSec;
+        setElapsedSecUi(s.elapsedSec);
+      }
       const { player: p, platforms, coins, enemies, keys } = s;
 
       // ── Input ──
@@ -540,6 +628,36 @@ const SuperMarioRightsGame: React.FC<Props> = ({ onBack }) => {
       const targetCamX = p.x - W * 0.35;
       s.camX += (targetCamX - s.camX) * 0.1;
       s.camX = Math.max(0, Math.min(WORLD_W - W, s.camX));
+
+      // ── Mid-game bird event + payslip puzzle ──
+      if (!s.bird.triggered && p.x >= WORLD_W * 0.5) {
+        s.bird.triggered = true;
+        s.bird.active = true;
+        s.bird.x = p.x + 230;
+        s.bird.y = -40;
+        s.bird.targetX = p.x + 70;
+        s.bird.targetY = Math.max(95, p.y - 45);
+      }
+
+      if (s.bird.active && !s.bird.completed) {
+        s.bird.targetX = p.x + 70;
+        s.bird.targetY = Math.max(95, p.y - 45);
+        s.bird.x += (s.bird.targetX - s.bird.x) * 0.06;
+        s.bird.y += (s.bird.targetY - s.bird.y) * 0.08;
+
+        if (Math.abs(s.bird.x - s.bird.targetX) < 8 && Math.abs(s.bird.y - s.bird.targetY) < 8) {
+          s.bird.landedTicks++;
+        } else {
+          s.bird.landedTicks = 0;
+        }
+
+        if (s.bird.landedTicks > 30 && !s.bird.puzzleShown) {
+          s.bird.puzzleShown = true;
+          pausedForFact.current = true;
+          setPayslipPuzzleResult(null);
+          setPayslipPuzzleOpen(true);
+        }
+      }
 
       // ── Enemies ──
       for (const e of enemies) {
@@ -629,7 +747,8 @@ const SuperMarioRightsGame: React.FC<Props> = ({ onBack }) => {
         drawPlayer(ctx, p, s.camX, s.tick);
       }
       drawParticles(ctx, s.particles);
-      drawHUD(ctx, p, coins.filter(c => !c.collected).length);
+      drawBirdWithPayslip(ctx, s.camX, s.tick, s.bird);
+      drawHUD(ctx, p, coins.filter(c => !c.collected).length, s.elapsedSec);
       ctx.restore();
     };
 
@@ -667,6 +786,7 @@ const SuperMarioRightsGame: React.FC<Props> = ({ onBack }) => {
             <div className="bg-blue-800/40 rounded-xl p-3">🚀 חץ למעלה / Space לקפיצה</div>
             <div className="bg-amber-700/40 rounded-xl p-3">✊ אסוף מטבעות זכויות</div>
             <div className="bg-red-700/40 rounded-xl p-3">😤 דרוך על האויב להכות</div>
+            <div className="bg-emerald-700/40 rounded-xl p-3 col-span-2">⏱️ יש טיימר משחק + אירוע ציפור עם חידת תלוש באמצע</div>
           </div>
           <div className="flex gap-4 flex-wrap justify-center">
             <button
@@ -734,6 +854,49 @@ const SuperMarioRightsGame: React.FC<Props> = ({ onBack }) => {
         </div>
       )}
 
+      {/* ── PAYSLIP PUZZLE POPUP ── */}
+      {payslipPuzzleOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl flex flex-col items-center gap-5" dir="rtl">
+            <div className="text-6xl">🐦📄</div>
+            <div className="text-center space-y-2">
+              <h3 className="text-2xl font-black text-sky-700">חידת תלוש שכר של ניר</h3>
+              <p className="text-gray-700 text-lg leading-relaxed">
+                הציפור נחתה ליד ניר ומסרה לו תלוש. מה הניסוח הנכון לשעות נוספות בתלוש?
+              </p>
+            </div>
+
+            <div className="w-full grid gap-2">
+              <button
+                onClick={() => answerPayslipPuzzle(true)}
+                className="w-full text-right px-4 py-3 rounded-xl border border-gray-300 hover:bg-sky-50"
+              >שעות 9-10 = 125%, שעות 11-12 = 150%</button>
+              <button
+                onClick={() => answerPayslipPuzzle(false)}
+                className="w-full text-right px-4 py-3 rounded-xl border border-gray-300 hover:bg-sky-50"
+              >כל שעה נוספת היא 125%</button>
+              <button
+                onClick={() => answerPayslipPuzzle(false)}
+                className="w-full text-right px-4 py-3 rounded-xl border border-gray-300 hover:bg-sky-50"
+              >שעות 9-12 כולן 150%</button>
+            </div>
+
+            {payslipPuzzleResult && (
+              <div className={`w-full rounded-2xl px-4 py-3 text-center font-bold ${payslipPuzzleResult === 'correct' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}`}>
+                {payslipPuzzleResult === 'correct'
+                  ? 'נכון מאוד! כך צריך להופיע בתלוש.'
+                  : 'כמעט. התשובה הנכונה: שעות 9-10 = 125%, שעות 11-12 = 150%.'}
+              </div>
+            )}
+
+            <button
+              onClick={continueAfterPayslipPuzzle}
+              className="px-10 py-3 bg-green-500 hover:bg-green-400 text-white text-xl font-black rounded-2xl shadow transition hover:scale-105"
+            >▶ המשך משחק</button>
+          </div>
+        </div>
+      )}
+
       {/* ── DEAD ── */}
       {screen === 'dead' && (
         <div className="w-full max-w-lg bg-gradient-to-br from-red-900 to-gray-900 rounded-3xl p-8 text-white flex flex-col items-center gap-6 shadow-2xl">
@@ -741,6 +904,7 @@ const SuperMarioRightsGame: React.FC<Props> = ({ onBack }) => {
           <h2 className="text-3xl font-black">המעסיקים ניצחו הפעם...</h2>
           <p className="text-red-200 text-center">אבל ניר לא מוותר! כל כישלון הוא הזדמנות ללמוד את הזכויות טוב יותר 💪</p>
           <p className="text-2xl font-black text-amber-300">ניקוד: {score} זכויות</p>
+          <p className="text-lg font-bold text-blue-100">⏱ זמן משחק: {String(Math.floor(elapsedSecUi / 60)).padStart(2, '0')}:{String(elapsedSecUi % 60).padStart(2, '0')}</p>
           <div className="flex gap-4 flex-wrap justify-center">
             <button onClick={() => { initGame(); setScreen('playing'); }}
               className="px-8 py-3 bg-green-500 hover:bg-green-400 rounded-2xl font-black text-xl transition">🔄 שחק שוב!</button>
@@ -759,6 +923,7 @@ const SuperMarioRightsGame: React.FC<Props> = ({ onBack }) => {
           <div className="bg-white/10 rounded-2xl p-6 text-center w-full">
             <p className="text-5xl font-black text-amber-300">{score}</p>
             <p className="text-green-200">מטבעות זכויות נאספו מתוך {RIGHTS_FACTS.length}</p>
+            <p className="text-blue-100 mt-2 font-bold">⏱ זמן משחק: {String(Math.floor(elapsedSecUi / 60)).padStart(2, '0')}:{String(elapsedSecUi % 60).padStart(2, '0')}</p>
           </div>
           <div className="w-full space-y-2">
             <p className="text-green-200 font-bold text-center text-sm">🏅 הזכויות שניר למד:</p>

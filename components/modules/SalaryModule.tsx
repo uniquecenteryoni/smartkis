@@ -1105,6 +1105,56 @@ const QuizStep: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
     const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
     const [feedback, setFeedback] = useState('');
 
+    const d = paySlipData;
+    const payRows: SlipRowData[] = d.payments.items.map(it => ({
+      name: it.name,
+      qty: fmtNum(it.quantity as number),
+      rate: fmtNum(it.rate as number),
+      amt: fmtNum(it.value),
+      tooltip: termExplanations[it.name],
+    }));
+    const mandRows: DedRowData[] = d.deductions.mandatory.items.map(it => ({
+      name: it.name, amt: fmtNum(it.value), tooltip: termExplanations[it.name],
+    }));
+    const volRows: DedRowData[] = d.deductions.voluntary.items.map(it => ({
+      name: it.name, amt: fmtNum(it.value), tooltip: termExplanations[it.name],
+    }));
+
+    const renderWithReferenceSlip = (content: React.ReactNode) => (
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 animate-fade-in" dir="rtl">
+        <div>{content}</div>
+        <div className="bg-white/60 backdrop-blur-sm border border-white/40 rounded-2xl p-4 shadow-lg">
+          <div className="mb-3 text-center xl:text-right">
+            <h4 className="text-2xl font-black text-brand-dark-blue">התלוש שאליו מתייחס הבוחן</h4>
+            <p className="text-lg text-brand-dark-blue/70">אפשר לעיין בתלוש בזמן פתרון השאלות.</p>
+          </div>
+          <div className="max-h-[72vh] overflow-auto rounded-xl border border-gray-200 bg-white">
+            <SlipShell
+              companyName={d.details.companyName}
+              employeeName={d.details.employeeName}
+              employeeId={d.details.employeeId}
+              role="עובד שכיר"
+              startDate={d.details.startDate}
+              period={d.details.payPeriod}
+              bank={d.details.bank}
+              branch={d.details.branch}
+              account={d.details.account}
+              paymentRows={payRows}
+              grossCell={fmtNum(d.payments.total)}
+              mandatoryRows={mandRows}
+              voluntaryRows={volRows}
+              totalDedCell={fmtNum(d.deductions.total)}
+              netCell={fmtNum(d.summary.netSalary)}
+              marginalTax={`${d.informative.marginalTax.toFixed(2)}%`}
+              creditPoints={String(d.informative.creditPoints)}
+              employerPension={fmtNum(d.informative.employerPension)}
+              employerStudyFund={fmtNum(d.informative.employerStudyFund)}
+            />
+          </div>
+        </div>
+      </div>
+    );
+
     useEffect(() => {
         if (quizState === 'finished' && (score / quizQuestions.length) >= 0.8) onComplete();
     }, [quizState, score, onComplete]);
@@ -1137,7 +1187,7 @@ const QuizStep: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
 
     if (quizState === 'finished') {
         const isCompleted = (score / quizQuestions.length) >= 0.8;
-        return (
+      return renderWithReferenceSlip(
             <div className="text-center p-6 bg-white/80 border-4 border-yellow-400 rounded-2xl shadow-2xl animate-fade-in">
                 <TrophyIcon className="w-24 h-24 mx-auto text-yellow-500" />
                 <h3 className="text-4xl font-bold mb-2 mt-4 text-brand-dark-blue">סיימת את הבוחן!</h3>
@@ -1155,19 +1205,19 @@ const QuizStep: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
         );
     }
 
-    if (quizState === 'not_started') return (
-        <div className="text-center space-y-6 animate-fade-in">
-            <div className="text-6xl">🧠</div>
-            <h3 className="text-3xl font-black text-brand-dark-blue">מוכנים? בחנו את עצמכם</h3>
-            <p className="text-xl text-brand-dark-blue/70">יש לענות נכון על לפחות 80% ({Math.ceil(quizQuestions.length * 0.8)} מתוך {quizQuestions.length}) כדי להשלים את המודול.</p>
-            <button onClick={() => setQuizState('in_progress')} className="bg-brand-magenta hover:bg-pink-700 text-white font-black py-3 px-8 rounded-xl text-2xl transition-colors shadow-lg">
+          if (quizState === 'not_started') return renderWithReferenceSlip(
+            <div className="text-center space-y-6 animate-fade-in">
+              <div className="text-6xl">🧠</div>
+              <h3 className="text-3xl font-black text-brand-dark-blue">מוכנים? בחנו את עצמכם</h3>
+              <p className="text-xl text-brand-dark-blue/70">יש לענות נכון על לפחות 80% ({Math.ceil(quizQuestions.length * 0.8)} מתוך {quizQuestions.length}) כדי להשלים את המודול.</p>
+              <button onClick={() => setQuizState('in_progress')} className="bg-brand-magenta hover:bg-pink-700 text-white font-black py-3 px-8 rounded-xl text-2xl transition-colors shadow-lg">
                 התחל בוחן
-            </button>
-        </div>
-    );
+              </button>
+            </div>
+          );
 
     const q = quizQuestions[currentQuestionIndex];
-    return (
+    return renderWithReferenceSlip(
         <div className="space-y-5 animate-fade-in">
             <div>
                 <div className="bg-gray-300 rounded-full h-2.5">
@@ -1207,7 +1257,7 @@ const QuizStep: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
                 </button>
             )}
         </div>
-    );
+        );
 };
 
 // ─── Main Component ───────────────────────────────────────────────────────────
