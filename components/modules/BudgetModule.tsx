@@ -166,6 +166,12 @@ const initialExpenses: (BudgetItem & { task?: React.ReactNode })[] = [
 ];
 
 const calculateIncomeTax = (salary: number, characterName: string): number => {
+    const details = calculateIncomeTaxDetails(salary, characterName);
+    return details.finalTax;
+};
+
+const calculateIncomeTaxDetails = (salary: number, characterName: string) => {
+    const safeSalary = Math.max(0, salary);
     let tax = 0;
     const brackets = [
         { upTo: 7010, rate: 0.10 },
@@ -181,8 +187,8 @@ const calculateIncomeTax = (salary: number, characterName: string): number => {
 
     for (const bracket of brackets) {
         const previousBracketLimit = processedSalary;
-        if (salary > previousBracketLimit) {
-            const taxableAmountInBracket = Math.min(salary - previousBracketLimit, bracket.upTo - previousBracketLimit);
+        if (safeSalary > previousBracketLimit) {
+            const taxableAmountInBracket = Math.min(safeSalary - previousBracketLimit, bracket.upTo - previousBracketLimit);
             tax += taxableAmountInBracket * bracket.rate;
             processedSalary += taxableAmountInBracket;
         } else {
@@ -190,55 +196,88 @@ const calculateIncomeTax = (salary: number, characterName: string): number => {
         }
     }
 
-    const CREDIT_POINT_VALUE = 242; // For 2024
-    let creditPoints = 2.25; // Default for male characters (דניאל, רוני)
-    if (characterName === 'יובל' || characterName === 'מאיה') {
-        creditPoints = 2.75; // For female characters
-    }
-    const taxCredit = creditPoints * CREDIT_POINT_VALUE;
+    const CREDIT_POINT_VALUE = 242;
 
-    const finalTax = tax - taxCredit;
-    
-    return finalTax > 0 ? finalTax : 0;
+    // Male default: 2.25 credit points.
+    let creditPoints = 2.25;
+
+    // Keep existing female characters with 2.75 points.
+    if (characterName === 'יובל' || characterName === 'מאיה') {
+        creditPoints = 2.75;
+    }
+
+    const creditAmount = creditPoints * CREDIT_POINT_VALUE;
+    const taxAfterCredits = Math.max(0, tax - creditAmount);
+
+    return {
+        grossTax: parseFloat(tax.toFixed(2)),
+        creditPoints,
+        creditAmount: parseFloat(creditAmount.toFixed(2)),
+        finalTax: parseFloat(taxAfterCredits.toFixed(2)),
+    };
 };
 
 const salaryDeductions = (salary: number, characterName: string): (BudgetItem & { isDeduction: boolean })[] => {
-    const incomeTax = calculateIncomeTax(salary, characterName);
+    const incomeTaxDetails = calculateIncomeTaxDetails(salary, characterName);
+    const incomeTax = incomeTaxDetails.finalTax;
 
-    // Bituach Leumi & Mas Briut calculation updated according to the official rates
-    // published by the National Insurance Institute of Israel for 2024.
-    // Source: https://www.btl.gov.il/Insurance/Rates/Pages/%D7%9C%D7%A2%D7%95%D7%91%D7%93%D7%99%D7%9D%20%D7%A9%D7%9B%D7%99%D7%A8%D7%99%D7%9D.aspx
+    // Bituach Leumi & Mas Briut calculation — employee rates per official table effective 01.01.2026.
+    // Lower bracket (up to 7,703 ₪): ביטוח לאומי 1.04%, ביטוח בריאות 3.23%
+    // Upper bracket (7,703–51,910 ₪): ביטוח לאומי 7.00%, ביטוח בריאות 5.17%
     let bituachLeumi = 0;
     let masBriut = 0;
     
-    const lowerBracketLimit = 7522; 
-    const upperBracketLimit = 49030;
+    const lowerBracketLimit = 7703; 
+    const upperBracketLimit = 51910;
 
     if (salary <= lowerBracketLimit) {
-        // Reduced rates on income up to 60% of the average wage
-        bituachLeumi = salary * 0.004; // 0.40%
-        masBriut = salary * 0.031; // 3.10%
+        bituachLeumi = salary * 0.0104; // 1.04%
+        masBriut = salary * 0.0323; // 3.23%
     } else {
-        // Calculate for the part up to the lower bracket
-        let lowerPartAmount = lowerBracketLimit;
-        bituachLeumi += lowerPartAmount * 0.004;
-        masBriut += lowerPartAmount * 0.031;
+        // Lower bracket portion
+        bituachLeumi += lowerBracketLimit * 0.0104;
+        masBriut += lowerBracketLimit * 0.0323;
 
-        // Calculate for the part above the lower bracket up to the upper bracket
-        let upperPartAmount = Math.min(salary, upperBracketLimit) - lowerBracketLimit;
+        // Upper bracket portion (capped at 51,910 ₪)
+        const upperPartAmount = Math.min(salary, upperBracketLimit) - lowerBracketLimit;
         bituachLeumi += upperPartAmount * 0.07; // 7.00%
-        masBriut += upperPartAmount * 0.05; // 5.00%
+        masBriut += upperPartAmount * 0.0517; // 5.17%
 
         // Income above the upper bracket is not subject to these deductions.
     }
     
     const pension = salary * 0.065; // Example rate remains as an approximation
 
+    // Build breakdown notes for ביטוח לאומי and מס בריאות
+    const fmt = (n: number) => n.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const buildInsuranceNote = (lowerRate: number, upperRate: number, lowerAmount: number, upperAmount: number, total: number): string => {
+        if (salary <= lowerBracketLimit) {
+            return `${(lowerRate * 100).toFixed(2)}% על ${fmt(salary)} ₪ = ${fmt(total)} ₪`;
+        }
+        const lowerPart = parseFloat((lowerAmount).toFixed(2));
+        const upperPart = parseFloat((upperAmount).toFixed(2));
+        return `${(lowerRate * 100).toFixed(2)}% על ${fmt(lowerBracketLimit)} ₪ = ${fmt(lowerPart)} ₪ | ${(upperRate * 100).toFixed(2)}% על ${fmt(Math.min(salary, upperBracketLimit) - lowerBracketLimit)} ₪ = ${fmt(upperPart)} ₪ | סה"כ: ${fmt(total)} ₪`;
+    };
+
+    const blLowerAmount = lowerBracketLimit * 0.0104;
+    const blUpperAmount = salary <= lowerBracketLimit ? 0 : (Math.min(salary, upperBracketLimit) - lowerBracketLimit) * 0.07;
+    const mbLowerAmount = lowerBracketLimit * 0.0323;
+    const mbUpperAmount = salary <= lowerBracketLimit ? 0 : (Math.min(salary, upperBracketLimit) - lowerBracketLimit) * 0.0517;
+
+    const bituachLeumiNote = buildInsuranceNote(0.0104, 0.07, blLowerAmount, blUpperAmount, bituachLeumi);
+    const masBriutNote = buildInsuranceNote(0.0323, 0.0517, mbLowerAmount, mbUpperAmount, masBriut);
+
     return [
-        { id: 100, category: 'מס הכנסה', amount: parseFloat(incomeTax.toFixed(2)), isDeduction: true },
-        { id: 101, category: 'ביטוח לאומי', amount: parseFloat(bituachLeumi.toFixed(2)), isDeduction: true },
-        { id: 102, category: 'מס בריאות', amount: parseFloat(masBriut.toFixed(2)), isDeduction: true },
-        { id: 103, category: 'הפרשה לפנסיה', amount: parseFloat(pension.toFixed(2)), isDeduction: true },
+        {
+            id: 100,
+            category: 'מס הכנסה',
+            amount: parseFloat(incomeTax.toFixed(2)),
+            note: `מס לפני זיכוי: ${fmt(incomeTaxDetails.grossTax)} ₪ | זיכוי: ${incomeTaxDetails.creditPoints}×242 = ${fmt(incomeTaxDetails.creditAmount)} ₪ | לתשלום: ${fmt(incomeTaxDetails.finalTax)} ₪`,
+            isDeduction: true
+        },
+        { id: 101, category: 'ביטוח לאומי', amount: parseFloat(bituachLeumi.toFixed(2)), note: bituachLeumiNote, isDeduction: true },
+        { id: 102, category: 'מס בריאות', amount: parseFloat(masBriut.toFixed(2)), note: masBriutNote, isDeduction: true },
+        { id: 103, category: 'הפרשה לפנסיה', amount: parseFloat(pension.toFixed(2)), note: `6.5% על ${fmt(salary)} ₪ = ${fmt(pension)} ₪ | המעסיק מוסיף עוד 6.5% (${fmt(salary * 0.065)} ₪) לחשבון הפנסיה שלך`, isDeduction: true },
     ];
 };
 
@@ -312,10 +351,11 @@ const budgetGuideSteps = [
 const termExplanations: Record<string, string> = {
     'שכר ברוטו': 'זהו השכר הכולל שלך לפני כל הניכויים. הוא כולל את שכר היסוד, שעות נוספות, בונוסים ותוספות אחרות.',
     'ניכויים': 'אלו סכומים שהמעסיק שלך מוריד משכר הברוטו שלך על פי חוק (כמו מסים וביטוחים) לפני שהכסף מגיע אליך.',
-    'מס הכנסה': 'מס המוטל על הכנסתך. מחושב לפי מדרגות מס ומופחת על ידי נקודות זיכוי אישיות.',
+    'מס הכנסה': 'מס המוטל על הכנסתך. החישוב במודול זה הוא פרוגרסיבי לפי מדרגות מס, ולאחר מכן מופחתות נקודות זיכוי אישיות.',
     'ביטוח לאומי': 'תשלום חובה למוסד לביטוח לאומי, המבטח אותך במקרים של אבטלה, פגיעה בעבודה, נכות, ומממן קצבאות.',
     'מס בריאות': 'תשלום חובה המממן את מערכת הבריאות הציבורית ומאפשר לך לקבל שירותים רפואיים מקופת החולים.',
     'הפרשה לפנסיה': 'חיסכון חובה לגיל פרישה. חלק מהסכום מופרש על ידך וחלק על ידי המעסיק.',
+    'קרן השתלמות': 'חיסכון לטווח בינוני שניתן למשוך לאחר 6 שנים. העובד מפריש 2.5% והמעסיק מוסיף 7.5% — זהו אחד מההטבות הכי כדאיות לשכיר.',
 };
 
 const categoryExplanations: { [key: string]: { title: string; content: React.ReactNode } } = {
@@ -2318,6 +2358,8 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
   const FUEL_PRICE_PER_LITER = 7.5; // Approximation
 
     const [clothingInputString, setClothingInputString] = useState('0');
+  const [includeKerenHishtalmut, setIncludeKerenHishtalmut] = useState(false);
+  const [newExpenseRow, setNewExpenseRow] = useState<{ name: string; amount: string; note: string } | null>(null);
 
   const [drivingScale, setDrivingScale] = useState(5);
   
@@ -2643,21 +2685,33 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
       setExpenses(prev => [...prev, newItem]);
   };
 
+  const confirmNewExpenseRow = () => {
+      if (!newExpenseRow || !newExpenseRow.name.trim()) return;
+      const amount = parseFloat(newExpenseRow.amount) || 0;
+      handleAddCustomExpense(newExpenseRow.name.trim(), amount, newExpenseRow.note);
+      setNewExpenseRow(null);
+  };
+
   useEffect(() => {
     if (selectedCharacter) {
         const deductions = salaryDeductions(selectedCharacter.salary, selectedCharacter.name);
-        setExpenses([...initialExpenses.map(e => ({...e, amount: 0})), ...deductions]);
+        const fmt = (n: number) => n.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const kerenAmount = parseFloat((selectedCharacter.salary * 0.025).toFixed(2));
+        const kerenItem = { id: 104, category: 'קרן השתלמות', amount: kerenAmount, note: `2.5% על ${fmt(selectedCharacter.salary)} ₪ = ${fmt(kerenAmount)} ₪ | המעסיק מוסיף עוד 7.5% (${fmt(selectedCharacter.salary * 0.075)} ₪) לקרן`, isDeduction: true };
+        const allDeductions = includeKerenHishtalmut ? [...deductions, kerenItem] : deductions;
+        setExpenses([...initialExpenses.map(e => ({...e, amount: 0})), ...allDeductions]);
     } else {
         setExpenses(initialExpenses.map(e => ({...e, amount: 0})));
     }
-  }, [selectedCharacter]);
+  }, [selectedCharacter, includeKerenHishtalmut]);
 
   const netIncome = useMemo(() => {
     if (!selectedCharacter) return 0;
     const totalDeductions = salaryDeductions(selectedCharacter.salary, selectedCharacter.name)
         .reduce((sum, item) => sum + item.amount, 0);
-    return selectedCharacter.salary - totalDeductions;
-  }, [selectedCharacter]);
+    const kerenAmount = includeKerenHishtalmut ? selectedCharacter.salary * 0.025 : 0;
+    return selectedCharacter.salary - totalDeductions - kerenAmount;
+  }, [selectedCharacter, includeKerenHishtalmut]);
   
   const userExpenses = useMemo(() => expenses.filter(e => !e.isDeduction), [expenses]);
   const deductionExpenses = useMemo(() => expenses.filter(e => e.isDeduction), [expenses]);
@@ -3235,9 +3289,9 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
                   {userExpenses.map(item => (
                     <div key={item.id} ref={(el) => (rowRefs.current[String(item.id)] = el)} data-id={item.id} className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-md p-4 border border-transparent hover:border-brand-light-blue/50">
                         {/* Top row */}
-                        <div className="flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                                <span className="font-bold text-3xl">{item.category}</span>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <span className="font-bold text-3xl truncate">{item.category}</span>
                                 {categoryExplanations[item.category] && (
                                     <Tooltip 
                                         title={categoryExplanations[item.category].title}
@@ -3245,13 +3299,13 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
                                     />
                                 )}
                             </div>
-                            <div className="relative flex-shrink-0">
+                            <div className="relative w-full sm:w-36 flex-shrink-0">
                                 {item.category === 'הוצאות ביגוד' ? (
                                     <input 
                                         type="number" 
                                         value={clothingInputString} 
                                         onChange={(e) => handleAnnualAmountChange(item.id, e.target.value, setClothingInputString)}
-                                        className={`w-36 text-left py-2 pr-2 pl-12 rounded-lg border-2 shadow-inner bg-white transition-all focus:border-brand-teal focus:ring-1 focus:ring-brand-teal text-base`}
+                                        className={`w-full text-left py-2 pr-2 pl-12 rounded-lg border-2 shadow-inner bg-white transition-all focus:border-brand-teal focus:ring-1 focus:ring-brand-teal text-base`}
                                     />
                                 ) : (
                                     <input 
@@ -3259,7 +3313,7 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
                                         value={item.amount || ''} 
                                         onChange={(e) => handleExpenseChange(item.id, parseFloat(e.target.value) || 0)}
                                         readOnly={['חסכון והשקעות', 'רכב- דלק', 'מנויים', 'רכב - טיפולים', 'בילויים ומסעדות', 'חשבונות', 'שכירות', 'רכב - קנייה'].includes(item.category)}
-                                        className={`w-36 text-left py-2 pr-2 pl-12 rounded-lg border-2 shadow-inner bg-slate-50 transition-all focus:border-brand-teal focus:ring-1 focus:ring-brand-teal text-base ${
+                                        className={`w-full text-left py-2 pr-2 pl-12 rounded-lg border-2 shadow-inner bg-slate-50 transition-all focus:border-brand-teal focus:ring-1 focus:ring-brand-teal text-base ${
                                         ['חסכון והשקעות', 'רכב- דלק', 'מנויים', 'רכב - טיפולים', 'בילויים ומסעדות', 'חשבונות', 'שכירות', 'רכב - קנייה'].includes(item.category) 
                                         ? 'bg-gray-200 cursor-not-allowed' 
                                         : 'bg-white'}`
@@ -3305,8 +3359,41 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
                         </div>
                     </div>
                   ))}
+                  {newExpenseRow && (
+                    <div className="bg-white/80 border-2 border-brand-teal rounded-2xl p-4 mt-3 space-y-3">
+                      <input
+                        type="text"
+                        value={newExpenseRow.name}
+                        onChange={e => setNewExpenseRow(prev => prev ? { ...prev, name: e.target.value } : prev)}
+                        placeholder="שם ההוצאה (לדוגמה: ועד בית)"
+                        autoFocus
+                        className="w-full p-2 rounded-lg border border-gray-300 text-xl focus:outline-none focus:ring-2 focus:ring-brand-teal"
+                      />
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={newExpenseRow.amount}
+                          onChange={e => setNewExpenseRow(prev => prev ? { ...prev, amount: e.target.value } : prev)}
+                          placeholder={'סכום בש"ח'}
+                          className="w-full p-2 pl-12 rounded-lg border border-gray-300 text-xl focus:outline-none focus:ring-2 focus:ring-brand-teal"
+                        />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-base pointer-events-none">ש"ח</span>
+                      </div>
+                      <input
+                        type="text"
+                        value={newExpenseRow.note}
+                        onChange={e => setNewExpenseRow(prev => prev ? { ...prev, note: e.target.value } : prev)}
+                        placeholder="פירוט / הערה (אופציונלי)"
+                        className="w-full p-2 rounded-lg border border-gray-300 text-xl focus:outline-none focus:ring-2 focus:ring-brand-teal"
+                      />
+                      <div className="flex gap-3 justify-end">
+                        <button onClick={() => setNewExpenseRow(null)} className="px-4 py-2 rounded-xl border border-gray-300 text-gray-600 hover:bg-gray-100 font-bold">ביטול</button>
+                        <button onClick={confirmNewExpenseRow} className="px-4 py-2 rounded-xl bg-brand-teal text-white font-bold hover:bg-teal-600">הוסף</button>
+                      </div>
+                    </div>
+                  )}
                   <button 
-                    onClick={() => openModal('addCustomExpense')}
+                    onClick={() => setNewExpenseRow({ name: '', amount: '', note: '' })}
                     className="w-full py-3 px-4 rounded-2xl border-2 border-dashed border-gray-400 text-gray-600 hover:border-brand-teal hover:text-brand-teal hover:bg-teal-50 transition-all font-bold text-xl flex items-center justify-center gap-2 mt-4"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -3331,8 +3418,8 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
                   <div className="space-y-3">
                   {deductionExpenses.map(item => (
                     <div key={item.id} className="bg-gray-100/70 p-4 rounded-2xl shadow-inner">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                                <div className="flex flex-wrap items-center gap-2 min-w-0">
                            <span className="font-bold text-3xl text-gray-700">{item.category}</span>
                            <Tooltip title={item.category} content={termExplanations[item.category] || 'הסבר בקרוב...'} />
                             {item.category === 'מס הכנסה' && (
@@ -3381,18 +3468,33 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
                                 </a>
                             )}
                         </div>
-                        <div className="relative">
+                                                <div className="relative w-full sm:w-36 flex-shrink-0">
                             <input
                               type="number"
-                              value={item.amount}
+                              value={Math.round(item.amount)}
                               readOnly
-                              className="w-36 text-left py-2 pr-2 pl-12 rounded-lg border-2 border-gray-300 bg-gray-200 cursor-not-allowed shadow-inner text-base"
+                                                            className="w-full text-left py-2 pr-2 pl-12 rounded-lg border-2 border-gray-300 bg-gray-200 cursor-not-allowed shadow-inner text-base"
                             />
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none text-base">ש"ח</span>
                         </div>
                       </div>
+                                            {item.note && (
+                                                <p className="mt-2 text-sm text-gray-700 bg-white/70 border border-gray-200 rounded-lg px-3 py-2">
+                                                    {item.note}
+                                                </p>
+                                            )}
                     </div>
                   ))}
+                  </div>
+                  {/* Keren Hishtalmut toggle */}
+                  <div className="mt-4 flex justify-center">
+                    <button
+                      onClick={() => setIncludeKerenHishtalmut(prev => !prev)}
+                      className={`flex items-center gap-2 px-5 py-2 rounded-full font-bold text-base border-2 transition-all ${includeKerenHishtalmut ? 'bg-emerald-100 border-emerald-500 text-emerald-800' : 'bg-white/60 border-gray-300 text-gray-700 hover:border-emerald-400'}`}
+                    >
+                      <span>{includeKerenHishtalmut ? '✅' : '➕'}</span>
+                      <span>הוספת הפרשה לקרן השתלמות</span>
+                    </button>
                   </div>
                 </div>
               )}

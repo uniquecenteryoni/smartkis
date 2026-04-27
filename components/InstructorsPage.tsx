@@ -25,6 +25,7 @@ import JeopardyModule from './modules/JeopardyModule';
 import BullseyeGame from './modules/BullseyeGame';
 import MillionDropGame from './modules/MillionDropGame';
 import MyInvestmentPortfolioGame from './modules/MyInvestmentPortfolioGame';
+import PayslipChallengeGame from './modules/PayslipChallengeGame';
 import SupermarketRaceGame from './modules/SupermarketRaceGame';
 import PicassoGame from './modules/PicassoGame';
 import CarRaceGame from './modules/CarRaceGame';
@@ -2776,10 +2777,14 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">גרסה מודולרית לחבילה עוברת.</p>
               </button>
-              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-8 text-center text-brand-dark-blue/50 min-h-[14rem] flex flex-col items-center justify-center">
-                <p className="text-2xl font-bold">משחק נוסף</p>
-                <p className="text-lg mt-2">בקרוב יתווסף משחק תומך.</p>
-              </div>
+              <button
+                onClick={() => setActiveSubActivity('אתגר התלוש')}
+                className="rounded-3xl border-2 border-dashed border-teal-300 bg-gradient-to-br from-teal-50 to-cyan-50 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-2">🧾</p>
+                <p className="text-2xl font-bold text-teal-800">אתגר התלוש</p>
+                <p className="text-teal-700 mt-2 text-base">QR לנייד + מילוי תלוש מדומה עם שדות חסרים</p>
+              </button>
               <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-8 text-center text-brand-dark-blue/50 min-h-[14rem] flex flex-col items-center justify-center">
                 <p className="text-2xl font-bold">אתגר כיתתי</p>
                 <p className="text-lg mt-2">בקרוב יתווסף אתגר כיתתי.</p>
@@ -2802,6 +2807,8 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
               </div>
               <MillionDropGame onBack={() => setActiveSubActivity(null)} topic="paystub" />
             </div>
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'פענוח תלוש שכר' && activeProgram === "'חכם בכיס'" && activeSubActivity === 'אתגר התלוש' ? (
+            <PayslipChallengeGame onBack={() => setActiveSubActivity(null)} />
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'שכירים ועצמאיים' && activeProgram === "'חכם בכיס'" && !activeSubActivity ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <button
