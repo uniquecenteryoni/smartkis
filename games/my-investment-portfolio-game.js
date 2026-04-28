@@ -76,6 +76,76 @@
       sector: "צריכה",
       price: 250,
       note: "מוצרי צריכה יציבים"
+    },
+    {
+      symbol: "NKE",
+      company: "Nike",
+      sector: "ביגוד וספורט",
+      price: 380,
+      note: "ענקית הנעליים והביגוד הספורטיבי"
+    },
+    {
+      symbol: "DIS",
+      company: "Disney",
+      sector: "בידור",
+      price: 320,
+      note: "אימפריית הבידור וסרטים"
+    },
+    {
+      symbol: "NFLX",
+      company: "Netflix",
+      sector: "סטרימינג",
+      price: 580,
+      note: "פלטפורמת סרטונים וסדרות בעולם"
+    },
+    {
+      symbol: "SNAP",
+      company: "Snapchat",
+      sector: "מדיה חברתית",
+      price: 240,
+      note: "אפליקציית תמונות וידאו חברתית"
+    },
+    {
+      symbol: "RBLX",
+      company: "Roblox",
+      sector: "משחקים",
+      price: 180,
+      note: "פלטפורמת משחקי ריאליטי וירטואלי"
+    },
+    {
+      symbol: "SPOT",
+      company: "Spotify",
+      sector: "מוסיקה",
+      price: 280,
+      note: "שירות סטרימינג מוסיקה עולמי"
+    },
+    {
+      symbol: "INTC",
+      company: "Intel",
+      sector: "שבבים",
+      price: 360,
+      note: "יצרנית מעבדים למחשבים ומשחקים"
+    },
+    {
+      symbol: "MCD",
+      company: "McDonald's",
+      sector: "מזון",
+      price: 290,
+      note: "רשת מסעדות המבורגר גדולה ברחבי עולם"
+    },
+    {
+      symbol: "SBUX",
+      company: "Starbucks",
+      sector: "משקאות",
+      price: 330,
+      note: "רשת קפה בינלאומית ידועה"
+    },
+    {
+      symbol: "PYPL",
+      company: "PayPal",
+      sector: "תשלומים דיגיטליים",
+      price: 290,
+      note: "פלטפורמת תשלומים מקוונת"
     }
   ];
 
@@ -83,62 +153,122 @@
     {
       symbol: "AAPL",
       headline: "Apple משיקה סדרת מכשירים עם ביקוש גבוה מהתחזיות",
-      impactPct: 8.5,
+      impactPct: 9,
       details: "המכירות המוקדמות עקפו את התחזיות בוול סטריט."
     },
     {
       symbol: "MSFT",
       headline: "Microsoft מדווחת על צמיחה חזקה בשירותי Azure",
-      impactPct: 7.2,
+      impactPct: 7,
       details: "מנוע הצמיחה של הענן ממשיך להתרחב בקצב דו-ספרתי."
     },
     {
       symbol: "GOOGL",
       headline: "רגולטור באירופה פותח בדיקה חדשה נגד Alphabet",
-      impactPct: -6.8,
+      impactPct: -7,
       details: "חשש לקנס גבוה ולמגבלות פרסום בטווח הבינוני."
     },
     {
       symbol: "AMZN",
       headline: "Amazon משפרת רווחיות לוגיסטית ומקצרת זמני אספקה",
-      impactPct: 5.4,
+      impactPct: 5,
       details: "עלייה במרווח התפעולי בתחום המסחר המקוון."
     },
     {
       symbol: "TSLA",
       headline: "Tesla מכריזה על הורדת מחירים אגרסיבית במספר שווקים",
-      impactPct: -9.4,
+      impactPct: -9,
       details: "המשקיעים מודאגים מלחץ על שיעור הרווח הגולמי."
     },
     {
       symbol: "NVDA",
       headline: "ביקוש שיא לשבבי AI של NVIDIA במרכזי נתונים",
-      impactPct: 11.3,
+      impactPct: 11,
       details: "ספקיות ענן מדווחות על הזמנות חדשות משמעותיות."
     },
     {
       symbol: "META",
       headline: "Meta מגדילה הכנסות מפרסום בפלטפורמות וידאו",
-      impactPct: 6.1,
+      impactPct: 6,
       details: "המודלים לפרסום ממוקד משפרים את יחס ההמרה למפרסמים."
     },
     {
       symbol: "JPM",
       headline: "JPMorgan מפרישה סכומים גבוהים להפסדי אשראי",
-      impactPct: -4.9,
+      impactPct: -5,
       details: "עלייה בסיכון אשראי במגזר העסקי הקטן."
     },
     {
       symbol: "XOM",
       headline: "מחירי הנפט יורדים בעקבות צפי לעודף היצע",
-      impactPct: -5.6,
+      impactPct: -6,
       details: "הלחץ על סקטור האנרגיה מכביד על מניות הנפט."
     },
     {
       symbol: "KO",
       headline: "Coca-Cola מעלה תחזית שנתית לאחר תמחור מוצלח",
-      impactPct: 3.4,
+      impactPct: 3,
       details: "החברה מציגה יציבות במכירות ושיפור במרווחים."
+    },
+    {
+      symbol: "NKE",
+      headline: "Nike שיתפה פעולה עם כוכב ספורט צעיר בשיווק חדש",
+      impactPct: 8,
+      details: "הקמפיין החדש מושך דור צעיר של צרכנים ספורטיביים."
+    },
+    {
+      symbol: "DIS",
+      headline: "Disney משיקה סרט קופה משבורים חדש שמעורר התלהבות",
+      impactPct: 10,
+      details: "חזוי על ידי מנתחים כהיט קופה ישיר הקרוב."
+    },
+    {
+      symbol: "NFLX",
+      headline: "Netflix מוסיפה תכניות חדשות במחוץ לתחזוקה ותוכן מקורי",
+      impactPct: 8,
+      details: "מהירות גדולה בהשקות של סדרות פופולריות חדשות."
+    },
+    {
+      symbol: "SPOT",
+      headline: "Spotify מדווחת על צמיחה בחיות הכללית שמונעות הערות חיוביות",
+      impactPct: 7,
+      details: "הרצוויות של אני המוסיקה גבוהות מהתחזיות במגזר הצעירים."
+    },
+    {
+      symbol: "RBLX",
+      headline: "Roblox משחקים חדשים אתר זעמי הכנסות בהטבעות תוך-משחק",
+      impactPct: 12,
+      details: "מעוניינים צעירים במשחקים וירטואליים מעלים הכנסות פי שלוש."
+    },
+    {
+      symbol: "SNAP",
+      headline: "Snapchat משיקה תכונות ייחודיות עם מסנני AR חדשים",
+      impactPct: 9,
+      details: "הצעירים משתמשים בפלטפורמה יותר להבעה יצירתית."
+    },
+    {
+      symbol: "INTC",
+      headline: "Intel משיקה שבב מעבד חדש בעיצוב מתקדם",
+      impactPct: 6,
+      details: "התחרות בשוק המעבדים מתחזקת עם מוצר חדש."
+    },
+    {
+      symbol: "MCD",
+      headline: "McDonald's מדווחת על צמיחה בהזמנות דרך האפליקציה שלהם",
+      impactPct: 5,
+      details: "ההזמנות הדיגיטליות מנהלות עלייה משמעותית בהכנסות."
+    },
+    {
+      symbol: "SBUX",
+      headline: "Starbucks מרחיבה קטגוריות משקאות עם אפשרויות בריאות",
+      impactPct: 7,
+      details: "הגדילו בקטגוריות משקאות נמוכים קלוריות משכנעים צרכנים."
+    },
+    {
+      symbol: "PYPL",
+      headline: "PayPal מרחיבה שותפויות עם ענקיות קטגוריות בדיגיטל",
+      impactPct: 8,
+      details: "הרחבת השימושים בתשלומים דיגיטליים מביאה למטבח חדש."
     }
   ];
 
@@ -291,7 +421,7 @@
       " ש\"ח (" +
       formatSignedPercent(pnlPct) +
       ")</strong></div>" +
-      "<div class=\"bar-item\"><span>בזבוזים</span><strong>" +
+      "<div class=\"bar-item\"><span>יתרה</span><strong>" +
       formatMoney(wasteBudget()) +
       " ש\"ח</strong></div>";
   }
@@ -329,6 +459,7 @@
               stock.symbol +
               "\" data-delta=\"-1\" aria-label=\"הורדה באחוז\">-</button>"
             : "<div class=\"impact-step ghost\"></div>") +
+          "<div class=\"stock-pill-wrapper\" style=\"position:relative;display:flex;align-items:center;justify-content:center;\">" +
           "<button class=\"stock-pill " +
           (!state.finished && !canBuyOneMore ? "disabled" : "") +
           "\" data-buy=\"" +
@@ -345,6 +476,8 @@
           formatMoney(stock.price) +
           " ש\"ח</span>" +
           "</button>" +
+          "<span class=\"stock-info-icon\" data-stock-symbol=\"" + stock.symbol + "\" style=\"position:absolute;right:-12px;top:-12px;background:#0ea5e9;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer;font-size:14px;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.2);\">ℹ</span>" +
+          "</div>" +
           (state.finished
             ? "<button class=\"impact-step\" data-impact-step=\"" +
               stock.symbol +
@@ -388,6 +521,41 @@
           return;
         }
         stepAdjustment(symbol, delta);
+      });
+    });
+
+    container.querySelectorAll("span.stock-info-icon").forEach((icon) => {
+      icon.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const symbol = event.currentTarget.getAttribute("data-stock-symbol");
+        const stock = stocks.find((s) => s.symbol === symbol);
+        if (!stock) {
+          return;
+        }
+        
+        const popup = document.createElement("div");
+        popup.style.cssText = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;border:2px solid #0ea5e9;border-radius:12px;padding:20px;width:80%;max-width:400px;z-index:1000;box-shadow:0 10px 40px rgba(0,0,0,0.3);";
+        popup.innerHTML = 
+          "<div style='text-align:right;'>" +
+          "<h3 style='margin:0 0 10px 0;color:#0f172a;font-size:24px;'>" + stock.company + " (" + stock.symbol + ")</h3>" +
+          "<p style='margin:8px 0;color:#0f766e;font-weight:bold;'>סקטור: " + stock.sector + "</p>" +
+          "<p style='margin:8px 0;color:#0f172a;line-height:1.6;'>" + stock.note + "</p>" +
+          "<p style='margin:12px 0 0 0;color:#64748b;font-size:14px;'>מחיר: " + formatMoney(stock.price) + " ש\"ח</p>" +
+          "<button id='closePopupBtn' style='margin-top:16px;background:#0ea5e9;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:bold;width:100%;'>סגור</button>" +
+          "</div>";
+        
+        document.body.appendChild(popup);
+        
+        const closeBtn = popup.querySelector("#closePopupBtn");
+        closeBtn.addEventListener("click", () => {
+          popup.remove();
+        });
+        
+        popup.addEventListener("click", (e) => {
+          if (e.target === popup) {
+            popup.remove();
+          }
+        });
       });
     });
   }
