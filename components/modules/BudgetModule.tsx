@@ -2177,6 +2177,13 @@ const SummaryReportForPdf: React.FC<{
     
     const deductions = allExpenses.filter(e => e.isDeduction);
     const userExpenses = allExpenses.filter(e => !e.isDeduction);
+    const defaultCategories = new Set(initialExpenses.map((item) => item.category));
+    const changedUserExpenses = userExpenses.filter((item) => {
+        const hasAmount = Math.round(item.amount) !== 0;
+        const hasNote = !!item.note?.trim();
+        const isCustomCategory = !defaultCategories.has(item.category);
+        return hasAmount || hasNote || isCustomCategory;
+    });
 
     return (
         <div id="pdf-content" className="bg-white p-8 w-[800px] font-sans">
@@ -2206,13 +2213,17 @@ const SummaryReportForPdf: React.FC<{
                     </thead>
                     <tbody>
                          <tr className="bg-gray-200 font-bold"><td colSpan={3} className="p-2">הוצאות מחייה</td></tr>
-                        {userExpenses.filter(e => e.amount > 0).map(item => (
+                        {changedUserExpenses.length > 0 ? changedUserExpenses.map(item => (
                             <tr key={item.id} className="border-b">
                                 <td className="p-3">{item.category}</td>
                                 <td className="p-3 text-left font-mono">{item.amount.toLocaleString('he-IL', {style:'currency', currency:'ILS'})}</td>
                                 <td className="p-3 text-sm text-gray-600">{item.note || '-'}</td>
                             </tr>
-                        ))}
+                        )) : (
+                            <tr className="border-b">
+                                <td className="p-3 text-gray-600" colSpan={3}>לא נמצאו שורות הוצאה עם הזנה או שינוי.</td>
+                            </tr>
+                        )}
                          <tr className="bg-gray-200 font-bold"><td colSpan={3} className="p-2">ניכויים</td></tr>
                         {deductions.map(item => (
                             <tr key={item.id} className="border-b">
@@ -2515,10 +2526,29 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
   };
 
   const handleDownload = async () => {
+    if (!selectedCharacter) {
+        return;
+    }
+
+    const defaultFileName = `budget-report-${selectedCharacter.name}`;
+    const userFileName = window.prompt('הקלידו שם לקובץ הדוח:', defaultFileName);
+
+    if (userFileName === null) {
+        return;
+    }
+
+    const cleanedFileName = (userFileName.trim() || defaultFileName)
+        .replace(/[\\/:*?"<>|]/g, '-')
+        .replace(/\s+/g, ' ');
+
+    const finalFileName = cleanedFileName.toLowerCase().endsWith('.pdf')
+        ? cleanedFileName
+        : `${cleanedFileName}.pdf`;
+
     setIsProcessing(true);
     const pdf = await generatePdfDocument();
-    if (pdf && selectedCharacter) {
-        pdf.save(`budget-report-${selectedCharacter.name}.pdf`);
+    if (pdf) {
+        pdf.save(finalFileName);
     }
     setIsProcessing(false);
     setIsShareModalOpen(false);
@@ -2763,18 +2793,29 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
 
         return (
             <div className="sticky bottom-0 mt-8 z-20">
-                <div className="bg-white/85 backdrop-blur-md border border-white/40 rounded-2xl p-3 flex items-center justify-between gap-3">
+                <div className="bg-white/85 backdrop-blur-md border border-white/40 rounded-2xl p-3 grid grid-cols-1 sm:grid-cols-3 items-center gap-3">
                     <button
                         onClick={handlePrev}
                         disabled={isFirstStep}
-                        className="bg-gray-300 hover:bg-gray-400 text-brand-dark-blue font-bold py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed text-xl"
+                        className="bg-gray-300 hover:bg-gray-400 text-brand-dark-blue font-bold py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed text-xl justify-self-start"
                     >
                         לפרק הקודם
                     </button>
+                    {step === 1 ? (
+                        <button
+                            ref={shareButtonRef}
+                            onClick={handleOpenShareModal}
+                            className="bg-amber-400 hover:bg-amber-500 text-brand-dark-blue font-bold py-3 px-6 rounded-lg text-xl justify-self-center"
+                        >
+                            הפק דוח
+                        </button>
+                    ) : (
+                        <div className="hidden sm:block" />
+                    )}
                     <button
                         onClick={handleNext}
                         disabled={!canGoNext || isLastStep}
-                        className={`font-bold py-3 px-6 rounded-lg text-xl text-white ${canGoNext && !isLastStep ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}`}
+                        className={`font-bold py-3 px-6 rounded-lg text-xl text-white justify-self-end ${canGoNext && !isLastStep ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}`}
                     >
                         לפרק הבא
                     </button>
