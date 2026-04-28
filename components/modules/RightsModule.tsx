@@ -460,14 +460,6 @@ const JobInterviewChapter: React.FC = () => {
                         <textarea
                             value={draftAnswer}
                             onChange={(event) => setDraftAnswer(event.target.value)}
-                            onKeyDown={(event) => {
-                                if (event.key === 'Enter' && !event.shiftKey) {
-                                    event.preventDefault();
-                                    if (draftAnswer.trim()) {
-                                        submitAnswer();
-                                    }
-                                }
-                            }}
                             placeholder="התשובה שלכם לשאלה מופיעה כאן, מתחת לשאלה..."
                             className="w-full min-h-[140px] rounded-2xl border border-gray-300 p-4 text-2xl bg-white focus:outline-none focus:ring-2 focus:ring-brand-teal"
                         />
