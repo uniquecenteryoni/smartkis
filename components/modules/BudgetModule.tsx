@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, ChangeEvent, useCallback, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import type { BudgetItem, Character } from '../../types';
 import ModuleView from '../ModuleView';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip as RechartsTooltip } from 'recharts';
@@ -2243,21 +2244,20 @@ const ShareReportModal: React.FC<{
     isOpen: boolean;
     onClose: () => void;
     onDownload: () => void;
+    onDownloadData: () => void;
     onShare: () => void;
     onCopyLink: () => void;
     isProcessing: boolean;
     isCopied: boolean;
-    style?: React.CSSProperties;
-}> = ({ isOpen, onClose, onDownload, onShare, onCopyLink, isProcessing, isCopied, style }) => {
+}> = ({ isOpen, onClose, onDownload, onDownloadData, onShare, onCopyLink, isProcessing, isCopied }) => {
     if (!isOpen) return null;
 
     const canShare = !!navigator.share;
 
-    return (
-        <div className="fixed inset-0 bg-black/60 z-50 animate-fade-in" onClick={onClose}>
+    return ReactDOM.createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in" onClick={onClose}>
             <div 
-                style={style}
-                className="absolute bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl" 
+                className="w-full max-w-md bg-white p-8 rounded-3xl shadow-2xl" 
                 onClick={e => e.stopPropagation()}
             >
                 <h3 className="text-2xl font-bold mb-6 text-center text-brand-dark-blue">שתף את דו"ח התקציב</h3>
@@ -2269,6 +2269,14 @@ const ShareReportModal: React.FC<{
                     >
                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                         <span>{isProcessing ? 'מעבד...' : 'הורד קובץ PDF'}</span>
+                    </button>
+                    <button
+                        onClick={onDownloadData}
+                        disabled={isProcessing}
+                        className="w-full flex items-center justify-center gap-3 p-4 bg-brand-dark-blue text-white rounded-lg text-lg font-bold transition transform hover:scale-105 disabled:bg-gray-400"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 16v-8m0 8l-3-3m3 3l3-3M5 20h14" /></svg>
+                        <span>{isProcessing ? 'מעבד...' : 'הורד קובץ דמות לשחזור'}</span>
                     </button>
                     <button
                         onClick={onShare}
@@ -2290,7 +2298,8 @@ const ShareReportModal: React.FC<{
                 </div>
                 <button onClick={onClose} className="mt-6 w-full text-center text-gray-500 hover:text-gray-800">ביטול</button>
             </div>
-        </div>
+        </div>,
+        document.body
     )
 }
 
@@ -2362,7 +2371,7 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
   const reportRef = useRef<HTMLDivElement>(null);
   
   const shareButtonRef = useRef<HTMLButtonElement>(null);
-  const [shareModalStyle, setShareModalStyle] = useState<React.CSSProperties>({});
+  const importFileRef = useRef<HTMLInputElement>(null);
 
   const [fuelConsumption, setFuelConsumption] = useState<string>('');
   const [carDetails, setCarDetails] = useState<{ year: string; price: string; } | null>(null);
@@ -2476,16 +2485,6 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
   const handleOpenShareModal = () => {
     if (!selectedCharacter) return;
 
-    if (shareButtonRef.current) {
-        const rect = shareButtonRef.current.getBoundingClientRect();
-        setShareModalStyle({
-            position: 'absolute',
-            top: `${rect.top}px`,
-            left: `${rect.left + rect.width / 2}px`,
-            transform: 'translate(-50%, calc(-100% - 1rem))', // Position above with 1rem gap
-        });
-    }
-
     setReportDataForPdf({
         character: selectedCharacter,
         netIncome,
@@ -2522,8 +2521,58 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
     const y = (pdfHeight - imgFinalHeight) / 2;
 
     pdf.addImage(imgData, 'PNG', x, y, imgFinalWidth, imgFinalHeight);
+
     return pdf;
   };
+
+    const createBudgetExportData = () => ({
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        character: selectedCharacter,
+        expenses: expenses.map(({ task, ...rest }) => rest),
+        savingsPercentage,
+        includeKerenHishtalmut,
+        fuelConsumption,
+        drivingScale,
+        clothingInputString,
+        carPurchaseDetails,
+        rentDetails,
+        entertainmentItems,
+        selectedSubscriptions,
+        maintenanceCostInput,
+        accountsAnswers,
+    });
+
+    const encodeExportData = (data: ReturnType<typeof createBudgetExportData>) =>
+        btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+
+    const createEmbeddedPdfBlob = (pdf: any) => {
+        const exportData = createBudgetExportData();
+        const basePdfBlob = pdf.output('blob');
+        const encodedData = encodeExportData(exportData);
+        const marker = `\n%%SMARTKIS_EXPORT_START%%${encodedData}%%SMARTKIS_EXPORT_END%%`;
+
+        return {
+            exportData,
+            pdfBlob: new Blob([basePdfBlob, marker], { type: 'application/pdf' }),
+        };
+    };
+
+    const promptForExportFileName = (defaultFileName: string, extension: string, message: string) => {
+        const userFileName = window.prompt(message, defaultFileName);
+
+        if (userFileName === null) {
+            return null;
+        }
+
+        const cleanedFileName = (userFileName.trim() || defaultFileName)
+            .replace(/[\\/:*?"<>|]/g, '-')
+            .replace(/\s+/g, ' ');
+
+        return cleanedFileName.toLowerCase().endsWith(extension)
+            ? cleanedFileName
+            : `${cleanedFileName}${extension}`;
+    };
 
   const handleDownload = async () => {
     if (!selectedCharacter) {
@@ -2531,27 +2580,53 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
     }
 
     const defaultFileName = `budget-report-${selectedCharacter.name}`;
-    const userFileName = window.prompt('הקלידו שם לקובץ הדוח:', defaultFileName);
+    const finalFileName = promptForExportFileName(defaultFileName, '.pdf', 'הקלידו שם לקובץ ה-PDF:');
 
-    if (userFileName === null) {
+    if (!finalFileName) {
         return;
     }
-
-    const cleanedFileName = (userFileName.trim() || defaultFileName)
-        .replace(/[\\/:*?"<>|]/g, '-')
-        .replace(/\s+/g, ' ');
-
-    const finalFileName = cleanedFileName.toLowerCase().endsWith('.pdf')
-        ? cleanedFileName
-        : `${cleanedFileName}.pdf`;
 
     setIsProcessing(true);
     const pdf = await generatePdfDocument();
     if (pdf) {
-        pdf.save(finalFileName);
+        const { pdfBlob } = createEmbeddedPdfBlob(pdf);
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        const pdfLink = document.createElement('a');
+        pdfLink.href = pdfUrl;
+        pdfLink.download = finalFileName;
+        pdfLink.click();
+        URL.revokeObjectURL(pdfUrl);
     }
     setIsProcessing(false);
     setIsShareModalOpen(false);
+  };
+
+  const handleDownloadData = () => {
+    if (!selectedCharacter) {
+        return;
+    }
+
+    const defaultFileName = `budget-character-${selectedCharacter.name}`;
+    const finalFileName = promptForExportFileName(defaultFileName, '.smartkis', 'הקלידו שם לקובץ הדמות:');
+
+    if (!finalFileName) {
+        return;
+    }
+
+    setIsProcessing(true);
+    try {
+        const exportData = createBudgetExportData();
+        const dataBlob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const dataUrl = URL.createObjectURL(dataBlob);
+        const dataLink = document.createElement('a');
+        dataLink.href = dataUrl;
+        dataLink.download = finalFileName;
+        dataLink.click();
+        URL.revokeObjectURL(dataUrl);
+        setIsShareModalOpen(false);
+    } finally {
+        setIsProcessing(false);
+    }
   };
 
   const handleShare = async () => {
@@ -2563,8 +2638,8 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
         return;
     }
 
-    const blob = pdf.output('blob');
-    const file = new File([blob], `budget-report-${selectedCharacter.name}.pdf`, { type: 'application/pdf' });
+    const { pdfBlob } = createEmbeddedPdfBlob(pdf);
+    const file = new File([pdfBlob], `budget-report-${selectedCharacter.name}.pdf`, { type: 'application/pdf' });
     const shareData = {
         files: [file],
         title: `דו"ח התקציב של ${selectedCharacter.name}`,
@@ -2729,7 +2804,16 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
         const kerenAmount = parseFloat((selectedCharacter.salary * 0.025).toFixed(2));
         const kerenItem = { id: 104, category: 'קרן השתלמות', amount: kerenAmount, note: `2.5% על ${fmt(selectedCharacter.salary)} ₪ = ${fmt(kerenAmount)} ₪ | המעסיק מוסיף עוד 7.5% (${fmt(selectedCharacter.salary * 0.075)} ₪) לקרן`, isDeduction: true };
         const allDeductions = includeKerenHishtalmut ? [...deductions, kerenItem] : deductions;
-        setExpenses([...initialExpenses.map(e => ({...e, amount: 0})), ...allDeductions]);
+        setExpenses(prevExpenses => {
+            const defaultExpenseIds = new Set(initialExpenses.map(item => item.id));
+            const preservedBaseExpenses = initialExpenses.map(item => {
+                const existingItem = prevExpenses.find(expense => expense.id === item.id && !expense.isDeduction);
+                return existingItem ? { ...item, ...existingItem, task: item.task } : { ...item, amount: 0 };
+            });
+            const customExpenses = prevExpenses.filter(expense => !expense.isDeduction && !defaultExpenseIds.has(expense.id));
+
+            return [...preservedBaseExpenses, ...customExpenses, ...allDeductions];
+        });
     } else {
         setExpenses(initialExpenses.map(e => ({...e, amount: 0})));
     }
@@ -2923,9 +3007,63 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
   }, [carDetails]);
   
   const handleSelectCharacter = (character: Character) => {
+        setExpenses(initialExpenses.map(e => ({ ...e, amount: 0 })));
     setSelectedCharacter(character);
         setHasOpenedBudgetGame(false);
     setStep(1);
+  };
+
+  const handleImportCharacter = (file: File) => {
+    const lowerCaseFileName = file.name.toLowerCase();
+    const isPdf = lowerCaseFileName.endsWith('.pdf');
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            let data: any;
+            if (isPdf) {
+                const binary = e.target?.result as string;
+                const embeddedMatch = binary.match(/%%SMARTKIS_EXPORT_START%%([A-Za-z0-9+/=\r\n]+)%%SMARTKIS_EXPORT_END%%/);
+                const metadataMatch = binary.match(/smartkis-export:([A-Za-z0-9+/=\s\r\n]+)/);
+                const encodedData = embeddedMatch?.[1] ?? metadataMatch?.[1];
+
+                if (!encodedData) {
+                    alert('לא נמצאו נתוני דמות בקובץ ה-PDF. ודאו שהקובץ יוצא ממודול התקציב של SmartKIS.');
+                    return;
+                }
+
+                data = JSON.parse(decodeURIComponent(escape(atob(encodedData.replace(/[\s\r\n]/g, '')))));
+            } else {
+                data = JSON.parse(e.target?.result as string);
+            }
+            if (!data.version || !data.character) {
+                alert('קובץ לא תקין. ודאו שטענתם קובץ שיוצא מהמודול.');
+                return;
+            }
+            setSelectedCharacter(data.character);
+            const restoredExpenses = (data.expenses || []).map((exp: any) => {
+                const original = initialExpenses.find(e => e.id === exp.id);
+                return { ...exp, task: original?.task };
+            });
+            setExpenses(restoredExpenses);
+            if (data.savingsPercentage !== undefined) setSavingsPercentage(data.savingsPercentage);
+            if (data.includeKerenHishtalmut !== undefined) setIncludeKerenHishtalmut(data.includeKerenHishtalmut);
+            if (data.fuelConsumption !== undefined) setFuelConsumption(data.fuelConsumption);
+            if (data.drivingScale !== undefined) setDrivingScale(data.drivingScale);
+            if (data.clothingInputString !== undefined) setClothingInputString(data.clothingInputString);
+            if (data.carPurchaseDetails) setCarPurchaseDetails(data.carPurchaseDetails);
+            if (data.rentDetails) setRentDetails(data.rentDetails);
+            if (data.entertainmentItems) setEntertainmentItems(data.entertainmentItems);
+            if (data.selectedSubscriptions) setSelectedSubscriptions(data.selectedSubscriptions);
+            if (data.maintenanceCostInput !== undefined) setMaintenanceCostInput(data.maintenanceCostInput);
+            if (data.accountsAnswers) setAccountsAnswers(data.accountsAnswers);
+            setHasOpenedBudgetGame(false);
+            setStep(1);
+        } catch {
+            alert('שגיאה בקריאת הקובץ. ודאו שהקובץ תקין.');
+        }
+    };
+    if (isPdf) reader.readAsBinaryString(file);
+    else reader.readAsText(file);
   };
   
   const handleExpenseChange = (id: number, newAmount: number) => {
@@ -3040,6 +3178,17 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
                     <h4 className="font-bold text-3xl">יצירת דמות חדשה</h4>
                     <p className="text-lg">התאימו את התקציב לנתונים שלכם</p>
                 </div>
+                <div onClick={() => importFileRef.current?.click()} className="bg-white/60 backdrop-blur-lg p-4 rounded-2xl border-2 border-dashed border-purple-400 hover:border-purple-500 hover:bg-purple-50/50 transition-all duration-300 cursor-pointer text-center transform hover:-translate-y-2 shadow-lg flex flex-col items-center justify-center">
+                    <div className="w-32 h-32 rounded-full bg-purple-100 flex items-center justify-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                    </div>
+                    <h4 className="font-bold text-3xl">ייבוא דמות</h4>
+                    <p className="text-lg">טענו קובץ SmartKIS, JSON או PDF שיוצא בעבר</p>
+                    <input ref={importFileRef} type="file" accept=".smartkis,.json,.pdf" className="hidden"
+                        onChange={(e) => { if (e.target.files?.[0]) handleImportCharacter(e.target.files[0]); e.target.value = ''; }} />
+                </div>
             </div>
             {renderChapterNavigation()}
         </ModuleView>
@@ -3059,11 +3208,11 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
                     isOpen={isShareModalOpen}
                     onClose={() => setIsShareModalOpen(false)}
                     onDownload={handleDownload}
+                    onDownloadData={handleDownloadData}
                     onShare={handleShare}
                     onCopyLink={handleCopyLink}
                     isProcessing={isProcessing}
                     isCopied={isCopied}
-                    style={shareModalStyle}
                 />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -3222,11 +3371,11 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
         onDownload={handleDownload}
+          onDownloadData={handleDownloadData}
         onShare={handleShare}
         onCopyLink={handleCopyLink}
         isProcessing={isProcessing}
         isCopied={isCopied}
-        style={shareModalStyle}
      />
       
       <div className="space-y-8">
