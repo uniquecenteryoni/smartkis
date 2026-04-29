@@ -2043,14 +2043,32 @@ const RentPurchaseModal: React.FC<{
             <div className="bg-white p-6 rounded-2xl w-full max-w-lg shadow-2xl">
                 <h3 className="text-2xl font-bold mb-6 text-center">הזנת פרטי שכירות</h3>
                 <div className="space-y-4">
-                    <input type="text" value={city} onChange={e => setField('city', e.target.value)} placeholder="מיקום הדירה (עיר)*" className="w-full p-2 rounded border" />
-                    <input type="number" value={size} onChange={e => setField('size', e.target.value)} placeholder="גודל הדירה (מ&quot;ר)*" className="w-full p-2 rounded border" />
-                    <input type="number" value={rooms} onChange={e => setField('rooms', e.target.value)} placeholder="מספר חדרים*" className="w-full p-2 rounded border" />
-                    <input type="number" value={floor} onChange={e => setField('floor', e.target.value)} placeholder="קומה*" className="w-full p-2 rounded border" />
-                    <input type="url" value={adLink} onChange={e => setField('adLink', e.target.value)} placeholder="קישור למודעה*" className="w-full p-2 rounded border" />
-                    <div>
-                        <input type="number" value={rent} onChange={e => setField('rent', e.target.value)} placeholder="שכר דירה (₪)*" className="w-full p-2 rounded border font-bold" />
-                        {warning && <p className="text-red-500 text-sm mt-1">{warning}</p>}
+                    <div dir="ltr" className="grid grid-cols-[150px_minmax(0,1fr)] items-center gap-3">
+                        <input type="text" value={city} onChange={e => setField('city', e.target.value)} className="w-full max-w-[260px] justify-self-start p-2 rounded border" />
+                        <label className="text-sm font-semibold text-gray-700 text-right">מיקום הדירה (עיר)*</label>
+                    </div>
+                    <div dir="ltr" className="grid grid-cols-[150px_minmax(0,1fr)] items-center gap-3">
+                        <input type="number" value={size} onChange={e => setField('size', e.target.value)} className="w-full max-w-[260px] justify-self-start p-2 rounded border" />
+                        <label className="text-sm font-semibold text-gray-700 text-right">גודל הדירה (מ&quot;ר)*</label>
+                    </div>
+                    <div dir="ltr" className="grid grid-cols-[150px_minmax(0,1fr)] items-center gap-3">
+                        <input type="number" value={rooms} onChange={e => setField('rooms', e.target.value)} className="w-full max-w-[260px] justify-self-start p-2 rounded border" />
+                        <label className="text-sm font-semibold text-gray-700 text-right">מספר חדרים*</label>
+                    </div>
+                    <div dir="ltr" className="grid grid-cols-[150px_minmax(0,1fr)] items-center gap-3">
+                        <input type="number" value={floor} onChange={e => setField('floor', e.target.value)} className="w-full max-w-[260px] justify-self-start p-2 rounded border" />
+                        <label className="text-sm font-semibold text-gray-700 text-right">קומה*</label>
+                    </div>
+                    <div dir="ltr" className="grid grid-cols-[150px_minmax(0,1fr)] items-center gap-3">
+                        <input type="url" value={adLink} onChange={e => setField('adLink', e.target.value)} className="w-full max-w-[260px] justify-self-start p-2 rounded border" />
+                        <label className="text-sm font-semibold text-gray-700 text-right">קישור למודעה*</label>
+                    </div>
+                    <div dir="ltr" className="grid grid-cols-[150px_minmax(0,1fr)] items-start gap-3">
+                        <div className="w-full max-w-[260px] justify-self-start">
+                            <input type="number" value={rent} onChange={e => setField('rent', e.target.value)} className="w-full p-2 rounded border font-bold" />
+                            {warning && <p className="text-red-500 text-sm mt-1">{warning}</p>}
+                        </div>
+                        <label className="text-sm font-semibold text-gray-700 text-right pt-2">שכר דירה (₪)*</label>
                     </div>
                 </div>
                 <div className="mt-6 flex flex-col gap-2">
@@ -2702,35 +2720,16 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
     }
 
     const itemIdentifier = `${type}-${itemId || 'global'}`;
-    
-    const rowEl = itemId ? Object.values(rowRefs.current).find((ref): ref is HTMLElement => ref instanceof HTMLElement && ref.dataset.id === String(itemId)) : undefined;
 
-    let positionStyle: React.CSSProperties = {
+    const positionStyle: React.CSSProperties = {
         position: 'fixed',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
+        inset: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         zIndex: 50,
+        padding: '1rem',
     };
-    
-    if (rowEl) {
-        const rect = rowEl.getBoundingClientRect();
-        positionStyle = {
-            position: 'absolute',
-            top: `${rect.top + window.scrollY}px`,
-            left: `${rect.left + rect.width / 2}px`,
-            transform: 'translate(-50%, -100%) translateY(-1rem)',
-            zIndex: 50,
-        };
-    } else if (type === 'createCharacter' || type === 'addCustomExpense') {
-         positionStyle = {
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            zIndex: 50,
-        };
-    }
     
     const item = initialExpenses.find(e => e.id === itemId);
     const category = item ? item.category : '';
@@ -2747,26 +2746,16 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
         setActiveModal(null);
       }
       const itemIdentifier = `explanation-${itemId}`;
-      
-      const rowEl = rowRefs.current[String(itemId)];
-      let positionStyle: React.CSSProperties = {
-        position: 'fixed',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        zIndex: 50,
-      };
 
-       if (rowEl) {
-            const rect = rowEl.getBoundingClientRect();
-            positionStyle = {
-                position: 'absolute',
-                top: `${rect.top + window.scrollY}px`,
-                left: `${rect.left + rect.width / 2}px`,
-                transform: 'translate(-50%, -100%) translateY(-1rem)',
+            const positionStyle: React.CSSProperties = {
+                position: 'fixed',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 zIndex: 50,
+                padding: '1rem',
             };
-        }
       
       setTimeout(() => {
         setModalPosition(positionStyle);
@@ -3323,45 +3312,50 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
   return (
     <ModuleView title={title} onBack={() => setStep(0)}>
             {renderProgressBar()}
-      {activeModal?.type === 'unforeseen' && <UnforeseenEventModal style={modalPosition} onClose={closeModal} onResult={handleUnforeseenResult} />}
-      {activeModal?.type.startsWith('carQuestionnaire') && <CarQuestionnaireModal style={modalPosition} onClose={closeModal} />}
-    {activeModal?.type.startsWith('rentQuestionnaire') && <RentQuestionnaireModal style={modalPosition} onClose={closeModal} selectedCharacter={selectedCharacter} />}
-      {activeModal?.type.startsWith('supermarket') && <SupermarketModal
-          style={modalPosition}
-          onClose={closeModal}
-          onSelect={(name) => handleNoteChange(2, name)}
-      />}
-       {activeModal?.type.startsWith('clothingStore') && <ClothingStoreModal
-          style={modalPosition}
-          onClose={closeModal}
-          onSelect={(name) => handleNoteChange(14, `רשת: ${name}`)}
-      />}
-      {activeModal?.type.startsWith('subscriptions') && <SubscriptionsModal initialSelected={selectedSubscriptions} setInitialSelected={setSelectedSubscriptions} style={modalPosition} onClose={closeModal} onSave={handleSaveSubscriptions} />}
-    {activeModal?.type.startsWith('carPurchase') && <CarPurchaseModal details={carPurchaseDetails} setDetails={setCarPurchaseDetails} netIncome={netIncome} style={modalPosition} onClose={closeModal} onPurchaseComplete={handlePurchaseComplete} />}
-    {activeModal?.type.startsWith('insuranceCalculator') && <InsuranceCalculatorModal style={modalPosition} onClose={closeModal} onSelect={handleSaveInsurance} />}
-      {activeModal?.type.startsWith('licenseFee') && <LicenseFeeExplanationModal style={modalPosition} onClose={closeModal} />}
-      {activeModal?.type.startsWith('fuelCost') && <FuelCostExplanationModal style={modalPosition} onClose={closeModal} />}
-      {activeModal?.type.startsWith('maintenanceCalculator') && <CarMaintenanceCalculatorModal cost={maintenanceCostInput} setCost={setMaintenanceCostInput} style={modalPosition} onClose={closeModal} onSave={handleSaveMaintenance} drivingScale={drivingScale} setDrivingScale={setDrivingScale} />}
-      {activeModal?.type.startsWith('maintenanceExplanation') && <CarMaintenanceExplanationModal style={modalPosition} onClose={closeModal} />}
-      {activeModal?.type.startsWith('entertainmentSimulator') && <EntertainmentSimulatorModal items={entertainmentItems} setItems={setEntertainmentItems} style={modalPosition} onClose={closeModal} onSave={(total, note) => updateBudgetFromModal('בילויים ומסעדות', total, note)} />}
-    {activeModal?.type.startsWith('accountsCalculator') && <AccountsCalculatorModal answers={accountsAnswers} setAnswers={setAccountsAnswers} selectedCharacter={selectedCharacter} style={modalPosition} onClose={closeModal} onSave={handleSaveAccounts} />}
-      {activeModal?.type === 'createCharacter' && <CreateCharacterModal onClose={closeModal} onCreate={(char) => handleSelectCharacter(char)} />}
-      {activeModal?.type === 'explanation' && activeModal.content && <ExplanationModal style={modalPosition} title={activeModal.content.title} content={activeModal.content.content} onClose={closeModal} />}
-      {activeModal?.type.startsWith('rentPurchase') && <RentPurchaseModal 
-        details={rentDetails}
-        setDetails={setRentDetails}
-        style={modalPosition} 
-        onClose={closeModal} 
-        netIncome={netIncome}
-        onSave={({rent, note}) => {
-            const rentItem = expenses.find(e => e.category === 'שכירות');
-            if (rentItem) {
-                handleExpenseChange(rentItem.id, rent);
-                handleNoteChange(rentItem.id, note);
-            }
-        }} 
-     />}
-     {activeModal?.type === 'addCustomExpense' && <AddCustomExpenseModal onClose={closeModal} onAdd={handleAddCustomExpense} style={modalPosition} />}
+            {activeModal && ReactDOM.createPortal(
+                <>
+                    {activeModal.type === 'unforeseen' && <UnforeseenEventModal style={modalPosition} onClose={closeModal} onResult={handleUnforeseenResult} />}
+                    {activeModal.type.startsWith('carQuestionnaire') && <CarQuestionnaireModal style={modalPosition} onClose={closeModal} />}
+                    {activeModal.type.startsWith('rentQuestionnaire') && <RentQuestionnaireModal style={modalPosition} onClose={closeModal} selectedCharacter={selectedCharacter} />}
+                    {activeModal.type.startsWith('supermarket') && <SupermarketModal
+                            style={modalPosition}
+                            onClose={closeModal}
+                            onSelect={(name) => handleNoteChange(2, name)}
+                    />}
+                    {activeModal.type.startsWith('clothingStore') && <ClothingStoreModal
+                            style={modalPosition}
+                            onClose={closeModal}
+                            onSelect={(name) => handleNoteChange(14, `רשת: ${name}`)}
+                    />}
+                    {activeModal.type.startsWith('subscriptions') && <SubscriptionsModal initialSelected={selectedSubscriptions} setInitialSelected={setSelectedSubscriptions} style={modalPosition} onClose={closeModal} onSave={handleSaveSubscriptions} />}
+                    {activeModal.type.startsWith('carPurchase') && <CarPurchaseModal details={carPurchaseDetails} setDetails={setCarPurchaseDetails} netIncome={netIncome} style={modalPosition} onClose={closeModal} onPurchaseComplete={handlePurchaseComplete} />}
+                    {activeModal.type.startsWith('insuranceCalculator') && <InsuranceCalculatorModal style={modalPosition} onClose={closeModal} onSelect={handleSaveInsurance} />}
+                    {activeModal.type.startsWith('licenseFee') && <LicenseFeeExplanationModal style={modalPosition} onClose={closeModal} />}
+                    {activeModal.type.startsWith('fuelCost') && <FuelCostExplanationModal style={modalPosition} onClose={closeModal} />}
+                    {activeModal.type.startsWith('maintenanceCalculator') && <CarMaintenanceCalculatorModal cost={maintenanceCostInput} setCost={setMaintenanceCostInput} style={modalPosition} onClose={closeModal} onSave={handleSaveMaintenance} drivingScale={drivingScale} setDrivingScale={setDrivingScale} />}
+                    {activeModal.type.startsWith('maintenanceExplanation') && <CarMaintenanceExplanationModal style={modalPosition} onClose={closeModal} />}
+                    {activeModal.type.startsWith('entertainmentSimulator') && <EntertainmentSimulatorModal items={entertainmentItems} setItems={setEntertainmentItems} style={modalPosition} onClose={closeModal} onSave={(total, note) => updateBudgetFromModal('בילויים ומסעדות', total, note)} />}
+                    {activeModal.type.startsWith('accountsCalculator') && <AccountsCalculatorModal answers={accountsAnswers} setAnswers={setAccountsAnswers} selectedCharacter={selectedCharacter} style={modalPosition} onClose={closeModal} onSave={handleSaveAccounts} />}
+                    {activeModal.type === 'createCharacter' && <CreateCharacterModal onClose={closeModal} onCreate={(char) => handleSelectCharacter(char)} />}
+                    {activeModal.type === 'explanation' && activeModal.content && <ExplanationModal style={modalPosition} title={activeModal.content.title} content={activeModal.content.content} onClose={closeModal} />}
+                    {activeModal.type.startsWith('rentPurchase') && <RentPurchaseModal 
+                        details={rentDetails}
+                        setDetails={setRentDetails}
+                        style={modalPosition} 
+                        onClose={closeModal} 
+                        netIncome={netIncome}
+                        onSave={({rent, note}) => {
+                                const rentItem = expenses.find(e => e.category === 'שכירות');
+                                if (rentItem) {
+                                        handleExpenseChange(rentItem.id, rent);
+                                        handleNoteChange(rentItem.id, note);
+                                }
+                        }} 
+                 />}
+                 {activeModal.type === 'addCustomExpense' && <AddCustomExpenseModal onClose={closeModal} onAdd={handleAddCustomExpense} style={modalPosition} />}
+                </>,
+                document.body
+            )}
      {reportDataForPdf && (
         <div ref={reportRef} style={{ position: 'absolute', left: '-9999px', top: 0, zIndex: -1 }}>
             <SummaryReportForPdf {...reportDataForPdf} />
