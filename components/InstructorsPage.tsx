@@ -749,6 +749,16 @@ const AIDS_LIBRARY: Record<string, Array<Aid>> = {
       description: 'תרגיל הפוך למציאת קודמים בתלוש',
     },
   ],
+  'סיפורו של כסף': [
+    {
+      title: 'כרטיסיות סחר חליפין להדפסה',
+      url: 'https://drive.google.com/file/d/1I5EobedfSGPorzxPTcdu9crFy06462U4/view?usp=sharing',
+      fileId: '1I5EobedfSGPorzxPTcdu9crFy06462U4',
+      thumbnailUrl: 'https://drive.google.com/uc?export=view&id=1I5EobedfSGPorzxPTcdu9crFy06462U4',
+      fileIcon: '🧾',
+      description: 'גיזרו את הכרטיסיות , חלקו לקבוצות, הנחו אותם לגזור את הפריטים ולנסות לסחור בהם עם קבוצות אחרות בכדי להשיג את מה שהם צריכים',
+    },
+  ],
   'זכויות עובדים': [
     {
       title: 'טופס 101',
@@ -765,7 +775,25 @@ const AIDS_LIBRARY: Record<string, Array<Aid>> = {
       description: 'דף מעקב לשעות עבודה חודשיות',
     },
   ],
+  'צרכנות נבונה': [
+    {
+      title: 'שאלות לבינגו',
+      url: 'https://drive.google.com/file/d/1JCbVU8SxjWssMgqgAx9E-SGIe5c8dqKr/view?usp=sharing',
+      fileId: '1JCbVU8SxjWssMgqgAx9E-SGIe5c8dqKr',
+      fileIcon: '🧩',
+      description: 'שאלות ותשובות לבינגו נמצאים בתיקיית הנספחים ועזרים.',
+    },
+  ],
 };
+
+const SMART_CONSUMERISM_BINGO_BOARDS = [
+  { title: 'לוח בינגו 1', url: 'https://drive.google.com/file/d/1wIHTHM7f1G45kO9RzDZfc69IXhRJIqNI/view?usp=sharing', fileId: '1wIHTHM7f1G45kO9RzDZfc69IXhRJIqNI' },
+  { title: 'לוח בינגו 2', url: 'https://drive.google.com/file/d/1wK4nU3Gb_-HgDtIsJft-RGk_akzVJj7u/view?usp=sharing', fileId: '1wK4nU3Gb_-HgDtIsJft-RGk_akzVJj7u' },
+  { title: 'לוח בינגו 3', url: 'https://drive.google.com/file/d/1T4u-FZyNjbLrrIzHHm8p2xFOJXlSG7XN/view?usp=sharing', fileId: '1T4u-FZyNjbLrrIzHHm8p2xFOJXlSG7XN' },
+  { title: 'לוח בינגו 4', url: 'https://drive.google.com/file/d/15_Urn8Cbw-GA8kxTVQxP2FKScqTWRorn/view?usp=sharing', fileId: '15_Urn8Cbw-GA8kxTVQxP2FKScqTWRorn' },
+  { title: 'לוח בינגו 5', url: 'https://drive.google.com/file/d/1OrH1LdHP8D-lS9R2lgf-BSLgzfV-yzJ0/view?usp=sharing', fileId: '1OrH1LdHP8D-lS9R2lgf-BSLgzfV-yzJ0' },
+  { title: 'לוח בינגו 6', url: 'https://drive.google.com/file/d/1x4S0x8S3IrGe6Yr_q7duBiwUYZDtQhWs/view?usp=sharing', fileId: '1x4S0x8S3IrGe6Yr_q7duBiwUYZDtQhWs' },
+];
 
 function getAidThumbnail(aid: Aid) {
   if (aid.thumbnailUrl) return aid.thumbnailUrl;
@@ -1834,10 +1862,14 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק כיתתי עם שאלות ומשימות בנושא סיפורו של כסף.</p>
               </button>
-              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-8 text-center text-brand-dark-blue/50 min-h-[14rem] flex flex-col items-center justify-center">
-                <p className="text-2xl font-bold">אתגר כיתתי</p>
-                <p className="text-lg mt-2">בקרוב יתווסף אתגר כיתתי.</p>
-              </div>
+              <button
+                onClick={() => setActiveSubActivity('פעילות סחר חליפין')}
+                className="rounded-3xl border-2 border-dashed border-brand-teal bg-teal-50 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">🔄</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">פעילות סחר חליפין</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">פעילות ניידת עם QR להבנת ערך, צורך ומחסור דרך סחר בין קבוצות.</p>
+              </button>
             </div>
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'סיפורו של כסף' && activeProgram === "'מה בכיס'" && activeSubActivity === 'אל תפילו את המיליון' ? (
             <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
@@ -1858,6 +1890,29 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
             </div>
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'סיפורו של כסף' && activeProgram === "'מה בכיס'" && activeSubActivity === 'חבילה עוברת' ? (
             <ParcelGame items={storyItems} moduleTitle="סיפורו של כסף" moduleSubtitle="כל סיבוב נעצר בזמן אקראי" musicUrl="/havila.mp3" />
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'סיפורו של כסף' && activeProgram === "'מה בכיס'" && activeSubActivity === 'פעילות סחר חליפין' ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">פעילות כיתתית</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">פעילות סחר חליפין</h3>
+                  <p className="text-brand-dark-blue/60">התלמידים נכנסים דרך QR מהטלפון, סוחרים בפריטים ולומדים על פער בין ערך נתפס לצורך אמיתי.</p>
+                </div>
+                <button
+                  onClick={() => setActiveSubActivity(null)}
+                  className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                >
+                  חזרה לחלון המשחקים
+                </button>
+              </div>
+              <div className="rounded-2xl overflow-hidden border border-gray-200 bg-white">
+                <iframe
+                  title="פעילות סחר חליפין"
+                  src="/games/barter-trade-challenge.html"
+                  className="w-full h-[820px]"
+                />
+              </div>
+            </div>
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'הכסף ואני' && activeProgram === "'מה בכיס'" && !activeSubActivity ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <button
@@ -2075,10 +2130,14 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 <p className="text-2xl font-bold text-brand-dark-blue">חבילה עוברת</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק כיתתי עם שאלות ומשימות בנושא צרכנות נבונה.</p>
               </button>
-              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-8 text-center text-brand-dark-blue/50 min-h-[14rem] flex flex-col items-center justify-center">
-                <p className="text-2xl font-bold">אתגר כיתתי</p>
-                <p className="text-lg mt-2">בקרוב יתווסף אתגר כיתתי.</p>
-              </div>
+              <button
+                onClick={() => setActiveSubActivity('בינגו צרכנות נבונה')}
+                className="rounded-3xl border-2 border-dashed border-brand-teal bg-teal-50 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">🧩</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">בינגו צרכנות נבונה</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">שאלות ותשובות לבינגו נמצאים בתיקיית הנספחים ועזרים</p>
+              </button>
             </div>
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'צרכנות נבונה' && activeProgram === "'מה בכיס'" && activeSubActivity === 'אל תפילו את המיליון' ? (
             <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
@@ -2099,6 +2158,39 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
             </div>
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'צרכנות נבונה' && activeProgram === "'מה בכיס'" && activeSubActivity === 'חבילה עוברת' ? (
             <ParcelGame items={consumerItems} moduleTitle="צרכנות נבונה" moduleSubtitle="כל סיבוב נעצר בזמן אקראי" musicUrl="/havila.mp3" />
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'צרכנות נבונה' && activeProgram === "'מה בכיס'" && activeSubActivity === 'בינגו צרכנות נבונה' ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">פעילות</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">בינגו צרכנות נבונה</h3>
+                  <p className="text-brand-dark-blue/60">שאלות ותשובות לבינגו נמצאים בתיקיית הנספחים ועזרים</p>
+                </div>
+                <button
+                  onClick={() => setActiveSubActivity(null)}
+                  className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                >
+                  חזרה לחלון המשחקים
+                </button>
+              </div>
+              <a
+                href="https://drive.google.com/file/d/1JCbVU8SxjWssMgqgAx9E-SGIe5c8dqKr/view?usp=sharing"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-5 text-center shadow hover:-translate-y-1 hover:shadow-xl transition"
+              >
+                <div className="relative mx-auto w-full max-w-sm overflow-hidden rounded-2xl border border-gray-200 bg-white p-4">
+                  <img
+                    src="https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=https%3A%2F%2Fdrive.google.com%2Ffile%2Fd%2F1JCbVU8SxjWssMgqgAx9E-SGIe5c8dqKr%2Fview%3Fusp%3Dsharing"
+                    alt="ברקוד בינגו צרכנות נבונה"
+                    className="w-full h-auto object-contain"
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <p className="mt-4 text-lg font-bold text-brand-dark-blue">פתיחה בחלון חדש</p>
+              </a>
+            </div>
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'מערכות יחסים וכסף' && activeProgram === "'מה בכיס'" && !activeSubActivity ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <button
@@ -3738,13 +3830,124 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
               {(PROGRAM_ACTIVITY_MODULES[activeProgram as keyof typeof PROGRAM_ACTIVITY_MODULES] || []).map((moduleName) => (
                 <button
                   key={moduleName}
-                  onClick={() => setActiveActivity(moduleName)}
+                  onClick={() => { setActiveActivity(moduleName); setActiveSubActivity(null); }}
                   className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/90 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
                 >
                   <p className="text-2xl font-bold text-brand-dark-blue">{moduleName}</p>
                   <p className="text-brand-dark-blue/60 mt-3 text-lg">{getSummary(moduleName)}</p>
                 </button>
               ))}
+            </div>
+          ) : activeModule === 'עזרים ונספחים' && activeProgram === "'מה בכיס'" && activeActivity === 'צרכנות נבונה' && activeSubActivity === 'לוחות בינגו פיזיים' ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">עזרים ונספחים</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">לוחות בינגו פיזיים</h3>
+                  <p className="text-brand-dark-blue/60">6 לוחות בינגו להדפסה, חלקו את הכיתה לקבוצות</p>
+                </div>
+                <button
+                  onClick={() => setActiveSubActivity(null)}
+                  className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                >
+                  חזרה לחלון העזרים
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {SMART_CONSUMERISM_BINGO_BOARDS.map((board) => {
+                  const thumb = getDriveThumbnail(board.fileId);
+                  return (
+                    <a
+                      key={board.fileId}
+                      href={board.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-3xl overflow-hidden border-2 border-dashed border-gray-300 bg-white/90 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col"
+                    >
+                      <div className="relative h-40 bg-gradient-to-br from-teal-100 to-cyan-100 border-b-2 border-gray-200 overflow-hidden">
+                        <div className="absolute inset-0 flex items-center justify-center text-6xl" style={{ display: thumb ? 'none' : undefined }}>🧩</div>
+                        {thumb ? (
+                          <img
+                            src={thumb}
+                            alt={`תצוגה מקדימה: ${board.title}`}
+                            className="relative z-10 w-full h-full object-cover"
+                            loading="lazy"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const icon = e.currentTarget.previousElementSibling as HTMLElement | null;
+                              if (icon) icon.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                      </div>
+                      <div className="p-5 flex-1 flex flex-col items-center justify-center">
+                        <p className="text-xl font-bold text-brand-dark-blue">{board.title}</p>
+                        <p className="text-brand-dark-blue/60 mt-2 text-sm">לפתיחה ולהדפסה</p>
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          ) : activeModule === 'עזרים ונספחים' && activeProgram === "'מה בכיס'" && activeActivity === 'צרכנות נבונה' ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-brand-dark-blue/70">עזרים ונספחים</p>
+                  <h3 className="text-2xl font-bold text-brand-dark-blue">צרכנות נבונה</h3>
+                  <p className="text-brand-dark-blue/60">שאלות ותשובות לבינגו נמצאים בתיקיית הנספחים ועזרים</p>
+                </div>
+                <button
+                  onClick={() => { setActiveActivity(null); setActiveSubActivity(null); }}
+                  className="px-4 py-2 rounded-full bg-gray-200 text-brand-dark-blue font-bold hover:bg-gray-300"
+                >
+                  חזרה לרשימת הנושאים
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <button
+                  onClick={() => setActiveSubActivity('לוחות בינגו פיזיים')}
+                  className="rounded-3xl border-2 border-dashed border-brand-teal bg-teal-50 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col items-center justify-center"
+                >
+                  <p className="text-4xl mb-3">🧩</p>
+                  <p className="text-2xl font-bold text-brand-dark-blue">לוחות בינגו פיזיים</p>
+                  <p className="text-brand-dark-blue/60 mt-3 text-lg">6 לוחות בינגו להדפסה, חלקו את הכיתה לקבוצות</p>
+                </button>
+                {(AIDS_LIBRARY['צרכנות נבונה'] || []).map((aid) => {
+                  const thumb = getAidThumbnail(aid);
+                  return (
+                    <a
+                      key={aid.fileId || aid.url}
+                      href={aid.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-3xl overflow-hidden border-2 border-dashed border-gray-300 bg-white/90 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[12rem] flex flex-col"
+                    >
+                      <div className="relative h-40 bg-gradient-to-br from-slate-100 to-sky-100 border-b-2 border-gray-200 overflow-hidden">
+                        <div className="absolute inset-0 flex items-center justify-center text-6xl" style={{ display: thumb ? 'none' : undefined }}>{aid.fileIcon || '📄'}</div>
+                        {thumb ? (
+                          <img
+                            src={thumb}
+                            alt={`תצוגה מקדימה: ${aid.title}`}
+                            className="relative z-10 w-full h-full object-cover"
+                            loading="lazy"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        ) : null}
+                      </div>
+                      <div className="p-5 flex-1 flex flex-col items-center justify-center">
+                        <p className="text-xl font-bold text-brand-dark-blue">{aid.title}</p>
+                        <p className="text-brand-dark-blue/60 mt-2 text-sm">{aid.description}</p>
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
             </div>
           ) : activeModule === 'עזרים ונספחים' ? (
             <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
@@ -3781,8 +3984,11 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                               alt={`תצוגה מקדימה: ${aid.title}`}
                               className="relative z-10 w-full h-full object-cover"
                               loading="lazy"
+                              referrerPolicy="no-referrer"
                               onError={(e) => {
                                 e.currentTarget.style.display = 'none';
+                                const icon = e.currentTarget.previousElementSibling as HTMLElement | null;
+                                if (icon) icon.style.display = 'flex';
                               }}
                             />
                           ) : null}
