@@ -206,9 +206,9 @@
     },
     {
       symbol: "KO",
-      headline: "Coca-Cola מעלה תחזית שנתית לאחר תמחור מוצלח",
-      impactPct: 3,
-      details: "החברה מציגה יציבות במכירות ושיפור במרווחים."
+      headline: "Coca-Cola סובלת מירידה במכירות בשל מגמת הבריאות",
+      impactPct: -4,
+      details: "צרכנים צעירים פונים למשקאות בריאים יותר, מה שפוגע בביקוש."
     },
     {
       symbol: "NKE",
@@ -224,9 +224,9 @@
     },
     {
       symbol: "NFLX",
-      headline: "Netflix מוסיפה תכניות חדשות במחוץ לתחזוקה ותוכן מקורי",
-      impactPct: 8,
-      details: "מהירות גדולה בהשקות של סדרות פופולריות חדשות."
+      headline: "Netflix מאבדת מנויים בשווקים מרכזיים לטובת מתחרים",
+      impactPct: -7,
+      details: "עלייה בתחרות מ-Disney+ ו-Apple TV+ מגדילה את נטישת המנויים."
     },
     {
       symbol: "SPOT",
@@ -242,21 +242,21 @@
     },
     {
       symbol: "SNAP",
-      headline: "Snapchat משיקה תכונות ייחודיות עם מסנני AR חדשים",
-      impactPct: 9,
-      details: "הצעירים משתמשים בפלטפורמה יותר להבעה יצירתית."
+      headline: "Snapchat מדווחת על האטה חדה בצמיחת המשתמשים",
+      impactPct: -8,
+      details: "מתחרים כמו TikTok ו-Instagram גוזלים נתח שוק מהפלטפורמה."
     },
     {
       symbol: "INTC",
-      headline: "Intel משיקה שבב מעבד חדש בעיצוב מתקדם",
-      impactPct: 6,
-      details: "התחרות בשוק המעבדים מתחזקת עם מוצר חדש."
+      headline: "Intel מפסידה עסקאות ספק גדולות לטובת AMD ו-NVIDIA",
+      impactPct: -6,
+      details: "לקוחות מרכזיים עוברים למתחרים בשל ביצועים טובים יותר."
     },
     {
       symbol: "MCD",
-      headline: "McDonald's מדווחת על צמיחה בהזמנות דרך האפליקציה שלהם",
-      impactPct: 5,
-      details: "ההזמנות הדיגיטליות מנהלות עלייה משמעותית בהכנסות."
+      headline: "McDonald's נפגעת מעליית מחירי חומרי הגלם והשכר",
+      impactPct: -5,
+      details: "עלויות ייצור גבוהות לוחצות על שיעורי הרווח של הרשת."
     },
     {
       symbol: "SBUX",
@@ -266,9 +266,9 @@
     },
     {
       symbol: "PYPL",
-      headline: "PayPal מרחיבה שותפויות עם ענקיות קטגוריות בדיגיטל",
-      impactPct: 8,
-      details: "הרחבת השימושים בתשלומים דיגיטליים מביאה למטבח חדש."
+      headline: "PayPal מאבדת נתח שוק ל-Apple Pay וכרטיסי אשראי חכמים",
+      impactPct: -7,
+      details: "ירידה בהיקף העסקאות בעקבות תחרות גוברת מפלטפורמות תשלום מובנות."
     }
   ];
 
@@ -458,7 +458,11 @@
             ? "<button class=\"impact-step\" data-impact-step=\"" +
               stock.symbol +
               "\" data-delta=\"-1\" aria-label=\"הורדה באחוז\">-</button>"
-            : "<div class=\"impact-step ghost\"></div>") +
+            : (qty > 0
+                ? "<button class=\"impact-step\" data-sell=\"" +
+                  stock.symbol +
+                  "\" aria-label=\"בטל קניה אחת של " + stock.symbol + "\">−</button>"
+                : "<div class=\"impact-step ghost\"></div>")) +
           "<div class=\"stock-pill-wrapper\" style=\"position:relative;display:flex;align-items:center;justify-content:center;\">" +
           "<button class=\"stock-pill " +
           (!state.finished && !canBuyOneMore ? "disabled" : "") +
@@ -509,6 +513,17 @@
           return;
         }
         setQty(symbol, (state.allocations[symbol] || 0) + 1);
+      });
+    });
+
+    container.querySelectorAll("button[data-sell]").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        const target = event.currentTarget;
+        const symbol = target.getAttribute("data-sell");
+        if (!symbol || state.finished) {
+          return;
+        }
+        setQty(symbol, (state.allocations[symbol] || 0) - 1);
       });
     });
 
