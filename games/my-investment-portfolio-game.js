@@ -426,6 +426,36 @@
       " ש\"ח</strong></div>";
   }
 
+  function showPopup(html, borderColor) {
+    const overlay = document.createElement("div");
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;display:flex;align-items:center;justify-content:center;";
+    const popup = document.createElement("div");
+    popup.style.cssText = "background:white;border:2px solid " + (borderColor || "#0ea5e9") + ";border-radius:14px;padding:20px;width:85%;max-width:420px;z-index:1000;box-shadow:0 10px 40px rgba(0,0,0,0.35);direction:rtl;";
+    popup.innerHTML = html;
+    overlay.appendChild(popup);
+    document.body.appendChild(overlay);
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+    const closeBtn = popup.querySelector(".popup-close-btn");
+    if (closeBtn) closeBtn.addEventListener("click", () => overlay.remove());
+    return overlay;
+  }
+
+  function fireEventForStock(symbol) {
+    const event = events.find((e) => e.symbol === symbol);
+    if (!event) return;
+    setAdjustment(symbol, event.impactPct);
+    const impactColor = event.impactPct >= 0 ? "#22c55e" : "#f87171";
+    const impactClass = event.impactPct >= 0 ? "good" : "bad";
+    showPopup(
+      "<h3 style='margin:0 0 10px 0;color:#0f172a;font-size:20px;'>📰 אירוע: " + symbol + "</h3>" +
+      "<p style='margin:6px 0;font-weight:700;color:#1e3a5f;line-height:1.5;'>" + event.headline + "</p>" +
+      "<p style='margin:8px 0;color:#374151;line-height:1.6;'>" + event.details + "</p>" +
+      "<p style='margin:10px 0 0 0;font-size:15px;'>שינוי: <strong style='color:" + impactColor + ";font-size:18px;'>" + formatSignedPercent(event.impactPct) + "</strong></p>" +
+      "<button class='popup-close-btn' style='margin-top:16px;background:#0ea5e9;color:white;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:700;width:100%;font-size:15px;'>סגור</button>",
+      impactColor
+    );
+  }
+
   function renderStockRows() {
     const container = document.getElementById("stocksContainer");
     if (!container) {
@@ -450,56 +480,54 @@
         const currentValue = currentStockValue(stock);
         const canBuyOneMore = wasteBudget() >= stock.price;
         const pctClass = pct > 0 ? "good" : pct < 0 ? "bad" : "neutral";
+        const hasEvent = events.some((e) => e.symbol === stock.symbol);
 
+        if (state.finished) {
+          // Post-finish: show pill (disabled) + event button below
+          return (
+            "<div class=\"stock-card\">" +
+            "<div class=\"stock-pill-row\" style=\"grid-template-columns:1fr;\">" +
+            "<div class=\"stock-pill-wrapper\" style=\"position:relative;display:flex;align-items:center;justify-content:center;\">" +
+            "<button class=\"stock-pill\" disabled>" +
+            "<span class=\"pill-symbol\">" + stock.symbol + "</span>" +
+            "<span class=\"pill-price\">" + formatMoney(stock.price) + " ש\"ח</span>" +
+            "</button>" +
+            "<span class=\"stock-info-icon\" data-stock-symbol=\"" + stock.symbol + "\" style=\"position:absolute;right:-12px;top:-12px;background:#0ea5e9;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer;font-size:14px;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.2);\">ℹ</span>" +
+            "</div>" +
+            "</div>" +
+            "<div class=\"stock-meta\">" +
+            "<span>כמות: <strong>" + qty + "</strong></span>" +
+            "<span>עלות: <strong>" + formatMoney(baseValue) + " ש\"ח</strong></span>" +
+            "<span>שינוי: <strong class=\"" + pctClass + "\">" + formatSignedPercent(pct) + "</strong></span>" +
+            "</div>" +
+            "<div class=\"value-line\">שווי מעודכן: <strong>" + formatMoney(currentValue) + " ש\"ח</strong></div>" +
+            (hasEvent
+              ? "<button class=\"event-btn\" data-event-symbol=\"" + stock.symbol + "\">📰 אירוע</button>"
+              : "") +
+            "</div>"
+          );
+        }
+
+        // Pre-finish: − pill +
         return (
           "<div class=\"stock-card\">" +
           "<div class=\"stock-pill-row\">" +
-          (state.finished
-            ? "<button class=\"impact-step\" data-impact-step=\"" +
-              stock.symbol +
-              "\" data-delta=\"-1\" aria-label=\"הורדה באחוז\">-</button>"
-            : (qty > 0
-                ? "<button class=\"impact-step\" data-sell=\"" +
-                  stock.symbol +
-                  "\" aria-label=\"בטל קניה אחת של " + stock.symbol + "\">−</button>"
-                : "<div class=\"impact-step ghost\"></div>")) +
+          (qty > 0
+            ? "<button class=\"impact-step\" data-sell=\"" + stock.symbol + "\" aria-label=\"מכור מניה\">−</button>"
+            : "<div class=\"impact-step ghost\"></div>") +
           "<div class=\"stock-pill-wrapper\" style=\"position:relative;display:flex;align-items:center;justify-content:center;\">" +
-          "<button class=\"stock-pill " +
-          (!state.finished && !canBuyOneMore ? "disabled" : "") +
-          "\" data-buy=\"" +
-          stock.symbol +
-          "\" " +
-          (state.finished ? "disabled" : "") +
-          " aria-label=\"קנה מניה אחת של " +
-          stock.symbol +
-          "\">" +
-          "<span class=\"pill-symbol\">" +
-          stock.symbol +
-          "</span>" +
-          "<span class=\"pill-price\">" +
-          formatMoney(stock.price) +
-          " ש\"ח</span>" +
+          "<button class=\"stock-pill " + (!canBuyOneMore ? "disabled" : "") + "\" data-buy=\"" + stock.symbol + "\" aria-label=\"קנה מניה אחת של " + stock.symbol + "\">" +
+          "<span class=\"pill-symbol\">" + stock.symbol + "</span>" +
+          "<span class=\"pill-price\">" + formatMoney(stock.price) + " ש\"ח</span>" +
           "</button>" +
           "<span class=\"stock-info-icon\" data-stock-symbol=\"" + stock.symbol + "\" style=\"position:absolute;right:-12px;top:-12px;background:#0ea5e9;color:white;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer;font-size:14px;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.2);\">ℹ</span>" +
           "</div>" +
-          (state.finished
-            ? "<button class=\"impact-step\" data-impact-step=\"" +
-              stock.symbol +
-              "\" data-delta=\"1\" aria-label=\"העלאה באחוז\">+</button>"
-            : "<div class=\"impact-step ghost\"></div>") +
+          "<button class=\"impact-step\" data-buy=\"" + stock.symbol + "\" aria-label=\"קנה מניה\">+</button>" +
           "</div>" +
           "<div class=\"stock-meta\">" +
           "<span>כמות: <strong>" + qty + "</strong></span>" +
           "<span>עלות: <strong>" + formatMoney(baseValue) + " ש\"ח</strong></span>" +
-          (state.finished
-            ? "<span>שינוי: <strong class=\"" + pctClass + "\">" + formatSignedPercent(pct) + "</strong></span>"
-            : "") +
           "</div>" +
-          (state.finished
-            ? "<div class=\"value-line\">שווי מעודכן: <strong>" +
-              formatMoney(currentValue) +
-              " ש\"ח</strong></div>"
-            : "") +
           "</div>"
         );
       })
@@ -509,9 +537,7 @@
       button.addEventListener("click", (event) => {
         const target = event.currentTarget;
         const symbol = target.getAttribute("data-buy");
-        if (!symbol || state.finished) {
-          return;
-        }
+        if (!symbol || state.finished) return;
         setQty(symbol, (state.allocations[symbol] || 0) + 1);
       });
     });
@@ -520,22 +546,16 @@
       button.addEventListener("click", (event) => {
         const target = event.currentTarget;
         const symbol = target.getAttribute("data-sell");
-        if (!symbol || state.finished) {
-          return;
-        }
+        if (!symbol || state.finished) return;
         setQty(symbol, (state.allocations[symbol] || 0) - 1);
       });
     });
 
-    container.querySelectorAll("button[data-impact-step]").forEach((button) => {
+    container.querySelectorAll("button[data-event-symbol]").forEach((button) => {
       button.addEventListener("click", (event) => {
-        const target = event.currentTarget;
-        const symbol = target.getAttribute("data-impact-step");
-        const delta = ensureNumber(target.getAttribute("data-delta"));
-        if (!symbol) {
-          return;
-        }
-        stepAdjustment(symbol, delta);
+        const symbol = event.currentTarget.getAttribute("data-event-symbol");
+        if (!symbol) return;
+        fireEventForStock(symbol);
       });
     });
 
@@ -544,33 +564,15 @@
         event.stopPropagation();
         const symbol = event.currentTarget.getAttribute("data-stock-symbol");
         const stock = stocks.find((s) => s.symbol === symbol);
-        if (!stock) {
-          return;
-        }
-        
-        const popup = document.createElement("div");
-        popup.style.cssText = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;border:2px solid #0ea5e9;border-radius:12px;padding:20px;width:80%;max-width:400px;z-index:1000;box-shadow:0 10px 40px rgba(0,0,0,0.3);";
-        popup.innerHTML = 
-          "<div style='text-align:right;'>" +
-          "<h3 style='margin:0 0 10px 0;color:#0f172a;font-size:24px;'>" + stock.company + " (" + stock.symbol + ")</h3>" +
+        if (!stock) return;
+        showPopup(
+          "<h3 style='margin:0 0 10px 0;color:#0f172a;font-size:22px;'>" + stock.company + " (" + stock.symbol + ")</h3>" +
           "<p style='margin:8px 0;color:#0f766e;font-weight:bold;'>סקטור: " + stock.sector + "</p>" +
           "<p style='margin:8px 0;color:#0f172a;line-height:1.6;'>" + stock.note + "</p>" +
           "<p style='margin:12px 0 0 0;color:#64748b;font-size:14px;'>מחיר: " + formatMoney(stock.price) + " ש\"ח</p>" +
-          "<button id='closePopupBtn' style='margin-top:16px;background:#0ea5e9;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:bold;width:100%;'>סגור</button>" +
-          "</div>";
-        
-        document.body.appendChild(popup);
-        
-        const closeBtn = popup.querySelector("#closePopupBtn");
-        closeBtn.addEventListener("click", () => {
-          popup.remove();
-        });
-        
-        popup.addEventListener("click", (e) => {
-          if (e.target === popup) {
-            popup.remove();
-          }
-        });
+          "<button class='popup-close-btn' style='margin-top:16px;background:#0ea5e9;color:white;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:bold;width:100%;'>סגור</button>",
+          "#0ea5e9"
+        );
       });
     });
   }
@@ -627,7 +629,7 @@
       "<button id=\"finishBtn\" class=\"finish-btn\">" +
       (state.finished ? "ערוך מחדש" : "סיימתי") +
       "</button>" +
-      "<p>לאחר סיום יוצגו רק המניות שרכשתם, ויופיעו כפתורי + ו-- לעדכון אחוזי שינוי לפי אירועי המדריך.</p>" +
+      "<p>לאחר סיום יוצגו רק המניות שרכשתם, ולצד כל מניה יופיע כפתור \"אירוע\" שלחיצה עליו תפעיל את האירוע הרלוונטי ותציג חלונית עם הפרטים.</p>" +
       "</section>" +
       "</main>" +
       "</div>" +
@@ -661,6 +663,8 @@
       ".finish{margin-top:12px;text-align:center;}" +
       ".finish-btn{width:100%;border:0;border-radius:10px;padding:12px;background:#0ea5e9;color:#06283d;font-weight:700;cursor:pointer;}" +
       ".finish-btn:hover{background:#38bdf8;}" +
+      ".event-btn{display:block;width:100%;margin-top:8px;padding:7px 0;border:0;border-radius:8px;background:#1e3a5f;color:#7dd3fc;font-weight:700;font-size:12px;cursor:pointer;}" +
+      ".event-btn:hover{background:#1d4ed8;color:#fff;}" +
       "@media (max-width:700px){.mobile-main{padding-top:86px;}.stocks{grid-template-columns:repeat(2,minmax(0,1fr));}.stock-pill-row{grid-template-columns:30px 1fr 30px;gap:6px;}.impact-step{width:30px;height:30px;font-size:18px;}.pill-symbol{font-size:13px;}.pill-price{font-size:10px;}.stock-meta{font-size:10px;}}" +
       "@media (max-width:420px){.top-bar{gap:4px;padding:6px;}.bar-item{padding:5px 3px;}.bar-item span{font-size:9px;}.bar-item strong{font-size:11px;}.stocks{gap:8px;}.stock-card{padding:8px;}}" +
       "</style>";
