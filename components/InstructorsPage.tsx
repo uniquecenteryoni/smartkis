@@ -1908,7 +1908,7 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
               <div className="rounded-2xl overflow-hidden border border-gray-200 bg-white">
                 <iframe
                   title="פעילות סחר חליפין"
-                  src="/games/barter-trade-challenge.html"
+                  src={`${import.meta.env.BASE_URL}games/barter-trade-challenge.html`}
                   className="w-full h-[820px]"
                 />
               </div>
