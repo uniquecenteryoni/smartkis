@@ -293,7 +293,7 @@ const GameScreen: React.FC<{ groups: Group[]; onGroupsChange: (g: Group[]) => vo
                       ? '#fff'
                       : '#1e3a5f',
                     color: isMatchedCard ? '#166534' : isFaceUp ? '#0f172a' : '#7dd3fc',
-                    fontSize: isFaceUp ? '9px' : '13px',
+                    fontSize: isFaceUp ? '13px' : '18px',
                     fontWeight: 800,
                     display: 'flex',
                     alignItems: 'center',

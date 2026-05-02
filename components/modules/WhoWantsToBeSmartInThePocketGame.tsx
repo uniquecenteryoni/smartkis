@@ -281,7 +281,7 @@ export default function WhoWantsToBeSmartInThePocketGame({ onBack }: WhoWantsToB
           <img
             src={qrImageUrl}
             alt="QR לחידון מי רוצה להיות חכם בכיס"
-            className="mx-auto w-20 h-20 rounded-lg border border-cyan-200"
+            className="mx-auto w-40 h-40 rounded-lg border border-cyan-200"
             loading="lazy"
             referrerPolicy="no-referrer"
           />
