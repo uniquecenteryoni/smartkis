@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import BudgetModule from './modules/BudgetModule';
 import ExpensesModule from './modules/ExpensesModule';
 import OverdraftModule from './modules/OverdraftModule';
@@ -41,6 +41,10 @@ import CompoundInterestCalculator from './modules/CompoundInterestCalculator';
 import InvestmentSimulator from './modules/InvestmentSimulator';
 import { WordCloudHost } from './modules/WordCloudGame';
 import InterviewerCardsModule from './modules/InterviewerCardsModule';
+import WhatDidWeHaveGame from './modules/WhatDidWeHaveGame';
+import HowWasItForUsActivity from './modules/HowWasItForUsActivity';
+import WhoWantsToBeSmartInThePocketGame from './modules/WhoWantsToBeSmartInThePocketGame';
+import SaleActivity from './modules/SaleActivity';
 import WhereMoneyComesFromModule from './modules/kisonim/WhereMoneyComesFromModule';
 import NeedsVsWantsModule from './modules/kisonim/NeedsVsWantsModule';
 import SavingsAdventureModule from './modules/kisonim/SavingsAdventureModule';
@@ -186,6 +190,7 @@ const PROGRAM_ACTIVITY_MODULES: Record<string, string[]> = {
     'משימת למידת חקר',
     'תקציב המדינה',
     'רב תחומי',
+    'שיעור סיכום',
   ],
   "'מה בכיס'": [
     'סיפורו של כסף',
@@ -200,6 +205,7 @@ const PROGRAM_ACTIVITY_MODULES: Record<string, string[]> = {
     'איך בונים עסק?',
     'רב תחומי',
     'מסמכים שימושיים',
+    'שיעור סיכום',
   ],
   "'כיסונים פיננסים'": [
     'מאיפה בא הכסף?',
@@ -214,6 +220,7 @@ const PROGRAM_ACTIVITY_MODULES: Record<string, string[]> = {
     'מטבעות ושטרות',
     'כוח הנתינה',
     'החלטות קטנות',
+    'שיעור סיכום',
   ],
 };
 
@@ -281,6 +288,7 @@ const MODULE_SUMMARIES: Record<string, string> = {
   'מטבעות ושטרות': 'היכרות עם כסף מזומן וצורתו.',
   'כוח הנתינה': 'השפעת תרומה ונתינה כלכלית.',
   'החלטות קטנות': 'השפעת החלטות יומיומיות על כסף וחיסכון.',
+  'שיעור סיכום': 'סיכום מרכזי לתוכנית — סרטונים, עזרים, מצגת ומערך שיעור לשיעור הסגירה.',
 };
 
 interface VideoItem {
@@ -4126,6 +4134,50 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 <p className="text-base mt-2 text-brand-dark-blue/60">עבור המודול: {activeActivity}</p>
               </div>
             </div>
+
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'שיעור סיכום' && activeProgram === "'מה בכיס'" && !activeSubActivity ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <button
+                onClick={() => setActiveSubActivity('מה היה לנו?')}
+                className="rounded-3xl border-2 border-dashed border-brand-teal bg-teal-50 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">🧩</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">מה היה לנו?</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק זיכרון עם 25 מושגים מרכזיים מתוכנית &quot;מה בכיס&quot;</p>
+              </button>
+              <button
+                onClick={() => setActiveSubActivity('איך היה לנו?')}
+                className="rounded-3xl border-2 border-dashed border-sky-300 bg-sky-50 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">💬</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">איך היה לנו?</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">כרטיסיות פתיחה לשיתוף ורפלקציה בסוף התוכנית</p>
+              </button>
+              <button
+                onClick={() => setActiveSubActivity('מי רוצה להיות חכם בכיס')}
+                className="rounded-3xl border-2 border-dashed border-amber-300 bg-amber-50 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">🎯</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">מי רוצה להיות חכם בכיס</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">חידון טריוויה עם 20 שאלות אמריקאיות על נושאי התוכנית</p>
+              </button>
+              <button
+                onClick={() => setActiveSubActivity('המכירה')}
+                className="rounded-3xl border-2 border-dashed border-cyan-300 bg-cyan-50 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">🧾</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">המכירה</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">QR לטופס נייד לבניית חשבון עסקה עם חישוב אוטומטי</p>
+              </button>
+            </div>
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'שיעור סיכום' && activeProgram === "'מה בכיס'" && activeSubActivity === 'מה היה לנו?' ? (
+            <WhatDidWeHaveGame onBack={() => setActiveSubActivity(null)} />
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'שיעור סיכום' && activeProgram === "'מה בכיס'" && activeSubActivity === 'איך היה לנו?' ? (
+            <HowWasItForUsActivity onBack={() => setActiveSubActivity(null)} />
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'שיעור סיכום' && activeProgram === "'מה בכיס'" && activeSubActivity === 'מי רוצה להיות חכם בכיס' ? (
+            <WhoWantsToBeSmartInThePocketGame onBack={() => setActiveSubActivity(null)} />
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'שיעור סיכום' && activeProgram === "'מה בכיס'" && activeSubActivity === 'המכירה' ? (
+            <SaleActivity onBack={() => setActiveSubActivity(null)} />
           ) : (
             <div className="rounded-3xl border border-dashed border-gray-300 bg-white/70 p-10 shadow-xl min-h-[18rem] flex flex-col items-center justify-center text-center">
               <p className="text-3xl font-bold text-brand-dark-blue mb-3">מרחב המודול: {activeModule}</p>

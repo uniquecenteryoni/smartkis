@@ -93,6 +93,15 @@ export const FutureManagersChallengeContent: React.FC<{ onComplete: () => void }
   const [inputValue, setInputValue] = useState('');
   const [eventMessage, setEventMessage] = useState('');
   const [isCompleted, setIsCompleted] = useState(false);
+  const [qrPopup, setQrPopup] = useState<{ groupId: number; url: string } | null>(null);
+
+  const mobileUrl = (groupId: number) => {
+    const base = `${window.location.origin}${import.meta.env.BASE_URL}games/future-managers-mobile.html`;
+    return `${base}?group=${groupId}`;
+  };
+
+  const qrImageUrl = (url: string) =>
+    `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
 
   const calculateTotalExpenses = (group: Group) => Object.values(group.expenses).reduce((sum, value) => sum + (value ?? 0), 0);
 
@@ -156,6 +165,42 @@ export const FutureManagersChallengeContent: React.FC<{ onComplete: () => void }
 
   return (
     <div className="min-h-screen bg-slate-100 p-4 md:p-8 font-sans text-slate-800" dir="rtl">
+        {qrPopup && (
+          <div
+            className="fixed inset-0 bg-indigo-950/90 backdrop-blur-xl flex items-center justify-center p-6 z-[200] cursor-pointer"
+            onClick={() => setQrPopup(null)}
+          >
+            <div
+              className="bg-white rounded-[3rem] p-8 flex flex-col items-center gap-4 shadow-2xl cursor-default max-w-xs w-full"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="text-2xl font-black text-indigo-900">
+                👥 {groups.find(g => g.id === qrPopup.groupId)?.name}
+              </div>
+              <img
+                src={qrImageUrl(qrPopup.url)}
+                alt="QR לנייד"
+                className="rounded-2xl border-4 border-indigo-100"
+                style={{ width: 220, height: 220 }}
+              />
+              <p className="text-xs text-slate-400 text-center">סרקו עם הטלפון לפתיחת טופס המשימות</p>
+              <a
+                href={qrPopup.url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs text-indigo-500 underline"
+              >
+                פתיחה ישירה בדפדפן
+              </a>
+              <button
+                onClick={() => setQrPopup(null)}
+                className="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-8 py-2 rounded-2xl"
+              >
+                סגור
+              </button>
+            </div>
+          </div>
+        )}
         <div className="max-w-7xl mx-auto mb-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-white p-6 rounded-[2.5rem] shadow-sm border-b-4 border-indigo-200">
             <div className="flex items-center gap-4">
@@ -191,19 +236,34 @@ export const FutureManagersChallengeContent: React.FC<{ onComplete: () => void }
                 <th className="p-6 text-right text-xl font-black border-l border-indigo-600 w-1/6 italic opacity-70">
                   קטגוריה \ צוות
                 </th>
-                {groups.map(group => (
-                  <th key={group.id} className="p-6 text-center border-l border-indigo-600 w-1/5">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="flex items-center gap-2 text-2xl font-black">👥 {group.name}</div>
-                      <button
-                        onClick={() => triggerEvent(group.id)}
-                        className="bg-white/20 hover:bg-white/40 px-4 py-1.5 rounded-xl text-xs font-bold transition-all"
-                      >
-                        בלת"ם! 🎲
-                      </button>
-                    </div>
-                  </th>
-                ))}
+                {groups.map(group => {
+                  const url = mobileUrl(group.id);
+                  return (
+                    <th key={group.id} className="p-4 text-center border-l border-indigo-600 w-1/5">
+                      <div className="flex flex-col items-center gap-2">
+                        <button
+                          onClick={() => setQrPopup({ groupId: group.id, url })}
+                          title="לחץ להגדלת ה-QR"
+                          className="group relative"
+                        >
+                          <img
+                            src={qrImageUrl(url)}
+                            alt={`QR לנייד - ${group.name}`}
+                            className="rounded-xl bg-white p-1.5 shadow-lg border-2 border-white/60 group-hover:scale-105 transition-transform"
+                            style={{ width: 72, height: 72 }}
+                          />
+                        </button>
+                        <div className="flex items-center gap-2 text-xl font-black">👥 {group.name}</div>
+                        <button
+                          onClick={() => triggerEvent(group.id)}
+                          className="bg-white/20 hover:bg-white/40 px-4 py-1.5 rounded-xl text-xs font-bold transition-all"
+                        >
+                          בלת"ם! 🎲
+                        </button>
+                      </div>
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody>
