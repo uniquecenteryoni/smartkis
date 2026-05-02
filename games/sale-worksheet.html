@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>המכירה - חשבון עסקה</title>
+  <style>
+    :root {
+      --bg1: #ecfeff;
+      --bg2: #eff6ff;
+      --bg3: #f0fdfa;
+      --ink: #0f172a;
+      --teal: #0d9488;
+      --blue: #2563eb;
+      --line: #cbd5e1;
+      --ok: #065f46;
+      --bad: #b91c1c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Rubik", "Assistant", sans-serif;
+      color: var(--ink);
+      background: linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3));
+      padding: 14px;
+      min-height: 100vh;
+    }
+
+    .sheet {
+      max-width: 980px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      border: 2px solid #bfdbfe;
+      border-radius: 20px;
+      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
+      overflow: hidden;
+    }
+
+    .top {
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .top-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      border: 1px solid #dbeafe;
+      border-radius: 12px;
+      padding: 8px;
+      min-height: 46px;
+    }
+
+    .field label {
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .field input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1e293b;
+      background: transparent;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      padding: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      min-width: 720px;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 8px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    th {
+      font-size: 1.35rem;
+      font-weight: 900;
+      background: #f1f5f9;
+    }
+
+    .subhead th {
+      font-size: 1rem;
+      font-weight: 800;
+      background: #f8fafc;
+    }
+
+    td input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 4px;
+      background: transparent;
+      color: #0f172a;
+    }
+
+    td input[type="number"]::-webkit-outer-spin-button,
+    td input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .line-total {
+      font-weight: 900;
+      color: var(--blue);
+      min-width: 70px;
+    }
+
+    .sum-row td {
+      font-weight: 900;
+      background: #f8fafc;
+    }
+
+    .footer {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      padding: 10px;
+    }
+
+    .stat {
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+      font-weight: 900;
+      border: 2px solid #bae6fd;
+      background: #ecfeff;
+    }
+
+    .stat.bad {
+      border-color: #fecaca;
+      background: #fef2f2;
+      color: var(--bad);
+    }
+
+    .stat.ok {
+      border-color: #bbf7d0;
+      background: #f0fdf4;
+      color: var(--ok);
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 0 10px 14px;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-weight: 800;
+      cursor: pointer;
+      color: #fff;
+      background: linear-gradient(90deg, var(--teal), var(--blue));
+    }
+
+    .btn.secondary {
+      background: #64748b;
+    }
+
+    .note {
+      margin: 0;
+      padding: 0 12px 14px;
+      text-align: center;
+      color: #475569;
+      font-weight: 700;
+    }
+
+    @media (min-width: 760px) {
+      .top-row {
+        grid-template-columns: 1fr 1fr;
+      }
+      .footer {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="top">
+      <div class="top-row">
+        <div class="field">
+          <label for="studentName">שם:</label>
+          <input id="studentName" type="text" placeholder="הקלידו שם" />
+        </div>
+        <div class="field">
+          <label for="money">כמה כסף יש לי:</label>
+          <input id="money" type="number" min="0" step="1" value="0" />
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th colspan="4">חשבון עסקה - המכירה</th>
+          </tr>
+          <tr class="subhead">
+            <th>מוצר</th>
+            <th>כמות</th>
+            <th>מחיר יח'</th>
+            <th>מחיר סה"כ</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+        <tfoot>
+          <tr class="sum-row">
+            <td colspan="3">סה"כ</td>
+            <td id="grandTotal">0</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="footer">
+      <div class="stat" id="moneyStat">כסף התחלתי: 0</div>
+      <div class="stat" id="totalStat">סה"כ קנייה: 0</div>
+      <div class="stat" id="balanceStat">יתרה: 0</div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="addRow">+ הוספת שורה</button>
+      <button class="btn secondary" id="clearRows">ניקוי שורות</button>
+    </div>
+
+    <p class="note">מלאו מוצר, כמות ומחיר יחידה. החישוב לכל שורה ולסכום הכולל מתבצע אוטומטית.</p>
+  </div>
+
+  <script>
+    const rowsEl = document.getElementById('rows');
+    const moneyInput = document.getElementById('money');
+    const grandTotalEl = document.getElementById('grandTotal');
+    const moneyStatEl = document.getElementById('moneyStat');
+    const totalStatEl = document.getElementById('totalStat');
+    const balanceStatEl = document.getElementById('balanceStat');
+    const addRowBtn = document.getElementById('addRow');
+    const clearRowsBtn = document.getElementById('clearRows');
+
+    function formatNumber(value) {
+      return Number(value || 0).toLocaleString('he-IL');
+    }
+
+    function createRow() {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="text" placeholder="שם מוצר" /></td>
+        <td><input type="number" min="0" step="1" value="" data-role="qty" /></td>
+        <td><input type="number" min="0" step="1" value="" data-role="unit" /></td>
+        <td class="line-total" data-role="lineTotal">0</td>
+      `;
+      rowsEl.appendChild(tr);
+      tr.addEventListener('input', updateTotals);
+    }
+
+    function ensureInitialRows(count) {
+      for (let i = 0; i < count; i++) createRow();
+    }
+
+    function clearRows() {
+      rowsEl.innerHTML = '';
+      ensureInitialRows(8);
+      updateTotals();
+    }
+
+    function updateTotals() {
+      let grand = 0;
+      const rows = Array.from(rowsEl.querySelectorAll('tr'));
+
+      rows.forEach((row) => {
+        const qty = Number(row.querySelector('[data-role="qty"]').value || 0);
+        const unit = Number(row.querySelector('[data-role="unit"]').value || 0);
+        const line = qty * unit;
+        row.querySelector('[data-role="lineTotal"]').textContent = formatNumber(line);
+        grand += line;
+      });
+
+      const money = Number(moneyInput.value || 0);
+      const balance = money - grand;
+
+      grandTotalEl.textContent = formatNumber(grand);
+      moneyStatEl.textContent = `כסף התחלתי: ${formatNumber(money)}`;
+      totalStatEl.textContent = `סה"כ קנייה: ${formatNumber(grand)}`;
+      balanceStatEl.textContent = `יתרה: ${formatNumber(balance)}`;
+
+      balanceStatEl.classList.remove('ok', 'bad');
+      if (balance < 0) {
+        balanceStatEl.classList.add('bad');
+      } else {
+        balanceStatEl.classList.add('ok');
+      }
+    }
+
+    addRowBtn.addEventListener('click', () => {
+      createRow();
+      updateTotals();
+    });
+
+    clearRowsBtn.addEventListener('click', clearRows);
+    moneyInput.addEventListener('input', updateTotals);
+
+    ensureInitialRows(8);
+    updateTotals();
+  </script>
+</body>
+</html>

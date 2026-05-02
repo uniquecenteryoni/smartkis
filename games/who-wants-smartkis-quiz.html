@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>מי רוצה להיות חכם בכיס</title>
+  <style>
+    :root {
+      --bg1: #fdf2f8;
+      --bg2: #fffbeb;
+      --bg3: #ecfeff;
+      --ink: #1e293b;
+      --pink: #db2777;
+      --cyan: #06b6d4;
+      --ok: #059669;
+      --bad: #dc2626;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Rubik", "Assistant", sans-serif;
+      color: var(--ink);
+      background: linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3));
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .wrap {
+      max-width: 920px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.92);
+      border: 2px solid #f9a8d4;
+      border-radius: 24px;
+      box-shadow: 0 20px 50px rgba(30, 41, 59, 0.12);
+      padding: 16px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: #0f172a;
+    }
+
+    .sub {
+      margin: 6px 0 0;
+      color: #475569;
+      font-weight: 600;
+    }
+
+    .topbar {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .pill {
+      background: #fff;
+      border: 2px solid #fcd34d;
+      border-radius: 14px;
+      padding: 8px;
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .progress {
+      margin-top: 10px;
+      width: 100%;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      height: 10px;
+      overflow: hidden;
+    }
+
+    .bar {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--pink), var(--cyan));
+      transition: width .25s ease;
+    }
+
+    .card {
+      margin-top: 14px;
+      border: 2px solid #fbcfe8;
+      border-radius: 18px;
+      background: #fff;
+      padding: 14px;
+    }
+
+    .topic {
+      margin: 0 0 6px;
+      color: #be185d;
+      font-size: .9rem;
+      font-weight: 800;
+    }
+
+    .q {
+      margin: 0;
+      font-size: 1.3rem;
+      line-height: 1.45;
+      font-weight: 900;
+      color: #0f172a;
+    }
+
+    .opts {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .opt {
+      width: 100%;
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      background: #fff;
+      padding: 12px;
+      text-align: right;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1f2937;
+      cursor: pointer;
+      transition: .15s ease;
+    }
+
+    .opt:hover { border-color: #f472b6; background: #fdf2f8; }
+    .opt:disabled { cursor: default; }
+    .opt.correct { border-color: #34d399; background: #ecfdf5; color: #065f46; }
+    .opt.wrong { border-color: #f87171; background: #fef2f2; color: #7f1d1d; }
+    .opt.muted { opacity: .65; }
+
+    .bottom {
+      margin-top: 14px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .feedback {
+      font-weight: 900;
+      font-size: 1rem;
+    }
+
+    .feedback.ok { color: var(--ok); }
+    .feedback.bad { color: var(--bad); }
+
+    .next, .restart {
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 16px;
+      color: #fff;
+      font-weight: 900;
+      font-size: .95rem;
+      cursor: pointer;
+      background: linear-gradient(90deg, #c026d3, #06b6d4);
+    }
+
+    .result {
+      margin-top: 14px;
+      border: 2px solid #6ee7b7;
+      border-radius: 18px;
+      background: #f0fdf4;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .result h2 {
+      margin: 0 0 8px;
+      color: #065f46;
+      font-size: 1.7rem;
+    }
+
+    .result p {
+      margin: 6px 0;
+      font-weight: 800;
+      color: #065f46;
+    }
+
+    @media (min-width: 760px) {
+      .opts { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 class="title">מי רוצה להיות חכם בכיס</h1>
+    <p class="sub">חידון טריוויה - 20 שאלות אמריקאיות, רמה קלה-בינונית</p>
+
+    <div class="topbar">
+      <div class="pill" id="progressText"></div>
+      <div class="pill" id="scoreText"></div>
+      <div class="pill" id="timerText"></div>
+    </div>
+
+    <div class="progress"><div class="bar" id="bar"></div></div>
+
+    <div class="card" id="quizCard">
+      <p class="topic" id="topic"></p>
+      <h2 class="q" id="question"></h2>
+      <div class="opts" id="options"></div>
+      <div class="bottom" id="bottomRow"></div>
+    </div>
+
+    <div class="result" id="result" hidden>
+      <h2>סיימתם את החידון!</h2>
+      <p id="resultCorrect"></p>
+      <p id="resultTime"></p>
+      <p id="resultGrade"></p>
+      <button class="restart" id="restartBtn">שחקו שוב</button>
+    </div>
+  </div>
+
+  <script>
+    const QUESTIONS = [
+      { topic: 'תקציב', question: 'מהו שימוש נכון בתקציב חודשי?', options: ['לעדכן אותו רק כשנגמר כסף', 'לתכנן מראש ולעקוב מול ביצוע בפועל', 'להשתמש בו רק להוצאות קבועות', 'לוותר עליו אם יש הכנסה קבועה'], answerIndex: 1 },
+      { topic: 'כסף וניהול אישי', question: 'מהו סימן אזהרה לכך שההתנהלות החודשית לא מאוזנת?', options: ['נותר עודף קטן בסוף החודש', 'הוצאות משתנות מכסות את רוב התקציב', 'שימוש קבוע במסגרת מינוס לכיסוי הוצאות שוטפות', 'יש מעקב באפליקציה'], answerIndex: 2 },
+      { topic: 'חיסכון', question: 'איזו מטרה הכי מתאימה לקרן חירום?', options: ['חופשה שנתית', 'קנייה אימפולסיבית', 'הוצאה לא צפויה כמו תיקון דחוף', 'מתנה לחבר'], answerIndex: 2 },
+      { topic: 'כלכלה', question: 'אם המחירים עולים וההכנסה נשארת זהה, מה קורה לכוח הקנייה?', options: ['עולה', 'לא משתנה', 'יורד', 'מוכפל'], answerIndex: 2 },
+      { topic: 'צרכנות נבונה', question: 'בקנייה גדולה, איזה צעד מצמצם סיכון להוצאה מיותרת?', options: ['לקנות מיד כי יש מבצע', 'להתייעץ רק עם חבר', 'להשוות עלות כוללת כולל אחריות ומשלוח', 'לבחור רק לפי מותג'], answerIndex: 2 },
+      { topic: 'מונופולים', question: 'מה נכון לגבי מונופול לאורך זמן?', options: ['תמיד משפר מחירים לצרכן', 'עלול לצמצם תחרות ולהשפיע על מחירים', 'מחייב איכות גבוהה בחוק', 'לא משפיע על השוק'], answerIndex: 1 },
+      { topic: 'היצע וביקוש', question: 'במצב של ביקוש גבוה והיצע מוגבל, מה בדרך כלל יקרה למחיר?', options: ['ירד', 'יישאר תמיד קבוע', 'יעלה', 'יהפוך לאפס'], answerIndex: 2 },
+      { topic: 'ריבית וחיסכון', question: 'מהי ריבית דריבית בחיסכון?', options: ['ריבית רק על הקרן הראשונית', 'ריבית על הקרן ועל ריבית שנצברה', 'עמלה חד-פעמית', 'מס על משיכה'], answerIndex: 1 },
+      { topic: 'תקציב', question: 'איזו פעולה מחזקת תכנון תזרים חודשי?', options: ['להתעלם מהוצאות קטנות', 'להוסיף הוצאות רק בסוף חודש', 'לרשום תאריך חיוב לכל הוצאה קבועה', 'לבדוק מצב פעם בחצי שנה'], answerIndex: 2 },
+      { topic: 'עסקים', question: 'מהו מחיר עלות?', options: ['מחיר המכירה לצרכן', 'עלות הייצור לפני רווח', 'מחיר אחרי הנחה', 'המחיר הגבוה בשוק'], answerIndex: 1 },
+      { topic: 'עסקים', question: 'אם עסק מוכר ב-120 ש"ח ומחיר העלות הוא 90 ש"ח, מה הרווח הגולמי ליחידה?', options: ['20 ש"ח', '25 ש"ח', '30 ש"ח', '35 ש"ח'], answerIndex: 2 },
+      { topic: 'תעסוקה ומכירות', question: 'מהי המשמעות של עמלה במכירות?', options: ['קנס קבוע', 'תגמול שמשתנה לפי ביצועים', 'החזר מס', 'הוצאה חד-פעמית'], answerIndex: 1 },
+      { topic: 'מערכות יחסים וכסף', question: 'באיזה מצב נכון לדבר על כסף בתוך מערכת יחסים?', options: ['רק אחרי משבר', 'כשיש קנייה גדולה בלבד', 'באופן שוטף ושקוף סביב מטרות משותפות', 'עדיף לא לדבר בכלל'], answerIndex: 2 },
+      { topic: 'יזמות', question: 'מהו צעד ראשון חכם ליוזמה עסקית של תלמיד?', options: ['להוציא כסף על פרסום מיד', 'לבדוק צורך אמיתי אצל קהל יעד', 'לפתוח חברה בע"מ ביום הראשון', 'לקבוע מחיר בלי בדיקה'], answerIndex: 1 },
+      { topic: 'ניהול זמן', question: 'איזו דוגמה משקפת ניהול זמן יעיל בלמידה?', options: ['לעבור משימה למשימה בלי סדר', 'להתחיל במשימות דחופות וחשובות', 'לדחות עד הלילה', 'לעבוד רק כשיש לחץ'], answerIndex: 1 },
+      { topic: 'עמידה מול קהל', question: 'מה משפר אמינות בהצגה מול קהל?', options: ['שימוש בסיסמאות בלבד', 'הצגת נתון ודוגמה תומכת', 'דיבור בלי מבנה', 'התעלמות משאלות'], answerIndex: 1 },
+      { topic: 'בניית עסק', question: 'מה תפקיד המיתוג עבור עסק קטן?', options: ['להחליף מוצר טוב', 'ליצור זיהוי ובידול עקבי', 'להקטין עלויות מס', 'להבטיח מכירות מיידיות'], answerIndex: 1 },
+      { topic: 'צרכנות נבונה', question: 'איזו החלטה צרכנית נחשבת מושכלת יותר?', options: ['לקנות מוצר זול בלי לבדוק איכות', 'לבחור לפי המלצת משפיען בלבד', 'להשוות יחס עלות-תועלת ושירות', 'לרכוש מיד לפני בדיקה'], answerIndex: 2 },
+      { topic: 'השקעות', question: 'במונחי השקעה, מה המשמעות של "פיזור"?', options: ['להשקיע הכול בנכס אחד', 'לחלק השקעה בין כמה אפיקים', 'להשאיר כסף רק במזומן תמיד', 'להימנע מכל סיכון'], answerIndex: 1 },
+      { topic: 'יסודות כלכלה', question: 'מהו סחר חליפין?', options: ['קנייה בכרטיס אשראי בלבד', 'החלפת מוצרים/שירותים ללא שימוש בכסף', 'מבצע של מוצר שני חינם', 'מכירה בהקפה'], answerIndex: 1 },
+    ];
+
+    function shuffle(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function fmt(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
+
+    let quiz = shuffle(QUESTIONS);
+    let idx = 0;
+    let selected = null;
+    let score = 0;
+    let elapsed = 0;
+    let finished = false;
+
+    const els = {
+      progressText: document.getElementById('progressText'),
+      scoreText: document.getElementById('scoreText'),
+      timerText: document.getElementById('timerText'),
+      bar: document.getElementById('bar'),
+      topic: document.getElementById('topic'),
+      question: document.getElementById('question'),
+      options: document.getElementById('options'),
+      bottomRow: document.getElementById('bottomRow'),
+      result: document.getElementById('result'),
+      resultCorrect: document.getElementById('resultCorrect'),
+      resultTime: document.getElementById('resultTime'),
+      resultGrade: document.getElementById('resultGrade'),
+      restartBtn: document.getElementById('restartBtn'),
+      quizCard: document.getElementById('quizCard')
+    };
+
+    function renderTop() {
+      els.progressText.textContent = `שאלה ${idx + 1} מתוך ${quiz.length}`;
+      els.scoreText.textContent = `ניקוד: ${score}`;
+      els.timerText.textContent = `זמן: ${fmt(elapsed)}`;
+      els.bar.style.width = ((idx + 1) / quiz.length * 100) + '%';
+    }
+
+    function renderQuestion() {
+      const q = quiz[idx];
+      renderTop();
+      els.topic.textContent = 'נושא: ' + q.topic;
+      els.question.textContent = q.question;
+      els.options.innerHTML = '';
+      els.bottomRow.innerHTML = '';
+      selected = null;
+
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'opt';
+        btn.textContent = opt;
+        btn.onclick = () => answer(i);
+        els.options.appendChild(btn);
+      });
+    }
+
+    function answer(optIdx) {
+      if (selected !== null || finished) return;
+      selected = optIdx;
+      const q = quiz[idx];
+      const buttons = [...els.options.querySelectorAll('.opt')];
+
+      if (optIdx === q.answerIndex) score += 1;
+
+      buttons.forEach((b, i) => {
+        b.disabled = true;
+        if (i === q.answerIndex) b.classList.add('correct');
+        else if (i === optIdx) b.classList.add('wrong');
+        else b.classList.add('muted');
+      });
+
+      renderTop();
+
+      const fb = document.createElement('p');
+      fb.className = 'feedback ' + (optIdx === q.answerIndex ? 'ok' : 'bad');
+      fb.textContent = optIdx === q.answerIndex
+        ? 'נכון מאוד!'
+        : 'לא נכון. התשובה הנכונה היא: ' + q.options[q.answerIndex];
+
+      const next = document.createElement('button');
+      next.className = 'next';
+      next.textContent = idx === quiz.length - 1 ? 'סיום חידון' : 'שאלה הבאה';
+      next.onclick = nextQ;
+
+      els.bottomRow.appendChild(fb);
+      els.bottomRow.appendChild(next);
+    }
+
+    function nextQ() {
+      if (idx === quiz.length - 1) return finish();
+      idx += 1;
+      renderQuestion();
+    }
+
+    function finish() {
+      finished = true;
+      els.quizCard.hidden = true;
+      els.result.hidden = false;
+      const grade = Math.round((score / quiz.length) * 100);
+      els.resultCorrect.textContent = `תשובות נכונות: ${score} מתוך ${quiz.length}`;
+      els.resultTime.textContent = `זמן כולל: ${fmt(elapsed)}`;
+      els.resultGrade.textContent = `ציון סופי: ${grade}`;
+    }
+
+    els.restartBtn.onclick = () => {
+      quiz = shuffle(QUESTIONS);
+      idx = 0;
+      selected = null;
+      score = 0;
+      elapsed = 0;
+      finished = false;
+      els.result.hidden = true;
+      els.quizCard.hidden = false;
+      renderQuestion();
+    };
+
+    setInterval(() => {
+      if (!finished) {
+        elapsed += 1;
+        renderTop();
+      }
+    }, 1000);
+
+    renderQuestion();
+  </script>
+</body>
+</html>
