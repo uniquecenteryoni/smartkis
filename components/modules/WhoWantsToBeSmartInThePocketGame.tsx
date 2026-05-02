@@ -158,9 +158,13 @@ export default function WhoWantsToBeSmartInThePocketGame({ onBack }: WhoWantsToB
   const [showResult, setShowResult] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
+  const rawBasePath = import.meta.env.BASE_URL || '/';
+  const basePath = rawBasePath.startsWith('/') ? rawBasePath : `/${rawBasePath}`;
+  const basePathWithSlash = basePath.endsWith('/') ? basePath : `${basePath}/`;
+  const mobileQuizPath = `${basePathWithSlash}games/who-wants-smartkis-quiz.html`;
   const mobileQuizUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/games/who-wants-smartkis-quiz.html`
-    : '/games/who-wants-smartkis-quiz.html';
+    ? `${window.location.origin}${mobileQuizPath}`
+    : mobileQuizPath;
   const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(mobileQuizUrl)}`;
 
   const current = quiz[index];

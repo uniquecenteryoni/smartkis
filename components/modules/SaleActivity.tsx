@@ -5,9 +5,13 @@ interface SaleActivityProps {
 }
 
 export default function SaleActivity({ onBack }: SaleActivityProps) {
+  const rawBasePath = import.meta.env.BASE_URL || '/';
+  const basePath = rawBasePath.startsWith('/') ? rawBasePath : `/${rawBasePath}`;
+  const basePathWithSlash = basePath.endsWith('/') ? basePath : `${basePath}/`;
+  const mobilePath = `${basePathWithSlash}games/sale-worksheet.html`;
   const mobileUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/games/sale-worksheet.html`
-    : '/games/sale-worksheet.html';
+    ? `${window.location.origin}${mobilePath}`
+    : mobilePath;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=420x420&data=${encodeURIComponent(mobileUrl)}`;
 
   return (
