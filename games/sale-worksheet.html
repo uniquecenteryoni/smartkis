@@ -141,6 +141,17 @@
       min-width: 0;
     }
 
+    .line-total-input {
+      color: var(--blue);
+      font-weight: 900;
+      border-radius: 6px;
+    }
+
+    .line-total-input.line-total-manual {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
     .sum-row td {
       font-weight: 900;
       background: #f8fafc;
@@ -315,7 +326,7 @@
       <button class="btn secondary" id="clearRows">ניקוי שורות</button>
     </div>
 
-    <p class="note">מלאו מוצר, כמות ומחיר יחידה. החישוב לכל שורה ולסכום הכולל מתבצע אוטומטית.</p>
+    <p class="note">מלאו מוצר, כמות ומחיר יחידה. החישוב אוטומטי, ואם צריך אפשר לערוך ידנית גם את סכום השורה.</p>
   </div>
 
   <script>
@@ -338,10 +349,26 @@
         <td><input type="text" placeholder="שם מוצר" /></td>
         <td><input type="number" min="0" step="1" value="" data-role="qty" /></td>
         <td><input type="number" min="0" step="1" value="" data-role="unit" /></td>
-        <td class="line-total" data-role="lineTotal">0</td>
+        <td class="line-total"><input type="number" min="0" step="1" value="" data-role="lineTotal" class="line-total-input" placeholder="אוטומטי" /></td>
       `;
       rowsEl.appendChild(tr);
-      tr.addEventListener('input', updateTotals);
+      tr.addEventListener('input', (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLInputElement)) return;
+
+        const role = target.dataset.role;
+        const lineTotalInput = tr.querySelector('[data-role="lineTotal"]');
+
+        if (!lineTotalInput) return;
+        if (role === 'qty' || role === 'unit') {
+          lineTotalInput.dataset.manual = '0';
+        }
+        if (role === 'lineTotal') {
+          lineTotalInput.dataset.manual = '1';
+        }
+
+        updateTotals();
+      });
     }
 
     function ensureInitialRows(count) {
@@ -361,8 +388,18 @@
       rows.forEach((row) => {
         const qty = Number(row.querySelector('[data-role="qty"]').value || 0);
         const unit = Number(row.querySelector('[data-role="unit"]').value || 0);
-        const line = qty * unit;
-        row.querySelector('[data-role="lineTotal"]').textContent = formatNumber(line);
+        const computedLine = qty * unit;
+        const lineTotalInput = row.querySelector('[data-role="lineTotal"]');
+        if (!lineTotalInput) return;
+
+        const isManual = lineTotalInput.dataset.manual === '1' && lineTotalInput.value !== '';
+        const line = isManual ? Number(lineTotalInput.value || 0) : computedLine;
+
+        if (!isManual) {
+          lineTotalInput.value = computedLine ? String(computedLine) : '';
+        }
+
+        lineTotalInput.classList.toggle('line-total-manual', isManual);
         grand += line;
       });
 
