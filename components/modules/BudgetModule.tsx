@@ -1842,7 +1842,7 @@ const AccountsCalculatorModal: React.FC<{
     
     return (
         <div className="absolute bg-black bg-opacity-50 z-50 animate-fade-in" style={style}>
-            <div className="bg-white p-6 rounded-2xl w-full max-w-lg shadow-2xl">
+            <div className="bg-white p-5 rounded-2xl w-full max-w-[27rem] shadow-2xl max-h-[72vh] overflow-y-auto overscroll-contain">
                 <h3 className="text-2xl font-bold mb-4 text-center">מחשבון הערכת חשבונות</h3>
                 {step === 1 && (
                     <>
