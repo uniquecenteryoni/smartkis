@@ -2821,6 +2821,8 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
 
   const totalUserExpenses = useMemo(() => userExpenses.reduce((sum, item) => sum + item.amount, 0), [userExpenses]);
   const balance = useMemo(() => netIncome - totalUserExpenses, [netIncome, totalUserExpenses]);
+    const remainingFromNetIncome = useMemo(() => Math.max(0, balance), [balance]);
+    const overBudgetAmount = useMemo(() => Math.max(0, -balance), [balance]);
   
   const chartData = useMemo(() => {
     return userExpenses
@@ -2994,7 +2996,8 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
         }));
     }
   }, [carDetails]);
-  
+
+
   const handleSelectCharacter = (character: Character) => {
         setExpenses(initialExpenses.map(e => ({ ...e, amount: 0 })));
     setSelectedCharacter(character);
@@ -3371,6 +3374,26 @@ const BudgetModule: React.FC<BudgetModuleProps> = ({ onBack, title, onComplete }
         isProcessing={isProcessing}
         isCopied={isCopied}
      />
+
+            <div className={`sticky top-0 z-40 rounded-2xl border shadow-xl backdrop-blur-md px-4 py-3 mb-4 ${overBudgetAmount > 0 ? 'bg-rose-50/95 border-rose-300' : 'bg-emerald-50/95 border-emerald-300'}`}>
+                <div className="grid grid-cols-1 md:grid-cols-4 items-center gap-2 text-center md:text-right">
+                    <p className="text-sm font-bold text-brand-dark-blue/80">כמה נשאר משכר הנטו</p>
+                    <p className={`text-2xl md:text-3xl font-black ${overBudgetAmount > 0 ? 'text-rose-600' : 'text-emerald-700'}`}>
+                        {remainingFromNetIncome.toLocaleString('he-IL', { style: 'currency', currency: 'ILS', minimumFractionDigits: 0 })}
+                    </p>
+                    <p className="text-sm md:text-base text-brand-dark-blue/80">
+                        נטו: <span className="font-bold text-brand-dark-blue">{netIncome.toLocaleString('he-IL', { style: 'currency', currency: 'ILS', minimumFractionDigits: 0 })}</span>
+                    </p>
+                    <p className="text-sm md:text-base text-brand-dark-blue/80">
+                        הוצאות: <span className="font-bold text-rose-600">{totalUserExpenses.toLocaleString('he-IL', { style: 'currency', currency: 'ILS', minimumFractionDigits: 0 })}</span>
+                    </p>
+                </div>
+                {overBudgetAmount > 0 && (
+                    <p className="text-center text-sm font-bold text-rose-600 mt-2">
+                        חריגה של {overBudgetAmount.toLocaleString('he-IL', { style: 'currency', currency: 'ILS', minimumFractionDigits: 0 })} מהנטו
+                    </p>
+                )}
+            </div>
       
       <div className="space-y-8">
         {/* Top Info Section */}
