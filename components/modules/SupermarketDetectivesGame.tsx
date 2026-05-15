@@ -13,6 +13,7 @@ type DetectiveOption = {
 
 const DETECTIVE_OPTIONS: DetectiveOption[] = [
   { id: 'osem', label: 'אסם', isMonopoly: true },
+  { id: 'sugat', label: 'סוגת', isMonopoly: true },
   { id: 'tnuva', label: 'תנובה', isMonopoly: true },
   { id: 'central', label: 'החברה המרכזית', isMonopoly: true },
   { id: 'strauss', label: 'שטראוס', isMonopoly: true },
@@ -98,13 +99,13 @@ const SupermarketDetectivesMobile: React.FC = () => {
           <div className="grid grid-cols-2 gap-3 text-center">
             <div className="rounded-2xl bg-red-50 border border-red-200 p-3">
               <p className="text-sm text-red-700">מונופולים</p>
-              <p className="text-3xl font-black text-red-600">{monopolyCount}</p>
-              <p className="text-sm font-bold text-red-700">{monopolyPercent}%</p>
+              <p className="text-3xl font-black text-red-600">{monopolyPercent}%</p>
+              <p className="text-sm font-bold text-red-700">{monopolyCount} פריטים</p>
             </div>
             <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-3">
               <p className="text-sm text-emerald-700">ללא מונופול</p>
-              <p className="text-3xl font-black text-emerald-600">{nonMonopolyCount}</p>
-              <p className="text-sm font-bold text-emerald-700">{nonMonopolyPercent}%</p>
+              <p className="text-3xl font-black text-emerald-600">{nonMonopolyPercent}%</p>
+              <p className="text-sm font-bold text-emerald-700">{nonMonopolyCount} פריטים</p>
             </div>
           </div>
 
