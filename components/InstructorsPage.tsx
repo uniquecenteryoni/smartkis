@@ -26,7 +26,7 @@ import BullseyeGame from './modules/BullseyeGame';
 import MillionDropGame from './modules/MillionDropGame';
 import MyInvestmentPortfolioGame from './modules/MyInvestmentPortfolioGame';
 import PayslipChallengeGame from './modules/PayslipChallengeGame';
-import SupermarketRaceGame from './modules/SupermarketRaceGame';
+import SupermarketDetectivesGame from './modules/SupermarketDetectivesGame';
 import PicassoGame from './modules/PicassoGame';
 import CarRaceGame from './modules/CarRaceGame';
 import WorkerRightsParcelGame from './modules/WorkerRightsParcelGame';
@@ -2091,12 +2091,12 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק כיתתי עם שאלות ומשימות בנושא מונופולים בישראל.</p>
               </button>
               <button
-                onClick={() => setActiveSubActivity('חכם בסופר')}
+                onClick={() => setActiveSubActivity('בלשי הסופר')}
                 className="rounded-3xl border-2 border-dashed border-brand-teal bg-teal-50 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
               >
                 <p className="text-4xl mb-3">🛒</p>
-                <p className="text-2xl font-bold text-brand-dark-blue">חכם בסופר</p>
-                <p className="text-brand-dark-blue/60 mt-3 text-lg">משחק מונופולים כיתתי — מי שייך למי?</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">בלשי הסופר</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">פעילות QR עם כפתורי מותגים ודו"ח יחס מונופולים.</p>
               </button>
             </div>
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'מונופולים בישראל' && activeProgram === "'מה בכיס'" && activeSubActivity === 'אל תפילו את המיליון' ? (
@@ -2118,8 +2118,8 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
             </div>
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'מונופולים בישראל' && activeProgram === "'מה בכיס'" && activeSubActivity === 'חבילה עוברת' ? (
             <ParcelGame items={monopolyItems} moduleTitle="מונופולים בישראל" moduleSubtitle="כל סיבוב נעצר בזמן אקראי" musicUrl="/havila.mp3" />
-          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'מונופולים בישראל' && activeProgram === "'מה בכיס'" && activeSubActivity === 'חכם בסופר' ? (
-            <SupermarketRaceGame onBack={() => setActiveSubActivity(null)} />
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'מונופולים בישראל' && activeProgram === "'מה בכיס'" && activeSubActivity === 'בלשי הסופר' ? (
+            <SupermarketDetectivesGame onBack={() => setActiveSubActivity(null)} />
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'צרכנות נבונה' && activeProgram === "'מה בכיס'" && !activeSubActivity ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <button

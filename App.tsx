@@ -4,6 +4,7 @@ import { BullseyePlayerView } from './components/modules/BullseyeGame';
 import { PicassoPlayerView } from './components/modules/PicassoGame';
 import { CarRacePlayerView } from './components/modules/CarRaceGame';
 import { SupermarketPlayerView } from './components/modules/SupermarketRaceGame';
+import { SupermarketDetectivesPlayerView } from './components/modules/SupermarketDetectivesGame';
 import { WordCloudPlayerView } from './components/modules/WordCloudGame';
 import Header from './components/Header';
 import ModuleCard from './components/ModuleCard';
@@ -383,6 +384,7 @@ const App: React.FC = () => {
   const [isPicassoPlayer, setIsPicassoPlayer] = useState(() => window.location.hash.startsWith('#picasso-player-'));
   const [isCarRacePlayer, setIsCarRacePlayer] = useState(() => window.location.hash.startsWith('#carrace-player-'));
   const [isSupermarketPlayer, setIsSupermarketPlayer] = useState(() => window.location.hash.startsWith('#supermarket-player-'));
+  const [isSupermarketDetectivesPlayer, setIsSupermarketDetectivesPlayer] = useState(() => window.location.hash === '#supermarket-detectives-player');
   const [isWordCloudPlayer,    setIsWordCloudPlayer]    = useState(() => window.location.hash.startsWith('#wordcloud-player-') || window.location.hash.startsWith('#pros-player-'));
   const [appState, setAppState] = useState<AppState>('user_selection');
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
@@ -441,6 +443,7 @@ const App: React.FC = () => {
       setIsPicassoPlayer(window.location.hash.startsWith('#picasso-player-'));
       setIsCarRacePlayer(window.location.hash.startsWith('#carrace-player-'));
       setIsSupermarketPlayer(window.location.hash.startsWith('#supermarket-player-'));
+      setIsSupermarketDetectivesPlayer(window.location.hash === '#supermarket-detectives-player');
       setIsWordCloudPlayer(window.location.hash.startsWith('#wordcloud-player-') || window.location.hash.startsWith('#pros-player-'));
     };
     window.addEventListener('hashchange', onHash);
@@ -792,6 +795,7 @@ const App: React.FC = () => {
   if (urlParams.get('mode') === 'budget-meeting-player') return <BudgetMeetingPlayerView />;
 
   return (
+    (appState === 'user_selection' && isSupermarketDetectivesPlayer) ? <SupermarketDetectivesPlayerView /> :
     (appState === 'user_selection' && isSupermarketPlayer) ? <SupermarketPlayerView /> :
     (appState === 'user_selection' && isWordCloudPlayer)    ? <WordCloudPlayerView /> :
     (appState === 'user_selection' && isCarRacePlayer) ? <CarRacePlayerView /> :
