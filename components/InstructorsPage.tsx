@@ -40,6 +40,7 @@ import SnowballGame from './modules/SnowballGame';
 import { OverdraftSimulator } from './modules/OverdraftModule';
 import CompoundInterestCalculator from './modules/CompoundInterestCalculator';
 import InvestmentSimulator from './modules/InvestmentSimulator';
+import ChoiceComparisonActivity from './modules/ChoiceComparisonActivity';
 import { WordCloudHost } from './modules/WordCloudGame';
 import InterviewerCardsModule from './modules/InterviewerCardsModule';
 import WhatDidWeHaveGame from './modules/WhatDidWeHaveGame';
@@ -3038,10 +3039,14 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                 <p className="text-2xl font-bold text-brand-dark-blue">תיק ההשקעות שלי</p>
                 <p className="text-brand-dark-blue/60 mt-3 text-lg">סימולציה מציאותית של בניית תיק, אירועי שוק וחישוב רווח/הפסד.</p>
               </button>
-              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white/70 p-8 text-center text-brand-dark-blue/50 min-h-[14rem] flex flex-col items-center justify-center">
-                <p className="text-2xl font-bold">אתגר כיתתי</p>
-                <p className="text-lg mt-2">בקרוב יתווסף אתגר כיתתי.</p>
-              </div>
+              <button
+                onClick={() => setActiveSubActivity('השוואת בחירות')}
+                className="rounded-3xl border-2 border-dashed border-brand-teal bg-teal-50 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">🧮</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">השוואת בחירות</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">השוואה בין 6 תרחישי חיסכון והשקעה עם טבלת סיכום.</p>
+              </button>
             </div>
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'חיסכון והשקעות' && activeProgram === "'חכם בכיס'" && activeSubActivity === 'אל תפילו את המיליון' ? (
             <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
@@ -3062,6 +3067,8 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
             </div>
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'חיסכון והשקעות' && activeProgram === "'חכם בכיס'" && activeSubActivity === 'תיק ההשקעות שלי' ? (
             <MyInvestmentPortfolioGame onBack={() => setActiveSubActivity(null)} />
+          ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'חיסכון והשקעות' && activeProgram === "'חכם בכיס'" && activeSubActivity === 'השוואת בחירות' ? (
+            <ChoiceComparisonActivity onBack={() => setActiveSubActivity(null)} />
           ) : activeModule === 'פעילויות ומשחקים' && activeActivity === 'תקציב המדינה' && activeProgram === "'חכם בכיס'" && !activeSubActivity ? (
             <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
               <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -3536,6 +3543,10 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
             <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
               <InvestmentSimulator onBack={() => setActiveSubActivity(null)} />
             </div>
+          ) : activeModule === 'עזרים ונספחים' && activeProgram === "'חכם בכיס'" && activeActivity === 'חיסכון והשקעות' && activeSubActivity === 'השוואת בחירות' ? (
+            <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
+              <ChoiceComparisonActivity onBack={() => setActiveSubActivity(null)} />
+            </div>
           ) : activeModule === 'עזרים ונספחים' && activeProgram === "'חכם בכיס'" && activeActivity === 'חיסכון והשקעות' ? (
                 <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-5 space-y-4">
                   <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -3568,6 +3579,14 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
                       <p className="text-4xl mb-3">💹</p>
                       <p className="text-2xl font-bold text-brand-dark-blue">סימולטור השקעות</p>
                       <p className="text-brand-dark-blue/60 mt-3 text-lg">הדמיית תיק עם תשואה שנתית צפויה והפקדות שוטפות.</p>
+                    </button>
+                    <button
+                      onClick={() => setActiveSubActivity('השוואת בחירות')}
+                      className="rounded-3xl border-2 border-dashed border-brand-teal bg-teal-50 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+                    >
+                      <p className="text-4xl mb-3">🧮</p>
+                      <p className="text-2xl font-bold text-brand-dark-blue">השוואת בחירות</p>
+                      <p className="text-brand-dark-blue/60 mt-3 text-lg">6 תיבות להשוואת החלטות השקעה וטבלת סיכום.</p>
                     </button>
                     {(AIDS_LIBRARY['חיסכון והשקעות'] || [])
                       .filter((aid) => !['#compound-interest', '#investment-simulator'].includes(aid.url))
