@@ -14,6 +14,7 @@ type SavedComment = {
 };
 
 type CommentStyle = 'warm' | 'direct' | 'humorous' | 'inspiring' | 'reflective' | 'poetic';
+type VariantParagraphKey = 'para_1' | 'para_2' | 'para_3' | 'para_5';
 
 interface FromMeToYouCommentGeneratorProps {
   onBack?: () => void;
@@ -112,6 +113,15 @@ const prefixHebrewList = (prefix: string, items: string[]) => {
   return joined ? `${prefix}${joined}` : '';
 };
 
+const getIndexPool = (count: number) => Array.from({ length: count }, (_, idx) => idx);
+
+const createInitialUsedVariants = (): Record<VariantParagraphKey, number[]> => ({
+  para_1: [],
+  para_2: [],
+  para_3: [],
+  para_5: [],
+});
+
 const FromMeToYouCommentGenerator: React.FC<FromMeToYouCommentGeneratorProps> = ({ onBack }) => {
   const [className, setClassName] = useState("ט'2");
   const [courseName, setCourseName] = useState('חינוך פיננסי');
@@ -139,6 +149,7 @@ const FromMeToYouCommentGenerator: React.FC<FromMeToYouCommentGeneratorProps> = 
   const [toastMessage, setToastMessage] = useState('');
   const [hoveredPart, setHoveredPart] = useState<string | null>(null);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, number>>({});
+  const [usedVariantsByParagraph, setUsedVariantsByParagraph] = useState<Record<VariantParagraphKey, number[]>>(createInitialUsedVariants());
 
   const toastTimeoutRef = useRef<number | null>(null);
 
@@ -350,6 +361,22 @@ const FromMeToYouCommentGenerator: React.FC<FromMeToYouCommentGeneratorProps> = 
     setSelectedTraits(['curiosity', 'diligence']);
     setSelectedSkills(['analysis', 'questioning']);
     setIsManualEditMode(false);
+    setSelectedVariants({});
+  };
+
+  const getAvailableIndicesForParagraph = (paraKey: VariantParagraphKey, totalOptions: number) => {
+    const usedSet = new Set(usedVariantsByParagraph[paraKey] || []);
+    const fullPool = getIndexPool(totalOptions);
+    const available = fullPool.filter((idx) => !usedSet.has(idx));
+    return available.length > 0 ? available : fullPool;
+  };
+
+  const pickNextDraftVariant = (paraKey: VariantParagraphKey, totalOptions: number, currentIndex: number) => {
+    const available = getAvailableIndicesForParagraph(paraKey, totalOptions);
+    if (available.length === 0) return currentIndex;
+    const sorted = [...available].sort((a, b) => a - b);
+    const nextIndex = sorted.find((idx) => idx > currentIndex) ?? sorted[0];
+    return nextIndex;
   };
 
   const regenerateWording = () => {
@@ -357,8 +384,17 @@ const FromMeToYouCommentGenerator: React.FC<FromMeToYouCommentGeneratorProps> = 
       showToast('הזן שם תלמיד כדי ליצור ניסוח חלופי.');
       return;
     }
+    const variants = getCommentVariants();
+    if (!variants) return;
+
     setIsManualEditMode(false);
-    setRewriteSeed((prev) => prev + 1);
+    setSelectedVariants((prev) => ({
+      ...prev,
+      para_1: pickNextDraftVariant('para_1', variants.opening.length, prev.para_1 ?? -1),
+      para_2: pickNextDraftVariant('para_2', variants.course.length, prev.para_2 ?? -1),
+      para_3: pickNextDraftVariant('para_3', variants.traits.length, prev.para_3 ?? -1),
+      para_5: pickNextDraftVariant('para_5', variants.closing.length, prev.para_5 ?? -1),
+    }));
   };
 
   const commentParts = [
@@ -444,6 +480,30 @@ const FromMeToYouCommentGenerator: React.FC<FromMeToYouCommentGeneratorProps> = 
     };
   };
 
+  useEffect(() => {
+    if (!studentName.trim()) return;
+    const variants = getCommentVariants();
+    if (!variants) return;
+
+    setSelectedVariants((prev) => {
+      const next = { ...prev };
+      if (next.para_1 === undefined) next.para_1 = pickNextDraftVariant('para_1', variants.opening.length, -1);
+      if (next.para_2 === undefined) next.para_2 = pickNextDraftVariant('para_2', variants.course.length, -1);
+      if (next.para_3 === undefined) next.para_3 = pickNextDraftVariant('para_3', variants.traits.length, -1);
+      if (next.para_5 === undefined) next.para_5 = pickNextDraftVariant('para_5', variants.closing.length, -1);
+      if (
+        next.para_1 === prev.para_1 &&
+        next.para_2 === prev.para_2 &&
+        next.para_3 === prev.para_3 &&
+        next.para_5 === prev.para_5
+      ) {
+        return prev;
+      }
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentName, courseName, topic1, topic2, topic3, topic4, currentGender, usedVariantsByParagraph]);
+
   const copyToClipboard = async () => {
     const text = outputComment.trim();
     if (!text) return;
@@ -463,6 +523,32 @@ const FromMeToYouCommentGenerator: React.FC<FromMeToYouCommentGeneratorProps> = 
     if (!name) {
       showToast('אנא הזן שם תלמיד לפני ההזנה לטבלה.');
       return;
+    }
+
+    const variants = getCommentVariants();
+    if (variants) {
+      setUsedVariantsByParagraph((prev) => {
+        const next: Record<VariantParagraphKey, number[]> = {
+          para_1: [...(prev.para_1 || [])],
+          para_2: [...(prev.para_2 || [])],
+          para_3: [...(prev.para_3 || [])],
+          para_5: [...(prev.para_5 || [])],
+        };
+
+        const commitOne = (paraKey: VariantParagraphKey, selectedIndex: number | undefined, totalOptions: number) => {
+          if (selectedIndex === undefined) return;
+          const currentSet = new Set(next[paraKey]);
+          currentSet.add(selectedIndex);
+          next[paraKey] = currentSet.size >= totalOptions ? [] : Array.from(currentSet);
+        };
+
+        commitOne('para_1', selectedVariants.para_1, variants.opening.length);
+        commitOne('para_2', selectedVariants.para_2, variants.course.length);
+        commitOne('para_3', selectedVariants.para_3, variants.traits.length);
+        commitOne('para_5', selectedVariants.para_5, variants.closing.length);
+
+        return next;
+      });
     }
 
     setSavedComments((prev) => [...prev, { id: Date.now(), name, comment }]);
@@ -719,11 +805,11 @@ const FromMeToYouCommentGenerator: React.FC<FromMeToYouCommentGeneratorProps> = 
                       {outputComment.split('\n\n').map((paragraph, idx) => {
                         const variants = getCommentVariants();
                         const variantIndex = selectedVariants[`para_${idx}`] || 0;
-                        const sectionMap: Record<number, { key: string; options: string[] }> = {
-                          1: { key: 'opening', options: variants?.opening || [] },
-                          2: { key: 'course', options: variants?.course || [] },
-                          3: { key: 'traits', options: variants?.traits || [] },
-                          5: { key: 'closing', options: variants?.closing || [] },
+                        const sectionMap: Record<number, { key: string; paraKey: VariantParagraphKey; options: string[] }> = {
+                          1: { key: 'opening', paraKey: 'para_1', options: variants?.opening || [] },
+                          2: { key: 'course', paraKey: 'para_2', options: variants?.course || [] },
+                          3: { key: 'traits', paraKey: 'para_3', options: variants?.traits || [] },
+                          5: { key: 'closing', paraKey: 'para_5', options: variants?.closing || [] },
                         };
                         const sectionInfo = sectionMap[idx];
 
@@ -738,7 +824,7 @@ const FromMeToYouCommentGenerator: React.FC<FromMeToYouCommentGeneratorProps> = 
                               if (!sectionInfo || sectionInfo.options.length === 0) return;
                               setSelectedVariants((prev) => ({
                                 ...prev,
-                                [`para_${idx}`]: (variantIndex + 1) % sectionInfo.options.length,
+                                [sectionInfo.paraKey]: pickNextDraftVariant(sectionInfo.paraKey, sectionInfo.options.length, variantIndex),
                               }));
                               setIsManualEditMode(false);
                             }}
