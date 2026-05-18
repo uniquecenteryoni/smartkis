@@ -61,6 +61,7 @@ import CoinsVsBillsModule from './modules/kisonim/CoinsVsBillsModule';
 import PowerOfGivingModule from './modules/kisonim/PowerOfGivingModule';
 import SmallDecisionsModule from './modules/kisonim/SmallDecisionsModule';
 import BudgetMeetingActivity from './modules/BudgetMeetingActivity';
+import FromMeToYouCommentGenerator from './modules/FromMeToYouCommentGenerator';
 import Header from './Header';
 import { SalaryIcon, BusinessIcon, PiggyBankIcon, PodiumIcon } from './icons/Icons';
 
@@ -1030,6 +1031,19 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
       },
     },
     {
+      title: 'כלים לניהול קבוצה',
+      description: 'חלונית ייעודית לניהול קבוצה בזמן אמת: ארגון, תפעול ומעקב.',
+      icon: PodiumIcon,
+      theme: 'tracking',
+      onSelect: () => {
+        setActiveProgram('כלים לניהול קבוצה');
+        setActiveModule(null);
+        setActiveActivity(null);
+        setActiveSubActivity(null);
+        setCameFromCustomPlan(false);
+      },
+    },
+    {
       title: 'מעקב אחר קבוצות למידה',
       description: 'ניהול התקדמות התלמידים וצפייה בתוצרים',
       icon: PodiumIcon,
@@ -1121,6 +1135,20 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
       kind: 'tool',
     });
 
+    results.push({
+      id: 'tool-group-management',
+      title: 'כלים לניהול קבוצה',
+      description: 'חלונית ייעודית לניהול קבוצה בזמן אמת',
+      kind: 'tool',
+    });
+
+    results.push({
+      id: 'tool-from-me-to-you-generator',
+      title: 'מחולל הערות ממני אליך',
+      description: 'כלים לניהול קבוצה · מחולל משוב אישי לתלמידים',
+      kind: 'tool',
+    });
+
     return results;
   }, []);
 
@@ -1169,6 +1197,22 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
     setCameFromCustomPlan(false);
 
     if (result.kind === 'tool') {
+      if (result.id === 'tool-group-management') {
+        setActiveProgram('כלים לניהול קבוצה');
+        setActiveActivity(null);
+        setActiveModule(null);
+        setActiveSubActivity(null);
+        return;
+      }
+
+      if (result.id === 'tool-from-me-to-you-generator') {
+        setActiveProgram('כלים לניהול קבוצה');
+        setActiveActivity('מחולל הערות ממני אליך');
+        setActiveModule(null);
+        setActiveSubActivity(null);
+        return;
+      }
+
       setActiveProgram(null);
       setActiveActivity(null);
       setActiveModule(null);
@@ -1464,6 +1508,39 @@ const InstructorsPage: React.FC<InstructorsPageProps> = ({ onBack }) => {
               </div>
             </div>
           )}
+        </main>
+      ) : activeProgram === 'כלים לניהול קבוצה' && !activeActivity ? (
+        <main className="mt-12 space-y-6">
+          <div className="bg-white/90 rounded-3xl border border-white/70 shadow-xl p-6 space-y-4">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <p className="text-brand-dark-blue/70">כלים לניהול קבוצה</p>
+                <h3 className="text-2xl font-bold text-brand-dark-blue">בחרו כלי</h3>
+                <p className="text-brand-dark-blue/60">כלים ייעודיים לניהול, הובלה ותיעוד עבודה עם קבוצות למידה.</p>
+              </div>
+              <button
+                onClick={() => { setActiveProgram(null); setActiveModule(null); setActiveActivity(null); setActiveSubActivity(null); }}
+                className="px-4 py-2 rounded-full bg-brand-magenta text-white font-bold hover:bg-pink-700"
+              >
+                חזרה לרשימת התוכניות
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <button
+                onClick={() => setActiveActivity('מחולל הערות ממני אליך')}
+                className="rounded-3xl border-2 border-dashed border-indigo-300 bg-gradient-to-br from-indigo-50 to-slate-50 p-8 text-center shadow hover:-translate-y-1 hover:shadow-xl transition min-h-[14rem] flex flex-col items-center justify-center"
+              >
+                <p className="text-4xl mb-3">✍️</p>
+                <p className="text-2xl font-bold text-brand-dark-blue">מחולל הערות ממני אליך</p>
+                <p className="text-brand-dark-blue/60 mt-3 text-lg">מחולל חכם לכתיבת משוב אישי, שמירה לטבלה וייצוא ל-CSV.</p>
+              </button>
+            </div>
+          </div>
+        </main>
+      ) : activeProgram === 'כלים לניהול קבוצה' && activeActivity === 'מחולל הערות ממני אליך' ? (
+        <main className="mt-12">
+          <FromMeToYouCommentGenerator onBack={() => setActiveActivity(null)} />
         </main>
       ) : !activeActivity ? (
         /* Step 2: pick a module name */
