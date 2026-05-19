@@ -277,12 +277,21 @@ export const buildInitialAllocations = (): AllocationMap => ({
 });
 
 export const buildEqualAllocations = (): AllocationMap => {
-  const base = Number((TOTAL_BUDGET / budgetItems.length).toFixed(1));
-  const allocations: AllocationMap = {};
+  const allocations: AllocationMap = {
+    debt: debtMinimum,
+    other: otherReference,
+  };
+
+  const distributableItems = budgetItems.filter((item) => item.id !== 'debt' && item.id !== 'other');
+  const distributableBudget = Math.max(0, TOTAL_BUDGET - debtMinimum - otherReference);
+  const base = Number((distributableBudget / distributableItems.length).toFixed(1));
   let running = 0;
 
-  budgetItems.forEach((item, index) => {
-    const value = index === budgetItems.length - 1 ? Number((TOTAL_BUDGET - running).toFixed(1)) : base;
+  distributableItems.forEach((item, index) => {
+    const value =
+      index === distributableItems.length - 1
+        ? Number((distributableBudget - running).toFixed(1))
+        : base;
     allocations[item.id] = value;
     running += value;
   });
@@ -862,8 +871,6 @@ const GovernmentBudgetModule: React.FC<GovernmentBudgetModuleProps> = ({ onBack,
 
   const loadEqualBudget = () => {
     const equal = buildEqualAllocations();
-    equal.debt = Math.max(debtMinimum, Number((equal.debt || debtReference).toFixed(1)));
-    equal.other = otherReference;
     setOtherCutPercents(buildDefaultOtherCutPercents());
     setAllocations(equal);
   };
@@ -1014,8 +1021,6 @@ export const MobileBudgetView: React.FC = () => {
 
   const loadEqual = () => {
     const equal = buildEqualAllocations();
-    equal.debt = Math.max(debtMinimum, Number((equal.debt || debtReference).toFixed(1)));
-    equal.other = otherReference;
     setOtherCutPercents(buildDefaultOtherCutPercents());
     setAllocations(equal);
   };
@@ -1026,24 +1031,110 @@ export const MobileBudgetView: React.FC = () => {
   };
 
   if (submitted) {
+    const rows = budgetItems
+      .map((item) => {
+        const chosen = allocations[item.id] || 0;
+        const gap = Number((chosen - item.reference).toFixed(1));
+        const ratio = item.reference === 0 ? 1 : chosen / item.reference;
+        return { ...item, chosen, gap, ratio };
+      })
+      .sort((a, b) => b.chosen - a.chosen);
+
     const totalShift = Number(
-      budgetItems
-        .reduce((sum, item) => {
-          const chosen = allocations[item.id] || 0;
-          const gap = Number((chosen - item.reference).toFixed(1));
-          return gap > 0 ? sum + gap : sum;
-        }, 0)
+      rows
+        .reduce((sum, row) => (row.gap > 0 ? sum + row.gap : sum), 0)
         .toFixed(1),
     );
     const similarity = Math.max(0, Math.round(100 - (totalShift / TOTAL_BUDGET) * 100));
+    const biggestGaps = [...rows].sort((a, b) => Math.abs(b.gap) - Math.abs(a.gap)).slice(0, 5);
+    const identity = getStateIdentity(allocations);
+
+    const narrative: string[] = [];
+    const describeSector = (id: string) => rows.find((row) => row.id === id);
+
+    [
+      describeSector('education'),
+      describeSector('health'),
+      describeSector('transport'),
+      describeSector('welfare'),
+      describeSector('defense'),
+    ].forEach((row) => {
+      if (!row) return;
+      if (row.ratio < 0.85) narrative.push(`${row.title}: ${row.lowImpact}`);
+      else if (row.ratio > 1.15) narrative.push(`${row.title}: ${row.highImpact}`);
+    });
+
+    if (narrative.length === 0) {
+      narrative.push('התקציב שבחרתם קרוב יחסית לתקציב הייחוס, ולכן מתקבלת מדינה עם שירותים דומים יחסית למצב הקיים.');
+    }
+
+    const debtRow = rows.find((row) => row.id === 'debt');
+    if (debtRow && debtRow.chosen < debtRow.reference) {
+      const deferred = Number((debtRow.reference - debtRow.chosen).toFixed(1));
+      narrative.push(`החזרי חובות: הקטנתם השנה ב-${formatBillions(deferred)} ולכן חלק מהנטל צפוי לעבור לשנים הבאות.`);
+    }
+
+    const otherCutSummary = OTHER_OFFICE_OPTIONS
+      .filter((option) => (otherCutPercents[option.id] || 0) > 0)
+      .map((option) => {
+        const percent = otherCutPercents[option.id] || 0;
+        const cutAmount = Number((option.amount * (percent / 100)).toFixed(3));
+        return `${option.title}: ${percent}% (${formatBillions(cutAmount)})`;
+      });
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 p-4 space-y-4" dir="rtl">
-        <div className="rounded-3xl bg-gradient-to-r from-indigo-600 to-brand-magenta text-white p-6 shadow-xl text-center space-y-2">
-          <h2 className="text-3xl font-black">בדיקת התקציב שלכם</h2>
-          <p className="text-lg text-white/90">אחוז ההתאמה לתקציב האמיתי</p>
-          <div className="text-6xl font-black">{similarity}%</div>
+        <div className={`rounded-3xl bg-gradient-to-r ${identity.accent} text-white p-6 shadow-xl space-y-3`}>
+          <h2 className="text-3xl font-black">{identity.title}</h2>
+          <p className="text-lg text-white/90 leading-relaxed">{identity.description}</p>
+          <div className="bg-white/20 rounded-2xl p-4 text-center">
+            <p className="text-sm text-white/90">אחוז ההתאמה לתקציב האמיתי</p>
+            <div className="text-5xl font-black">{similarity}%</div>
+          </div>
         </div>
+
+        <div className="rounded-3xl bg-white shadow-md p-4 space-y-3">
+          <h3 className="text-2xl font-bold text-brand-dark-blue">הפערים הכי גדולים</h3>
+          <div className="space-y-2">
+            {biggestGaps.map((row) => (
+              <div key={row.id} className="rounded-2xl border border-gray-100 bg-slate-50 p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="font-bold text-brand-dark-blue">{row.title}</div>
+                  <div className={`font-bold ${row.gap > 0 ? 'text-emerald-600' : row.gap < 0 ? 'text-rose-600' : 'text-slate-500'}`}>
+                    {row.gap > 0 ? '+' : ''}{formatBillions(row.gap)}
+                  </div>
+                </div>
+                <div className="text-sm text-brand-dark-blue/70 mt-1">
+                  בחרתם {formatBillions(row.chosen)} מול {formatBillions(row.reference)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-3xl bg-white shadow-md p-4 space-y-3">
+          <h3 className="text-2xl font-bold text-brand-dark-blue">איך המדינה שלכם תיראה?</h3>
+          <div className="space-y-2">
+            {narrative.map((line) => (
+              <div key={line} className="rounded-2xl border border-brand-teal/20 bg-brand-teal/5 p-3 text-brand-dark-blue/85 leading-relaxed">
+                {line}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {otherCutSummary.length > 0 && (
+          <div className="rounded-3xl bg-white shadow-md p-4 space-y-3">
+            <h3 className="text-2xl font-bold text-brand-dark-blue">מאילו משרדים קוצץ "משרדים אחרים"?</h3>
+            <div className="space-y-2">
+              {otherCutSummary.map((line) => (
+                <div key={line} className="rounded-2xl border border-indigo-100 bg-indigo-50 p-3 text-brand-dark-blue">
+                  {line}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <button onClick={() => setSubmitted(false)} className="w-full py-4 rounded-3xl bg-brand-teal text-white font-bold text-xl">
           נסו שוב
