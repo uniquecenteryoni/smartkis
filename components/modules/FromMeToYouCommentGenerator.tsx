@@ -239,12 +239,7 @@ const FromMeToYouCommentGenerator: React.FC<FromMeToYouCommentGeneratorProps> = 
     const courseIndex = selectedVariants['para_2'] ?? (courseBaseIndex + rewriteSeed) % courseSentenceVariants.length;
     const professionalSentence = courseSentenceVariants[courseIndex % courseSentenceVariants.length];
 
-    const fallbackTraitKeys = ['curiosity', 'diligence', 'maturity', 'leadership'];
-    const selectedTraitKeys = (selectedTraits.length > 0 ? selectedTraits : fallbackTraitKeys).slice(0, 4);
-    while (selectedTraitKeys.length < 4) {
-      selectedTraitKeys.push(fallbackTraitKeys[selectedTraitKeys.length]);
-    }
-    const traitsWithDescriptors = selectedTraitKeys.map((key) => {
+    const traitsWithDescriptors = selectedTraits.map((key) => {
       const mappedPhrase = TRAIT_PHRASE_BY_KEY[key];
       if (mappedPhrase) return mappedPhrase;
       const rawTrait = traitsDb[key]?.[currentGender] || key;
@@ -253,7 +248,9 @@ const FromMeToYouCommentGenerator: React.FC<FromMeToYouCommentGeneratorProps> = 
     const traitsImpactBaseIndex = getDeterministicIndex(`${firstName}_${courseName}_traits`, traitsImpactVariants.length);
     const traitsImpactIndex = selectedVariants['para_3'] ?? (traitsImpactBaseIndex + rewriteSeed) % traitsImpactVariants.length;
     const traitsImpact = traitsImpactVariants[traitsImpactIndex % traitsImpactVariants.length];
-    const traitsSentence = `לאורך המפגשים זכיתי להכיר את היכולות והתכונות הייחודיות שלך כמו ${joinHebrewList(traitsWithDescriptors)}. ${traitsImpact}`;
+    const traitsSentence = traitsWithDescriptors.length > 0
+      ? `לאורך המפגשים זכיתי להכיר את היכולות והתכונות הייחודיות שלך כמו ${joinHebrewList(traitsWithDescriptors)}. ${traitsImpact}`
+      : 'לאורך המפגשים זכיתי להכיר את הדרך הייחודית שלך ללמוד, להשתתף ולהתקדם בתהליך.';
 
     const fallbackSkills = ['יכולת הבנה וניתוח מתקדמות', 'מיומנות שאילת שאלות', 'יכולת הקשבה פעילה'];
     const selectedSkillsText = (activeSkills.length > 0 ? activeSkills : fallbackSkills).slice(0, 3);
