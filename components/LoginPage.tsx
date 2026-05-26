@@ -8,10 +8,15 @@ interface LoginPageProps {
     onLogin: (grade?: string) => void;
     onBack: () => void;
     showGradeSelector?: boolean;
-    requiredCredentials?: {
-        username: string;
-        password: string;
-    };
+    requiredCredentials?:
+        | {
+            username: string;
+            password: string;
+        }
+        | Array<{
+            username: string;
+            password: string;
+        }>;
     guestUnlockClicks?: number;
     disableGuestLogin?: boolean;
     guestLockedMessage?: string;
@@ -49,7 +54,10 @@ const LoginPage: React.FC<LoginPageProps> = ({
         resetGuestSequence();
 
         if (requiredCredentials) {
-            const isValid = username.trim() === requiredCredentials.username && password === requiredCredentials.password;
+            const credentials = Array.isArray(requiredCredentials) ? requiredCredentials : [requiredCredentials];
+            const isValid = credentials.some((credential) => (
+                username.trim() === credential.username && password === credential.password
+            ));
             if (!isValid) {
                 setLoginError('שם משתמש או סיסמה שגויים.');
                 return;

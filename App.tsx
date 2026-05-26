@@ -730,7 +730,10 @@ const App: React.FC = () => {
                     onLogin={handleStudentLogin}
                     onBack={goBack}
                     showGradeSelector={true}
-              requiredCredentials={{ username: 'SMARTKIS', password: '1121991' }}
+              requiredCredentials={[
+                { username: 'SMARTKIS', password: '1121991' },
+                { username: 'חבל מודיעין', password: 'חכם בכיס' },
+              ]}
               guestUnlockClicks={5}
               disableGuestLogin={true}
               guestLockedMessage="למרחב התלמידים ניתן להיכנס עם שם משתמש וסיסמא"
